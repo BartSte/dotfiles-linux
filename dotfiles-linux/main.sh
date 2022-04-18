@@ -1,6 +1,8 @@
-function install_vim_plug () {
-    curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
-    https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-}
+. ~/dotfiles-linux/config.sh
+. ~/dotfiles-linux/helpers.sh
 
+upgrade_vim
 install_vim_plug
+install_node_js
+install_dependencies $dependencies
+
