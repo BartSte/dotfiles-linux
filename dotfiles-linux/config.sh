@@ -1,1 +1,1 @@
-dependencies=("tmux" "python3-pip")
+dependencies=("python3-pip" "silversearcher-ag")

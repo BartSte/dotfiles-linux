@@ -17,9 +17,17 @@ function upgrade_vim () {
     sudo apt install vim
 }
 
+function vim_plug_install () {
+    vim -c PlugInstall\|qa!
+}
+
+function build_fzf () {
+    ~/.vim/plugged/fzf/install --all
+}
+
 function install_dependencies () {
-    for dep in $1
-    do
+    deps=$1
+    for dep in ${deps[@]}; do
         sudo apt install $dep
     done
 }
