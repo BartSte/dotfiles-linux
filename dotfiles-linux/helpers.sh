@@ -2,13 +2,14 @@ function install_font () {
     wget https://download.jetbrains.com/fonts/JetBrainsMono-1.0.0.zip
     unzip JetBrainsMono-1.0.0.zip
 }
+
 function install_vim_plug () {
     curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
     https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 }
 
 function install_node_js () {
-    curl -sL install-node.vercel.app/lts | bash
+    curl -sL install-node.vercel.app/lts | sudo bash
 }
 
 function upgrade_vim () {
