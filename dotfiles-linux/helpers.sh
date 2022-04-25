@@ -1,7 +1,14 @@
+function install_python () {
+    sudo apt update 
+    sudo apt install software-properties-common
+    sudo add-apt-repository ppa:deadsnake/ppa
+    suod apt install python3.8
+}
 function install_font () {
     wget https://download.jetbrains.com/fonts/JetBrainsMono-1.0.0.zip
     unzip JetBrainsMono-1.0.0.zip
 }
+
 function install_vim_plug () {
     curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
     https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
