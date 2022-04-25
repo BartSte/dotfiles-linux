@@ -1,5 +1,5 @@
-. ~/dotfiles-linux/config.sh
-. ~/dotfiles-linux/helpers.sh
+. $HOME/dotfiles-linux/config.sh
+. $HOME/dotfiles-linux/helpers.sh
 
 upgrade_vim
 install_vim_plug

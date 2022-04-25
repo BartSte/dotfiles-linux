@@ -15,7 +15,7 @@ function install_vim_plug () {
 }
 
 function install_node_js () {
-    curl -sL install-node.vercel.app/lts | bash
+    curl -sL install-node.vercel.app/lts | sudo bash
 }
 
 function upgrade_vim () {
