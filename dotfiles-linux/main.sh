@@ -1,10 +1,13 @@
 . $HOME/dotfiles-linux/config.sh
 . $HOME/dotfiles-linux/helpers.sh
 
-upgrade_vim
-install_vim_plug
-install_node_js
-install_font
+
+sudo apt update
+add_ppa_python
+add_ppa_vim
+
 install_dependencies $dependencies
-vim_plug_install
+install_font
+install_node_js
+install_vim_plug
 build_fzf
