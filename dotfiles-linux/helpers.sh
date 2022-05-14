@@ -9,7 +9,8 @@ function add_ppa_vim () {
 
 function install_dependencies () {
     deps=$1
-    for dep in ${deps[@]}; do
+    for dep in "${deps[@]}" 
+    do
         sudo apt install $dep
     done
 }
