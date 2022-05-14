@@ -1,0 +1,18 @@
+source ~/.mutt/.private_muttrc
+
+set editor=vim
+set folder=imaps://outlook.office365.com
+set header_cache=~/.cache/mutt/headercache
+set imap_check_subscribed
+set imap_keepalive=300
+set mail_check=60
+set from=$imap_user
+set message_cachedir=~/.cache/mutt/messagecache
+set postponed="+Drafts"
+set realname=$name
+set record="+Sent"
+set smtp_pass=$imap_pass
+set smtp_url=smtp://$from@outlook.com@smtp-mail.outlook.com:587/
+set spoolfile =+Inbox
+set ssl_force_tls=yes
+set trash="+Trash"
