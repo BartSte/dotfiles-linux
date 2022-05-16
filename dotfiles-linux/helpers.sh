@@ -3,6 +3,12 @@ function add_ppa_python () {
     sudo add-apt-repository ppa:deadsnake/ppa
 }
 
+function download_mutt_oauth2() {
+ wget -O ~/.mutt/scripts/mutt_oauth2.py https://gitlab.com/muttmua/mutt/-/raw/master/contrib/mutt_oauth2.py
+ cd ~/.mutt/scripts
+ chmod +x mutt_oauth2.py
+}
+
 function add_ppa_vim () {
     sudo add-apt-repository ppa:jonathonf/vim
 }
