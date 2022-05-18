@@ -14,6 +14,8 @@ source "~/.mutt/lang/$my_lang"
 # IMAP config
 set imap_user="$my_username@$my_domain"
 set imap_pass=$my_password
+set imap_authenticators="oauthbearer:xoauth2"
+set imap_oauth_refresh_command="~/.mutt/scripts/mutt_oauth2.py ~/.mutt/scripts/${imap_user}.tokens"
 
 set folder="imaps://outlook.office365.com/"
 set spoolfile= +INBOX
@@ -31,14 +33,15 @@ set imap_idle
 unset mark_old
 set ssl_use_sslv3=yes
 
-# SMTP config
+# lMTP config
 set realname = $my_realname
 set from = "$my_username@$my_domain"
 set smtp_pass = $my_password
 set hostname = $my_domain
-set smtp_url = "smtp://$my_username@$my_domain@outlook.office365.com:587/"
+set smtp_url = "smtp://${imap_user}@smtp.office365.com:587/"
 set ssl_force_tls = yes
-set smtp_authenticators = "login"
+set smtp_authenticators=${imap_authenticators}
+set smtp_oauth_refresh_command=${imap_oauth_refresh_command}
 
 ## More settings
 
