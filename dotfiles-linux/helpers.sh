@@ -1,5 +1,8 @@
+function init_git() {
+    git config --global credential.helper store
+}
+
 function add_ppa_python () {
-    sudo apt install software-properties-common
     sudo add-apt-repository ppa:deadsnake/ppa
 }
 
@@ -14,16 +17,15 @@ function add_ppa_vim () {
 }
 
 function install_dependencies () {
-    deps=$1
-    for dep in "${deps[@]}" 
+    for dep in "$@"
     do
         sudo apt install $dep
     done
 }
 
 function install_font () {
-    wget https://download.jetbrains.com/fonts/JetBrainsMono-1.0.0.zip
-    unzip JetBrainsMono-1.0.0.zip
+    wget https://download.jetbrains.com/fonts/JetBrainsMono-1.0.0.zip -P ~/dotfiles-linux/fonts/
+    unzip ~/dotfiles-linux/fonts/JetBrainsMono-1.0.0.zip
 }
 
 function install_node_js () {

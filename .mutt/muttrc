@@ -1,39 +1,45 @@
-## Basic configuration
-
 source "~/.mutt/user"
 
-### Advanced configuration
-### YOU SHOULD NOT MODIFY THIS UNLESS YOU KNOW WHAT YOU'RE DOING
-
-# Loading language properties
-
+source "~/.mutt/aliases"
+source "~/.mutt/gal"
+source "~/.mutt/mailing_lists"
 source "~/.mutt/lang/$my_lang"
 
-## Server config
+# General
+alternative_order text/plain text/enriched text/html
+auto_view text/html
+set editor="vim"
+set index_format=" %?M?   ↳&%4C?   %Z      %D     %-15.15n    %s"
+set mail_check=90
+set pager_stop="yes"
+set reverse_alias=yes
+set reverse_name=yes
+set reverse_realname=yes
+set smart_wrap="yes"
+set sort=threads
+set sort_browser=date
+set sort_aux=reverse-last-date-received
+set timeout=15
+unset collapse_unread
+unset mark_old
 
 # IMAP config
 set imap_user="$my_username@$my_domain"
 set imap_pass=$my_password
 set imap_authenticators="oauthbearer:xoauth2"
-set imap_oauth_refresh_command="~/.mutt/scripts/mutt_oauth2.py ~/.mutt/scripts/${imap_user}.tokens"
-
-set folder="imaps://outlook.office365.com/"
-set spoolfile= +INBOX
-set postponed= +$my_drafts_noquote
-set record = +$my_sent_noquote
-set trash = +$my_trash_noquote
-mailboxes
-
-set imap_check_subscribed="yes"
-set imap_list_subscribed="yes"
-set timeout=15
-set mail_check=90
+set imap_oauth_refresh_command="python3 ~/.mutt/scripts/mutt_oauth2.py ~/.mutt/scripts/${imap_user}.tokens"
+set imap_check_subscribed="no"
+set imap_list_subscribed="no"
 set imap_keepalive=180
 set imap_idle
-unset mark_old
-set ssl_use_sslv3=yes
+set folder="imaps://${imap_user}@outlook.office365.com/"
+set spoolfile= +INBOX
+set postponed= +$my_drafts_noquote
+set record= +$my_sent_noquote
+set trash= +$my_trash_noquote
+mailboxes
 
-# lMTP config
+# SMTP config
 set realname = $my_realname
 set from = "$my_username@$my_domain"
 set smtp_pass = $my_password
@@ -42,41 +48,14 @@ set smtp_url = "smtp://${imap_user}@smtp.office365.com:587/"
 set ssl_force_tls = yes
 set smtp_authenticators=${imap_authenticators}
 set smtp_oauth_refresh_command=${imap_oauth_refresh_command}
+set ssl_use_sslv3=yes
 
-## More settings
-
-# File storage settings
-
-set signature="~/.mutt/signature"
-set message_cachedir="~/.mutt/message_cache"
-set header_cache="~/.mutt/header_cache"
-set tmpdir="~/.mutt/tmp"
-
-# Text view first
-set pager_stop="yes"
-set smart_wrap="yes"
-alternative_order text/plain
-auto_view text/html
-set reverse_name=yes
-set reverse_realname=yes
-
-# Text editor
-set editor="vim"
-
-# Adress book handling
-set sort_alias=alias
-set reverse_alias=yes
+# Paths
 set alias_file="~/.mutt/aliases"
-source "~/.mutt/gal"
-source "~/.mutt/aliases"
-source "~/.mutt/mailing_lists"
-
-# Thread ordering
-set sort = 'threads'
-set sort_browser="reverse-date"
-set sort_aux="last-date-received"
-unset collapse_unread
-set index_format=" %?M?   ↳&%4C?   %Z      %D     %-15.15n    %s"
+set header_cache="~/.mutt/header_cache"
+set message_cachedir="~/.mutt/message_cache"
+set signature="~/.mutt/signature"
+set tmpdir="~/.mutt/tmp"
 
 ## Key bindings
 
@@ -122,6 +101,5 @@ color   header      brightblue default ^Subject:
 color   body        brightred default [\-\.+_a-zA-Z0-9]+@[\-\.a-zA-Z0-9]+
 color   body        brightblue default (https?|ftp)://[\-\.,/%~_:?&=\#a-zA-Z0-9]+
 
-# For better looks
 set markers=no # don't put '+' at the beginning of wrapped lines
 set pager_index_lines= 5 # how large is the index window?
