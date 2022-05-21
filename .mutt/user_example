@@ -4,4 +4,5 @@ set my_username="john.smith"
 set my_domain="example.com"
 set my_password="This password is secure"
 set my_lang="en_US"
+set my_auth="login"
 
