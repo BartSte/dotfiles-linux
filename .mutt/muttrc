@@ -82,6 +82,9 @@ bind    pager   <delete>    delete-message
 bind    pager   k           previous-line
 bind    pager   j           next-line
 
+# Macros
+macro   index,pager A "<save-message>=ARCHIVE<enter>" "Archive Message"
+
 # Colors
 color   normal      white default
 color   attachment  brightyellow default
