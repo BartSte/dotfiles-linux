@@ -1,6 +1,5 @@
-. $HOME/dotfiles-linux/config.sh
-. $HOME/dotfiles-linux/helpers.sh
-
+. ~/dotfiles-linux/config.sh
+. ~/dotfiles-linux/helpers.sh
 
 sudo apt update
 sudo apt install software-properties-common
@@ -13,3 +12,5 @@ install_font
 install_node_js
 install_vim_plug
 build_fzf
+
+~/.mutt/main.sh
