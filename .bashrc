@@ -1,6 +1,7 @@
 # To set the cursor block to inverse (such it shows the underlying character)
 # right click on the title bar and go to Properties>Terminal>Cursor Colors>Inverse
 # colors.
+
 function get_ignored_directories() {
     readarray directories < ~/.ignore
     surround_by_quotes "${directories[@]}"
@@ -15,9 +16,9 @@ function surround_by_quotes() {
 }
 
 get_ignored_directories
-
 PROMPT_COMMAND='echo -en "\033]0;$(hostname) @ $(pwd)\a"'
-export PS1="\[$(tput sgr0)\] \[$(tput sgr0)\]\[\033[38;5;51m\]\W\[$(tput sgr0)\] \[$(tput sgr0)\]\[\033[38;5;172m\]\$(git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/(\1)/')\[$(tput sgr0)\]>\[$(tput sgr0)\]"
+export PS0="\e[2 q"
+export PS1="\[\033[38;5;201m\]\\$\[$(tput sgr0)\] \[$(tput sgr0)\]\[\033[38;5;51m\]\W\[$(tput sgr0)\] \[$(tput sgr0)\]\[\033[38;5;172m\]\$(git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/(\1)/')\[$(tput sgr0)\]>\[$(tput sgr0)\]"
 export GPG_TTY=$(tty)
 export EDITOR='vim'
 export FZF_DEFAULT_COMMAND="ag --hidden --skip-vcs-ignores --path-to-ignore $HOME/.ignore -g '' ." 
