@@ -27,7 +27,7 @@ unset mark_old
 set imap_user="$my_username@$my_domain"
 set imap_pass=$my_password
 set imap_authenticators="$my_auth"
-set imap_oauth_refresh_command="~/.mutt/authentication/mutt_oauth2.py ~/.mutt/authentication/${imap_user}.tokens"
+set imap_oauth_refresh_command="~/.mutt/mutt_oauth2.py ~/.mutt/${imap_user}.tokens"
 set imap_check_subscribed="no"
 set imap_list_subscribed="no"
 set imap_keepalive=180
