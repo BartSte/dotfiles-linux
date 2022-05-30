@@ -11,6 +11,7 @@ alias bat=batcat
 alias ps=powershell.exe
 alias ta='tmux attach'
 alias tn='tmux new'
+alias cc='clear'
 
 alias ls='ls -h --color'
 alias la='ls -A' 

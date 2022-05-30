@@ -60,7 +60,7 @@ set tmpdir="~/.mutt/tmp"
 ## Key bindings
 
 # Mailboxes
-bind    index   G  imap-fetch-mail
+bind    index   <F5> imap-fetch-mail
 bind    index   <esc>V noop
 bind    index   <esc>v noop
 bind    index   \Cn noop
