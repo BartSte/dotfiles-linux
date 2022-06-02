@@ -7,11 +7,12 @@ alias path='echo -e ${PATH//:/\\n}'
 alias base='/usr/bin/git --git-dir=$HOME/dotfiles.git/ --work-tree=$HOME'
 alias lin='/usr/bin/git --git-dir=$HOME/dotfiles-linux.git/ --work-tree=$HOME'
 
-alias bat=batcat
-alias ps=powershell.exe
+alias bat='batcat'
+alias ps='powershell.exe'
 alias ta='tmux attach'
 alias tn='tmux new'
 alias cc='clear'
+alias fd='fdfind'
 
 alias ls='ls -h --color'
 alias la='ls -A' 
