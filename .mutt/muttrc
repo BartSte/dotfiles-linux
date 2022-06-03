@@ -4,6 +4,7 @@ source "~/.mutt/aliases"
 source "~/.mutt/gal"
 source "~/.mutt/mailing_lists"
 source "~/.mutt/lang/$my_lang"
+source "~/.mutt/gruvbox/colors-gruvbox-shuber.muttrc
 
 # General
 alternative_order text/plain text/enriched text/html
@@ -123,25 +124,6 @@ macro index \'\' "<limit>~A<enter>"       "reset all limits"
 macro   index,pager y "<change-folder>?<toggle-mailboxes>" "show incoming mailboxes list"
 bind    browser y exit
 macro   index,pager A "<save-message>=ARCHIVE<enter>" "Archive Message"
-
-# Colors
-color   normal      white default
-color   attachment  brightyellow default
-color   hdrdefault  cyan default
-color   indicator   black cyan
-color   markers     brightred default
-color   quoted      green default
-color   signature   cyan default
-color   status      brightgreen blue
-color   tilde       blue default
-color   tree        red default
-color   header      brightgreen default ^From:
-color   header      brightcyan default ^To:
-color   header      brightcyan default ^Reply-To:
-color   header      brightcyan default ^Cc:
-color   header      brightblue default ^Subject:
-color   body        brightred default [\-\.+_a-zA-Z0-9]+@[\-\.a-zA-Z0-9]+
-color   body        brightblue default (https?|ftp)://[\-\.,/%~_:?&=\#a-zA-Z0-9]+
 
 set markers=no # don't put '+' at the beginning of wrapped lines
 set pager_index_lines= 5 # how large is the index window?
