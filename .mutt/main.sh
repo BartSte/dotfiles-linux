@@ -11,4 +11,9 @@ function copy_default_configs() {
     done
 }
 
+function clone_gruvbox() {
+    git clone https://git.sthu.org/repos/mutt-gruvbox.git ~/.mutt/gruvbox
+}
+
 copy_default_configs "${config_files[@]}"
+clone_gruvbox
