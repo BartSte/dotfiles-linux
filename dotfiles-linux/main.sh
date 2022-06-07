@@ -5,7 +5,7 @@ sudo apt update
 sudo apt install software-properties-common
 init_git
 add_ppa_python
-add_ppa_vim
+add_ppa_alacritty
 
 install_dependencies "${dependencies[@]}"
 install_font

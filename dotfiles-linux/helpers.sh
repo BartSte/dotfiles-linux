@@ -12,15 +12,12 @@ function download_mutt_oauth2() {
  chmod +x mutt_oauth2.py
 }
 
-function add_ppa_vim () {
-    sudo add-apt-repository ppa:jonathonf/vim
+function add_ppa_alacritty () {
+    sudo add-apt-repository ppa:aslatter/ppa
 }
 
 function install_dependencies () {
-    for dep in "$@"
-    do
-        sudo apt install $dep
-    done
+    sudo apt install "$@"
 }
 
 function install_font () {
