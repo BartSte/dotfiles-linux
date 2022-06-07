@@ -5,11 +5,24 @@ export PS1="\[\033[38;5;201m\]\\$\[$(tput sgr0)\] \[$(tput sgr0)\]\[\033[38;5;51
 export GPG_TTY=$(tty)
 export EDITOR='vim'
 
-export FZF_CTRL_T_COMMAND="fd --hidden --no-ignore-vcs --max-depth 4 --ignore-file ~/.ignore -t f '' ."
+export FZF_DEFAULT_COMMAND="fd --hidden --no-ignore-vcs --max-depth 4 --ignore-file ~/.ignore -t f '' ."
+export FZF_DEFAULT_OPTS="--height 100% --layout=reverse --border"
+
+export FZF_CTRL_T_COMMAND=$FZF_DEFAULT_COMMAND
 export FZF_CTRL_T_OPTS='--preview "batcat --style=numbers --color=always --line-range :500 {}"'
 
 export FZF_ALT_C_COMMAND="fd --hidden --no-ignore-vcs --max-depth 4 --ignore-file ~/.ignore -t d '' ."
 command -v tree > /dev/null && export FZF_ALT_C_OPTS='--preview "tree -C {} | head -200"'
 
 export FZF_COMPLETION_TRIGGER=""
-export FZF_DEFAULT_OPTS="--height 100% --layout=reverse --border"
+export FZF_COMPLETION_OPTS='--border --info=inline'
+
+_fzf_compgen_path() {
+  fd --hidden --follow --max-depth 4 --ignore-file ~/.ignore . "$1"
+}
+
+_fzf_compgen_dir() {
+  fd --type d --hidden --follow --max-depth 4 --ignore-file ~/.ignore . "$1"
+}
+
+
