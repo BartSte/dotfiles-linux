@@ -27,8 +27,8 @@ bindsym $mod+w layout tabbed
 bindsym $mod+e layout toggle split
 
 # Workspaces
-set $ws1 "1"
-set $ws2 "2"
+set $ws1 "Chat"
+set $ws2 "Mail"
 set $ws3 "Music"
 set $ws4 "Web"
 set $ws5 "5"
@@ -91,6 +91,7 @@ client.urgent           #282828 #282828 #fb4934 #282828 #282828
 client.placeholder      #282828 #282828 #ebdbb2 #282828 #282828
 
 # Run commands on startup
-exec_always --no-startup-id bash "$HOME/.config/polybar/launch.sh"
-exec_always --no-startup-id compton -b
+exec_always --no-startup-id $HOME/polybar-collection/launch.sh
 exec_always --no-startup-id feh --bg-fill "$HOME/Pictures/utrecht-netherlands-utrecht-canals-summer-178fffd1471408b4e663343fedbafb65.jpg"
+exec_always --no-startup-id picom -f
+

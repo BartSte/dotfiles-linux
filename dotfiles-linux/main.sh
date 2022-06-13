@@ -1,6 +1,5 @@
 . ~/dotfiles-linux/config.sh
 . ~/dotfiles-linux/helpers.sh
-. ~/dotfiles-linux/install_fira_sans.sh
 
 sudo apt update
 sudo apt install software-properties-common
@@ -13,6 +12,6 @@ install_font
 install_node_js
 install_vim_plug
 build_fzf
-install_fira_sans
+install_polybar_collections
 
 ~/.mutt/main.sh
