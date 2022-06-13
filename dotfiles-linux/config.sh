@@ -1,3 +1,3 @@
-dependencies=("feh" "python3.10" "python3-pip" "silversearcher-ag" "mutt" "tmux" "bat" "lynx" "make" "alacritty" "tree" "fd-find")
+dependencies=("unzip" "feh" "python3.10" "python3-pip" "silversearcher-ag" "mutt" "tmux" "bat" "lynx" "make" "alacritty" "tree" "fd-find")
 
-dependencies_extra=("xorg" "dwm" "picom" "dmenu" "nitrogen" "i3blocks")
+dependencies_extra=("scrot" "polybar" "fonts-firacode" "compton" "rofi" "fonts-font-awesome" "xorg" "i3blocks")

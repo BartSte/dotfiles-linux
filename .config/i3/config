@@ -27,12 +27,12 @@ bindsym $mod+w layout tabbed
 bindsym $mod+e layout toggle split
 
 # Workspaces
-set $ws1 "Chat"
+set $ws1 "1"
 set $ws2 "2"
 set $ws3 "Music"
-set $ws4 "Browser"
+set $ws4 "Web"
 set $ws5 "5"
-set $ws6 "Terminal"
+set $ws6 "Term"
 set $ws7 "7"
 set $ws8 "8"
 set $ws9 "9"
@@ -55,17 +55,17 @@ bindsym $mod+Shift+l move container to workspace $ws6
 bindsym $mod+Shift+u move container to workspace $ws7
 bindsym $mod+Shift+i move container to workspace $ws8
 
-assign [class="firefox"] $ws4
-assign [class="alacritty"] $ws6
+assign [class="Spotify"] workspace $ws3
+assign [class="firefox"] workspace $ws4
+assign [class="Alacritty"] workspace $ws6
 
 # Commands
-bindsym $mod+Print exec scrot -q 100 "~/Screenshots/%Y-%m-%d-%s-screenshot.png"
+bindsym $mod+Shift+s exec scrot -q 100 "~/Screenshots/%Y-%m-%d-%s-screenshot.png"
 bindsym $mod+Shift+c reload
 bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'You pressed the exit shortcut. Do you really want to exit i3? This will end your X session.' -B 'Yes, exit i3' 'i3-msg exit'"
 bindsym $mod+Shift+r restart
-bindsym $mod+d exec rofi -show run -theme gruvbox_custom -font "Iosevka 9"
-bindsym $mod+space exec --no-startup-id dmenu_run
-bindsym Mod3+F4 kill
+bindsym $mod+space exec rofi -show run -theme gruvbox_custom -font "Jetbrains Mono 10"
+bindsym Mod1+F4 kill
 
 bindsym $mod+r mode "resize"
 mode "resize" {
@@ -83,10 +83,6 @@ mode "resize" {
         bindsym $mod+r mode "default"
 }
 
-bar {
-    status_command i3status
-}
-
 # customize colors
 client.focused          #b8bb26 #b8bb26 #ebdbb2 #b8bb26 #b8bb26
 client.focused_inactive #282828 #282828 #ebdbb2 #282828 #282828
@@ -95,9 +91,6 @@ client.urgent           #282828 #282828 #fb4934 #282828 #282828
 client.placeholder      #282828 #282828 #ebdbb2 #282828 #282828
 
 # Run commands on startup
-# exec_always --no-startup-id bash /home/enindu/.config/polybar/launch.sh
-# exec_always --no-startup-id compton -b
-exec_always --no-startup-id feh --bg-fill "/home/barts/Pictures/utrecht-netherlands-utrecht-canals-summer-178fffd1471408b4e663343fedbafb65.jpg"
-# exec --no-startup-id dex --autostart --environment i3
-# exec --no-startup-id xss-lock --transfer-sleep-lock -- i3lock --nofork
-# exec --no-startup-id nm-applet
+exec_always --no-startup-id bash "$HOME/.config/polybar/launch.sh"
+exec_always --no-startup-id compton -b
+exec_always --no-startup-id feh --bg-fill "$HOME/Pictures/utrecht-netherlands-utrecht-canals-summer-178fffd1471408b4e663343fedbafb65.jpg"
