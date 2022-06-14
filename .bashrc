@@ -11,3 +11,4 @@ source ~/.bash/bindings.sh
 
 [ -f ~/.fzf.bash ] && source ~/.fzf.bash
 
+

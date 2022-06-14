@@ -24,5 +24,3 @@ _fzf_compgen_path() {
 _fzf_compgen_dir() {
   fd --type d --hidden --follow --max-depth 4 --ignore-file ~/.ignore . "$1"
 }
-
-
