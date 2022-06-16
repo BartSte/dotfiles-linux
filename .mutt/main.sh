@@ -17,3 +17,5 @@ function clone_gruvbox() {
 
 copy_default_configs "${config_files[@]}"
 clone_gruvbox
+
+#TODO: automate toke authorization? Store sensitive info in a private repo.

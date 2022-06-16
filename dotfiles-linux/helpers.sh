@@ -39,3 +39,12 @@ function build_fzf () {
     ~/.vim/plugged/fzf/install --all
 }
 
+function install_polybar_collections() {
+    git clone https://github.com/BartSte/polybar-collection ~/polybar-collection
+    git switch develop
+    git pull
+    cp ~/polybar-collection/fonts ~/.fonts
+    cd ~/.fonts
+    fc-cache -fv
+    ~
+}

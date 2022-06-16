@@ -18,11 +18,9 @@ export FZF_COMPLETION_TRIGGER=""
 export FZF_COMPLETION_OPTS='--border --info=inline'
 
 _fzf_compgen_path() {
-  fd --hidden --follow --max-depth 4 --ignore-file ~/.ignore . "$1"
+  fdfind --hidden --follow --max-depth 4 --ignore-file ~/.ignore . "$1"
 }
 
 _fzf_compgen_dir() {
-  fd --type d --hidden --follow --max-depth 4 --ignore-file ~/.ignore . "$1"
+  fdfind --type d --hidden --follow --max-depth 4 --ignore-file ~/.ignore . "$1"
 }
-
-
