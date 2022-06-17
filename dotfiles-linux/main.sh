@@ -15,3 +15,5 @@ build_fzf
 install_polybar_collections
 
 ~/.mutt/main.sh
+
+#TODO add /bin/firefox that has a different value for wsl vs linux
