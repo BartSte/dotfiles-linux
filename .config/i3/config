@@ -97,4 +97,4 @@ client.placeholder      #282828 #282828 #ebdbb2 #282828 #282828
 # Run commands on startup
 exec_always --no-startup-id $HOME/polybar-collection/launch.sh
 exec_always --no-startup-id feh --bg-fill "$HOME/dotfiles/wallpapers/DSC_0058.jpeg"
-exec --no-startup-id picom -f --xrender-fence
+exec_always --no-startup-id picom -f
