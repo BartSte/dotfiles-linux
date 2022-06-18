@@ -95,7 +95,7 @@ bind pager G bottom
 bind alias,index,browser,query gg first-entry
 bind pager gg top
 
-bind index,pager A create-alias
+bind index,pager S create-alias
 bind index,pager a group-reply
 
 bind alias,index,pager,browser,query \Cd half-down
@@ -124,6 +124,8 @@ macro index \'\' "<limit>~A<enter>"       "reset all limits"
 macro   index,pager y "<change-folder>?<toggle-mailboxes>" "show incoming mailboxes list"
 bind    browser y exit
 macro   index,pager A "<save-message>=ARCHIVE<enter>" "Archive Message"
+macro index,pager U "<enter-command>set pipe_decode = yes<enter><pipe-message>urlview<enter><enter-command>set pipe_decode = no<enter>""view URLs"
+
 
 set markers=no # don't put '+' at the beginning of wrapped lines
 set pager_index_lines= 5 # how large is the index window?
