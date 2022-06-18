@@ -48,3 +48,15 @@ function install_polybar_collections() {
     fc-cache -fv
     ~
 }
+
+function copy_win_firefox_to_binaries() {
+    sudo cp ~/dotfiles-linux/firefox_win /usr/bin/firefox --no-clobber
+}
+
+function running_wsl() {
+    if grep -q microsoft /proc/version; then
+        true
+    else
+        false
+    fi
+}

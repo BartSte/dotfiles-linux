@@ -8,7 +8,7 @@ REGEXP (((http|https|ftp|gopher)|mailto):(//)?[^ <>"\t]*|(www|ftp)[0-9]?\.[-a-z0
 # command to invoke for selected URL
 # COMMAND /etc/urlview/url_handler.sh
 # COMMAND /mnt/c/Program\ Files/Mozilla\ Firefox/firefox.exe %s
-COMMAND /bin/bash /bin/firefox %s
+COMMAND /usr/bin/firefox %s
 
 # set to yes to enable menu wrapping
 #WRAP Yes

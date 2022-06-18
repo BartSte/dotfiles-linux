@@ -16,4 +16,6 @@ install_polybar_collections
 
 ~/.mutt/main.sh
 
-#TODO add /bin/firefox that has a different value for wsl vs linux
+if running_wsl; then
+    copy_win_firefox_to_binaries
+fi
