@@ -21,8 +21,8 @@ function install_dependencies () {
 }
 
 function install_font () {
-    wget https://download.jetbrains.com/fonts/JetBrainsMono-1.0.0.zip -P ~/dotfiles-linux/fonts/
-    unzip ~/dotfiles-linux/fonts/JetBrainsMono-1.0.0.zip
+    unzip -u ~/dotfiles-linux/fonts/JetBrainsMono-1.0.0.zip -d ~/.fonts
+    fc-cache -fv
 }
 
 function install_node_js () {
@@ -59,4 +59,8 @@ function running_wsl() {
     else
         false
     fi
+}
+
+function set_time_zone() {
+    sudo timedatectl set-timezone $1
 }

@@ -13,6 +13,7 @@ install_node_js
 install_vim_plug
 build_fzf
 install_polybar_collections
+set_time_zone $time_zone
 
 ~/.mutt/main.sh
 
