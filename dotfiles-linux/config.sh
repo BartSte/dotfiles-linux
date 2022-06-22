@@ -1,3 +1,4 @@
 dependencies=("xev" "urlview" "gnupg-agent" "unzip" "feh" "python3.10" "python3-pip" "silversearcher-ag" "mutt" "tmux" "bat" "lynx" "make" "alacritty" "tree" "fd-find")
-dependencies_extra=("xbacklight" "pulseaudio" "scrot" "polybar" "fonts-firacode" "picom" "rofi" "fonts-font-awesome" "xorg" "i3blocks")
+dependencies_snap=("whatsapp-4linux" "firefox" "spotify")
+dependencies_extra=("pulseaudio-module-bluetooth" "pavucontrol" "xbacklight" "pulseaudio" "scrot" "polybar" "picom" "rofi" "xorg")
 time_zone="Europe/Amsterdam"
