@@ -1,9 +1,9 @@
 configuration {
-	display-drun:   "Activate";
-	display-run:    "Execute";
-	display-window: "Window";
-	show-icons:     false;
-	sidebar-mode:   true;
+	/* display-drun:   "Activate"; */
+	/* display-run:    "Execute"; */
+	/* display-window: "Window"; */
+	show-icons:     true;
+	/* sidebar-mode:   false; */
 }
 
 * {
@@ -38,17 +38,17 @@ configuration {
 }
 
 window {
-	location:	 west;
-	anchor:		 west;
-	height:		 100%;
-	width:		 15%;
-	orientation: horizontal;
+	/* location:	 west; */
+	/* anchor:		 west; */
+	/* height:		 100%; */
+	/* width:		 15%; */
+	/* orientation: horizontal; */
 	children:	 [mainbox];
 }
 
 mainbox {
 	spacing:  0.5em;
-	children: [entry,listview,mode-switcher];
+	children: [entry,listview];
 }
 
 button {
