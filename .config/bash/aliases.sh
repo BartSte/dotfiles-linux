@@ -12,6 +12,7 @@ alias ta='tmux attach'
 alias tn='tmux new'
 alias cc='clear'
 alias fd='fdfind'
+alias tp='trash-put'
 
 alias ls='ls -h --color'
 alias la='ls -A' 
