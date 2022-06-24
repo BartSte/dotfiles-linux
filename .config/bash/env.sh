@@ -9,10 +9,11 @@ export FZF_DEFAULT_COMMAND="fd --hidden --no-ignore-vcs --max-depth 4 --ignore-f
 export FZF_DEFAULT_OPTS="--height 100% --layout=reverse --border"
 
 export FZF_CTRL_T_COMMAND=$FZF_DEFAULT_COMMAND
-export FZF_CTRL_T_OPTS='--preview "batcat --style=numbers --color=always --line-range :500 {}"'
+export FZF_CTRL_T_OPTS='--preview "batcat --theme=gruvbox-dark --style=numbers --color=always --line-range :500 {}"'
 
 export FZF_ALT_C_COMMAND="fd --hidden --no-ignore-vcs --max-depth 4 --ignore-file ~/.ignore -t d '' ."
-command -v tree > /dev/null && export FZF_ALT_C_OPTS='--preview "tree -C {} | head -200"'
+# command -v tree > /dev/null && export FZF_ALT_C_OPTS='--preview "tree -C {} | head -200"'
+command -v exa > /dev/null && export FZF_ALT_C_OPTS='--preview "exa --icons -T -a {} | head -200"'
 
 export FZF_COMPLETION_TRIGGER=""
 export FZF_COMPLETION_OPTS='--border --info=inline'

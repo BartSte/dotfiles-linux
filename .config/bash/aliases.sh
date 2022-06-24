@@ -14,8 +14,8 @@ alias cc='clear'
 alias fd='fdfind'
 alias tp='trash-put'
 
-alias ls='ls -h --color'
-alias la='ls -A' 
-alias ll='ls -l'
-alias lal='ls -Al'
+alias ls='exa -h --icons'
+alias lsa='exa -ah --icons'
+alias ll='exa -hal --no-permissions --no-user --icons'
+alias la='exa -hal --no-permissions --no-user --icons' 
 
