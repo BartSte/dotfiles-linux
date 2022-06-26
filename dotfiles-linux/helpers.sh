@@ -22,7 +22,7 @@ function install_dependencies () {
 }
 
 function install_font () {
-    unzip -u ~/dotfiles-linux/fonts/JetBrainsMono.zip -d ~/.fonts
+    unzip -u ~/dotfiles/fonts/JetBrainsMono.zip -d ~/.fonts
     fc-cache -fv
 }
 

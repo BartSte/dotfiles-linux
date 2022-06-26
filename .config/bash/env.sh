@@ -5,7 +5,7 @@ export PS1="\\$ \[$(tput sgr0)\]\[\033[38;5;14m\]\W\[$(tput sgr0)\] \[$(tput sgr
 export GPG_TTY=$(tty)
 export EDITOR='vim'
 
-export FZF_DEFAULT_COMMAND="fd --hidden --no-ignore-vcs --max-depth 4 --ignore-file ~/.ignore -t f '' ."
+export FZF_DEFAULT_COMMAND="fd --hidden --no-ignore-vcs --max-depth 4 --ignore-file ~/.ignore '' ."
 export FZF_DEFAULT_OPTS="--height 100% --layout=reverse --border"
 
 export FZF_CTRL_T_COMMAND=$FZF_DEFAULT_COMMAND
