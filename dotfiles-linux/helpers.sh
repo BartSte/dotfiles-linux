@@ -1,3 +1,4 @@
+#!/bin/bash
 function init_git() {
     git config --global credential.helper store
 }
@@ -21,7 +22,7 @@ function install_dependencies () {
 }
 
 function install_font () {
-    unzip -u ~/dotfiles-linux/fonts/JetBrainsMono-1.0.0.zip -d ~/.fonts
+    unzip -u ~/dotfiles-linux/fonts/JetBrainsMono.zip -d ~/.fonts
     fc-cache -fv
 }
 
