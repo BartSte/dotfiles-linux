@@ -1,6 +1,5 @@
 if grep -q microsoft /proc/version; then
     source ~/.config/bash/wsl.sh
-    clear
 fi
 
 source ~/.config/bash/env.sh

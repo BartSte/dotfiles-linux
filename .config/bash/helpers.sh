@@ -14,6 +14,9 @@ function surround_by_quotes() {
 }
 
 function winenv() {
+    cwd=$pwd
+    cd /mnt/c
     cmd.exe /C "echo %$*%" | tr -d '\r'
+    cd $cwd
 }
 
