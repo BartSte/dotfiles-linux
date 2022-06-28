@@ -8,8 +8,7 @@ application/x-pdf; pdftotext -layout %s -; copiousoutput
 application/x-bzpdf; pdftotext -layout %s -; copiousoutput
 application/x-gzpdf; pdftotext -layout %s -; copiousoutput
 
-image/*; feh -x '%s'; test=test -n "$DISPLAY"
-# image/*; cacaview %s; needsterminal
+image/*; feh %s
 
 application/msword; antiword -w 96 %s; copiousoutput
 application/vnd.openxmlformats-officedocument.wordprocessingml.document; docx2txt < %s -; copiousoutput
