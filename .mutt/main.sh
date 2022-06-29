@@ -15,7 +15,13 @@ function clone_gruvbox() {
     git clone https://git.sthu.org/repos/mutt-gruvbox.git ~/.mutt/gruvbox
 }
 
+function make_html_viewer_executable() {
+    sudo cp ~/.mutt/viewhtmlmail.py /usr/bin/viewhtmlmail --no-clobber
+    sudo chmod +x /usr/bin/viewhtmlmail
+}
+
 copy_default_configs "${config_files[@]}"
 clone_gruvbox
+make_html_viewer_executable
 
 #TODO: automate toke authorization? Store sensitive info in a private repo.
