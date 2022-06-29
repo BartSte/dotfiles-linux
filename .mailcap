@@ -1,4 +1,5 @@
 text/html; lynx -assume_charset=%{charset} -display_charset=utf-8 -collapse_br_tags -dump %s; nametemplate=%s.html; copiousoutput
+text/html; /usr/bin/firefox_norace %s
 
 application/gpg; gpg -d %s; copiousoutput
 

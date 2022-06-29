@@ -1,0 +1,7 @@
+#!/bin/sh
+
+file="$1"
+tmpfile="$(mktemp --suffix=.html -p ~/tmp)"
+cp "$file" "$tmpfile"
+firefox "$tmpfile"
+echo $tmpfile
