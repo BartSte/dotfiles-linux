@@ -20,3 +20,5 @@ set_time_zone $time_zone
 if running_wsl; then
     copy_win_firefox_to_binaries
 fi
+
+copy_firefeh_to_bin

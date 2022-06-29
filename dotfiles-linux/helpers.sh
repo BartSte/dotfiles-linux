@@ -54,6 +54,11 @@ function copy_win_firefox_to_binaries() {
     sudo cp ~/dotfiles-linux/firefox_win /usr/bin/firefox --no-clobber
 }
 
+function copy_firefeh_to_bin() {
+    sudo cp ~/dotfiles-linux/firefeh /usr/bin/firefeh --no-clobber
+    sudo chmod +x /usr/bin/firefeh
+}
+
 function running_wsl() {
     if grep -q microsoft /proc/version; then
         true
