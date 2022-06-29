@@ -7,7 +7,6 @@ source "~/.mutt/lang/$my_lang"
 source "~/.mutt/gruvbox/colors-gruvbox-shuber.muttrc
 
 # General
-alternative_order text/plain text/enriched text/html
 auto_view text/html
 set editor="vim"
 set index_format=" %?M?   ↳&%4C?   %Z      %D     %-15.15n    %s"
@@ -123,8 +122,8 @@ macro index \'\' "<limit>~A<enter>"       "reset all limits"
 # Macros
 macro   index,pager y "<change-folder>?<toggle-mailboxes>" "show incoming mailboxes list"
 bind    browser y exit
-macro   index,pager A "<save-message>=ARCHIVE<enter>" "Archive Message"
-macro index,pager U "<enter-command>set pipe_decode = yes<enter><pipe-message>urlview<enter><enter-command>set pipe_decode = no<enter>""view URLs"
+macro  index,pager A "<save-message>=ARCHIVE<enter>" "Archive Message"
+macro  index,pager U "<enter-command>set pipe_decode = yes<enter><pipe-message>urlview<enter><enter-command>set pipe_decode = no<enter>""view URLs"
 macro  index  <F10>  "<pipe-message>/usr/bin/viewhtmlmail\n" "View HTML in browser"
 macro  pager  <F10>  "<pipe-message>/usr/bin/viewhtmlmail\n" "View HTML in browser"
 

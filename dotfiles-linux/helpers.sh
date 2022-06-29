@@ -52,6 +52,7 @@ function install_polybar_collections() {
 
 function copy_win_firefox_to_binaries() {
     sudo cp ~/dotfiles-linux/firefox_win /usr/bin/firefox --no-clobber
+    sudo chmod +x /usr/bin/firefox
 }
 
 function copy_firefeh_to_bin() {
