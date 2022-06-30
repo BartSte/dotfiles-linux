@@ -126,8 +126,8 @@ macro   index,pager y "<change-folder>?<toggle-mailboxes>" "show incoming mailbo
 bind    browser y exit
 macro  index,pager A "<save-message>=ARCHIVE<enter>" "Archive Message"
 macro  index,pager U "<enter-command>set pipe_decode = yes<enter><pipe-message>urlview<enter><enter-command>set pipe_decode = no<enter>""view URLs"
-macro  index  <F10>  "<pipe-message>/usr/bin/viewhtmlmail\n" "View HTML in browser"
-macro  pager  <F10>  "<pipe-message>/usr/bin/viewhtmlmail\n" "View HTML in browser"
+macro attach B "<pipe-message>cat > ~/tmp/mutt.html; firefox_norace ~/tmp/mutt.html<enter>"
+
 
 set markers=no # don't put '+' at the beginning of wrapped lines
 set pager_index_lines= 5 # how large is the index window?
