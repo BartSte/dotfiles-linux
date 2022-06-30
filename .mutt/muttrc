@@ -8,6 +8,7 @@ source "~/.mutt/gruvbox/colors-gruvbox-shuber.muttrc
 
 # General
 auto_view text/html
+alternative_order text/plain text/html
 set editor="vim"
 set index_format=" %?M?   ↳&%4C?   %Z      %D     %-15.15n    %s"
 set mail_check=90
@@ -22,6 +23,7 @@ set sort_aux=reverse-last-date-received
 set timeout=15
 unset collapse_unread
 unset mark_old
+set mailcap_path = ~/.mutt/mailcap
 
 # IMAP config
 set imap_user="$my_username@$my_domain"
