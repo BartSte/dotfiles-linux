@@ -122,14 +122,12 @@ macro index \'u  "<limit>!~Q<enter>"      "limit to unreplied messages"
 macro index \'\' "<limit>~A<enter>"       "reset all limits"
 
 # Macros
-macro   index,pager y "<change-folder>?<toggle-mailboxes>" "show incoming mailboxes list"
-bind    browser y exit
-macro  index,pager A "<save-message>=ARCHIVE<enter>" "Archive Message"
-macro  index,pager U "<enter-command>set pipe_decode = yes<enter><pipe-message>urlview<enter><enter-command>set pipe_decode = no<enter>""view URLs"
-# macro attach B "<pipe-message>cat > ~/tmp/mutt.html; firefox_norace ~/tmp/mutt.html<enter>"
+macro index,pager y "<change-folder>?<toggle-mailboxes>" "show incoming mailboxes list"
+macro index,pager A "<save-message>=ARCHIVE<enter>" "Archive Message"
+macro index,pager U "<enter-command>set pipe_decode = yes<enter><pipe-message>urlview<enter><enter-command>set pipe_decode = no<enter>""view URLs"
 macro attach B "<pipe-entry>iconv -c --to-code=UTF8 > $tmpdir/mail.html<enter><shell-escape>firefox $tmpdir/mail.html<enter>"
 
 
-
+bind browser y exit
 set markers=no # don't put '+' at the beginning of wrapped lines
 set pager_index_lines= 5 # how large is the index window?
