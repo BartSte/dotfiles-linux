@@ -127,7 +127,7 @@ bind    browser y exit
 macro  index,pager A "<save-message>=ARCHIVE<enter>" "Archive Message"
 macro  index,pager U "<enter-command>set pipe_decode = yes<enter><pipe-message>urlview<enter><enter-command>set pipe_decode = no<enter>""view URLs"
 # macro attach B "<pipe-message>cat > ~/tmp/mutt.html; firefox_norace ~/tmp/mutt.html<enter>"
-macro attach B "<pipe-entry>iconv -c --to-code=UTF8 > ~/mail.html<enter><shell-escape>firefox ~/mail.html<enter>"
+macro attach B "<pipe-entry>iconv -c --to-code=UTF8 > $tmpdir/mail.html<enter><shell-escape>firefox $tmpdir/mail.html<enter>"
 
 
 
