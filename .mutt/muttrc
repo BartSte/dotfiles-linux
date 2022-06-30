@@ -23,7 +23,6 @@ set sort_aux=reverse-last-date-received
 set timeout=15
 unset collapse_unread
 unset mark_old
-set mailcap_path = ~/.mutt/mailcap
 
 # IMAP config
 set imap_user="$my_username@$my_domain"
@@ -58,6 +57,7 @@ set header_cache="~/.mutt/header_cache"
 set message_cachedir="~/.mutt/message_cache"
 set signature="~/.mutt/signature"
 set tmpdir="~/.mutt/tmp"
+set mailcap_path = "~/.mutt/mailcap"
 
 ## Key bindings
 
@@ -126,7 +126,9 @@ macro   index,pager y "<change-folder>?<toggle-mailboxes>" "show incoming mailbo
 bind    browser y exit
 macro  index,pager A "<save-message>=ARCHIVE<enter>" "Archive Message"
 macro  index,pager U "<enter-command>set pipe_decode = yes<enter><pipe-message>urlview<enter><enter-command>set pipe_decode = no<enter>""view URLs"
-macro attach B "<pipe-message>cat > ~/tmp/mutt.html; firefox_norace ~/tmp/mutt.html<enter>"
+# macro attach B "<pipe-message>cat > ~/tmp/mutt.html; firefox_norace ~/tmp/mutt.html<enter>"
+macro attach B "<pipe-entry>iconv -c --to-code=UTF8 > ~/mail.html<enter><shell-escape>firefox ~/mail.html<enter>"
+
 
 
 set markers=no # don't put '+' at the beginning of wrapped lines
