@@ -54,7 +54,7 @@ set alias_file="~/.mutt/aliases"
 set header_cache="~/.mutt/header_cache"
 set message_cachedir="~/.mutt/message_cache"
 set signature="~/.mutt/signature"
-set tmpdir="~/.mutt/tmp"
+set tmpdir="~/tmp"
 set mailcap_path = "~/.mutt/mailcap"
 
 ## Key bindings
