@@ -8,7 +8,7 @@ auto_view text/html
 alternative_order text/plain text/html
 set editor="vim"
 set index_format=" %?M?   ↳&%4C?   %Z      %D     %-15.15n    %s"
-set mail_check=90
+set mail_check=120
 set pager_stop="yes"
 set reverse_alias=yes
 set reverse_name=yes
@@ -28,16 +28,15 @@ set imap_user="$MUTT_USERNAME@$MUTT_DOMAIN"
 set imap_pass=$MUTT_PASSWORD
 set imap_authenticators="$MUTT_AUTH"
 set imap_oauth_refresh_command="python3 ~/.mutt/mutt_oauth2.py ~/.mutt/${imap_user}.tokens"
-set imap_check_subscribed="no"
-set imap_list_subscribed="no"
-set imap_keepalive=180
+set imap_keepalive=300
 set imap_idle
 set folder="imaps://${imap_user}@outlook.office365.com/"
 set spoolfile= +INBOX
 set postponed= +$my_drafts_noquote
 set record= +$my_sent_noquote
 set trash= +$my_trash_noquote
-mailboxes
+mailboxes =INBOX =$my_drafts_noquote =$my_sent_noquote =$my_trash_noquote =ARCHIVE
+unset imap_passive
 
 # SMTP config
 set realname = $MUTT_REALNAME
