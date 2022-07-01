@@ -1,9 +1,6 @@
-source "~/.mutt/user"
-
 source "~/.mutt/aliases"
-source "~/.mutt/gal"
 source "~/.mutt/mailing_lists"
-source "~/.mutt/lang/$my_lang"
+source "~/.mutt/lang/$MUTT_LANG"
 source "~/.mutt/gruvbox/colors-gruvbox-shuber.muttrc
 
 # General
@@ -23,11 +20,13 @@ set sort_aux=reverse-last-date-received
 set timeout=15
 unset collapse_unread
 unset mark_old
+bind index - collapse-thread
+bind index _ collapse-all
 
 # IMAP config
-set imap_user="$my_username@$my_domain"
-set imap_pass=$my_password
-set imap_authenticators="$my_auth"
+set imap_user="$MUTT_USERNAME@$MUTT_DOMAIN"
+set imap_pass=$MUTT_PASSWORD
+set imap_authenticators="$MUTT_AUTH"
 set imap_oauth_refresh_command="python3 ~/.mutt/mutt_oauth2.py ~/.mutt/${imap_user}.tokens"
 set imap_check_subscribed="no"
 set imap_list_subscribed="no"
@@ -41,10 +40,10 @@ set trash= +$my_trash_noquote
 mailboxes
 
 # SMTP config
-set realname = $my_realname
-set from = "$my_username@$my_domain"
-set smtp_pass = $my_password
-set hostname = $my_domain
+set realname = $MUTT_REALNAME
+set from = "$MUTT_USERNAME@$MUTT_DOMAIN"
+set smtp_pass = $MUTT_PASSWORD
+set hostname = $MUTT_DOMAIN
 set smtp_url = "smtp://${imap_user}@smtp.office365.com:587/"
 set ssl_force_tls = yes
 set smtp_authenticators=${imap_authenticators}
