@@ -18,6 +18,6 @@ alias remove='/usr/bin/rm'
 
 alias ls='exa -h --icons'
 alias lsa='exa -ah --icons'
-alias ll='exa -hal --no-permissions --no-user --icons'
-alias la='exa -hal --no-permissions --no-user --icons' 
+alias ll='exa -hal --icons'
+alias la='exa -hal --icons' 
 
