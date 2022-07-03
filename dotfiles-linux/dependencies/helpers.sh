@@ -1,15 +1,19 @@
 function add_ppa_python () {
-    sudo add-apt-repository ppa:deadsnake/ppa
+    echo "Add ppa python"
+    sudo add-apt-repository ppa:deadsnake/ppa -y
 }
 
 function add_ppa_alacritty () {
-    sudo add-apt-repository ppa:aslatter/ppa
+    echo "Add ppa alacritty"
+    sudo add-apt-repository ppa:aslatter/ppa -y
 }
 
 function install_node_js () {
-    curl -sL install-node.vercel.app/lts | sudo bash
+    echo "Install node.jf"
+    sudo bash -c "$(curl -sL install-node.vercel.app/lts)" -y -f
 }
 
 function install_dependencies () {
-    sudo apt install "$@"
+    echo "Install apt dependencies"
+    sudo apt install "$@" -y
 }
