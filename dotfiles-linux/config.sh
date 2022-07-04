@@ -1,4 +1,8 @@
-dependencies=("software-properties-common" "exa" "trash-cli" "urlview" "gnupg-agent" "unzip" "feh" "python3.10" "python3-pip" "silversearcher-ag" "mutt" "tmux" "bat" "lynx" "make" "alacritty" "tree" "fd-find" "poppler-utils" "antiword" "odt2txt" "tar" "p7zip-full" "unzip" "fuse" "libfuse2")
-dependencies_snap=("firefox" "whatsapp-4linux" "spotify")
-dependencies_extra=("pulseaudio-module-bluetooth" "pavucontrol" "xbacklight" "pulseaudio" "scrot" "polybar" "picom" "rofi" "xorg")
-
+export GIT_NAME="jsmith"
+export TIME_ZONE="Europe/Amsterdam"
+export MUTT_REALNAME="John Smith"
+export MUTT_USERNAME="j.smith"
+export MUTT_DOMAIN="@outlook.com"
+export MUTT_PASSWORD="Foo"
+export MUTT_LANG="nl_NL"
+export MUTT_AUTH="login"

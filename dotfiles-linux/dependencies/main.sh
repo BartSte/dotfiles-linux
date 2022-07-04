@@ -1,5 +1,5 @@
 . ~/dotfiles-linux/dependencies/helpers.sh
-. ~/dotfiles-linux/config.sh
+. ~/dotfiles-linux/dependencies/deps.sh
 
 echo "# Dependencies"
 sudo apt update -y
