@@ -1,4 +1,3 @@
-source "~/.mutt/aliases"
 source "~/.mutt/lang/$MUTT_LANG"
 source "~/.mutt/gruvbox/colors-gruvbox-shuber.muttrc
 
@@ -49,10 +48,10 @@ set smtp_oauth_refresh_command=${imap_oauth_refresh_command}
 set ssl_use_sslv3=yes
 
 # Paths
-set alias_file="~/.mutt/aliases"
+set alias_file=$MUTT_ALIASES
 set header_cache="~/.mutt/header_cache"
 set message_cachedir="~/.mutt/message_cache"
-set signature="~/.mutt/signature"
+set signature=$MUTT_SIGNATURE
 set tmpdir="~/tmp"
 set mailcap_path = "~/.mutt/mailcap"
 
