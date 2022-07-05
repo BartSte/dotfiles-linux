@@ -1,3 +1,2 @@
 #!/usr/bin/bash
-win_path=$(wslpath -w $1)
-/mnt/c/Program\ Files/Mozilla\ Firefox/firefox.exe $win_path
+/mnt/c/Program\ Files/Mozilla\ Firefox/firefox.exe $@

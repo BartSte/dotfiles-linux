@@ -9,7 +9,7 @@ function add_ppa_alacritty () {
 }
 
 function install_node_js () {
-    echo "Install node.jf"
+    echo "Install node.js"
     sudo bash -c "$(curl -sL install-node.vercel.app/lts)" -y -f
 }
 

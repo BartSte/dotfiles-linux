@@ -1,11 +1,9 @@
 #!/usr/bin/bash
 
 # Choose firefox when running wsl, otherwise choose feh.
-
-. ~/dotfiles-linux/helpers.sh
-
 if running_wsl; then
-    /usr/bin/firefox $@
+    [ ! -z "$1" ] && win_path=$(wslpath -w $1)
+    /usr/bin/firefox $win_path
 else
     /usr/bin/feh $@
 fi
