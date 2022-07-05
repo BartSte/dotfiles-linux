@@ -1,5 +1,4 @@
 source "~/.mutt/aliases"
-source "~/.mutt/mailing_lists"
 source "~/.mutt/lang/$MUTT_LANG"
 source "~/.mutt/gruvbox/colors-gruvbox-shuber.muttrc
 
