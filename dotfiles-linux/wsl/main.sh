@@ -2,5 +2,5 @@
 
 echo "# WSL"
 enable_running_wsl
-copy_win_firefox_to_binaries
+running_wsl && enable_firefox_win
 

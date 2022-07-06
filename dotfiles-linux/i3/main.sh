@@ -1,4 +1,4 @@
-. ~/dotfiles-linux/config.sh
+. ~/dotfiles-linux/dependencies/deps.sh
 . ~/dotfiles-linux/dependencies/helpers.sh
 
 function install_polybar_collections() {
@@ -17,8 +17,12 @@ function set_time_zone() {
     sudo timedatectl set-timezone $1
 }
 
+running_wsl && return
+
 echo "# I3 window manager"
 install_polybar_collections 
 set_time_zone $TIME_ZONE
 install_dependencies "${dependencies_extra[@]}"
-sudo snap install "${dependencies_snap[@]}"
+for package in "${dependencies_snap[@]}"; do
+    sudo snap install $package
+done

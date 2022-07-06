@@ -1,9 +1,2 @@
 #!/usr/bin/bash
-
-function running_wsl() {
-    if grep -q microsoft /proc/version; then
-        true
-    else
-        false
-    fi
-}
+[[ $(grep -i microsoft /proc/version) ]]

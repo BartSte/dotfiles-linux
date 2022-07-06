@@ -4,7 +4,7 @@ function enable_running_wsl () {
     sudo chmod u+x /usr/bin/running_wsl
 }
 
-function copy_win_firefox_to_binaries() {
+function enable_firefox_win() {
     echo "Use windows's firefox for linux"
     sudo cp ~/dotfiles-linux/wsl/firefox_win /usr/bin/firefox
     sudo chmod +x /usr/bin/firefox
