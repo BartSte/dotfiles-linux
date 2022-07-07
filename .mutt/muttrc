@@ -121,7 +121,7 @@ macro index \'\' "<limit>~A<enter>"       "reset all limits"
 macro index,pager y "<change-folder>?<toggle-mailboxes>" "show incoming mailboxes list"
 macro index,pager A "<save-message>=ARCHIVE<enter>" "Archive Message"
 macro index,pager U "<enter-command>set pipe_decode = yes<enter><pipe-message>urlview<enter><enter-command>set pipe_decode = no<enter>""view URLs"
-macro attach B "<pipe-entry>iconv -c --to-code=UTF8 > $tmpdir/mail.html<enter><shell-escape>firefox $tmpdir/mail.html<enter>"
+macro attach B "<pipe-entry>iconv -c --to-code=UTF8 > $tmpdir/mail.html<enter><shell-escape>/usr/bin/firefox $tmpdir/mail.html<enter>"
 
 
 bind browser y exit
