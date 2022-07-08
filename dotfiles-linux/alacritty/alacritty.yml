@@ -2,4 +2,6 @@ window:
   opacity: 0.85
 
 font:
-  size: 9.0
+  size: 11.0
+
+decorations: none
