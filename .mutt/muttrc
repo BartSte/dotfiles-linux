@@ -25,7 +25,7 @@ bind index _ collapse-all
 set imap_user="$MUTT_USERNAME@$MUTT_DOMAIN"
 set imap_pass=$MUTT_PASSWORD
 set imap_authenticators="$MUTT_AUTH"
-set imap_oauth_refresh_command="python3 ~/.mutt/mutt_oauth2.py ~/.mutt/${imap_user}.tokens"
+set imap_oauth_refresh_command="python3 ~/dotfiles-linux/mutt_oauth2.py ~/.mutt/${imap_user}.tokens"
 set imap_keepalive=300
 set imap_idle
 set folder="imaps://${imap_user}@outlook.office365.com/"
@@ -53,7 +53,7 @@ set header_cache="~/.mutt/header_cache"
 set message_cachedir="~/.mutt/message_cache"
 set signature=$MUTT_SIGNATURE
 set tmpdir="~/tmp"
-set mailcap_path = "~/.mutt/mailcap"
+set mailcap_path = "~/dotfiles-linux/mailcap"
 
 ## Key bindings
 
