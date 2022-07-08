@@ -1,3 +1,9 @@
 #!/usr/bin/bash
-path=$(wslpath -w $@)
-/mnt/c/Program\ Files/Mozilla\ Firefox/firefox.exe $path
+if curl --head --silent --fail $1 2> /dev/null;
+ then
+    /mnt/c/Program\ Files/Mozilla\ Firefox/firefox.exe $1
+ else
+    /mnt/c/Program\ Files/Mozilla\ Firefox/firefox.exe $(wslpath -w $1)
+fi
+
+
