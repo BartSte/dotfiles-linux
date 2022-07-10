@@ -3,7 +3,7 @@
 # Choose firefox when running wsl, otherwise choose feh.
 if running_wsl; then
     cp $1 ~/tmp/image
-    /usr/bin/firefox ~/tmp/image
+    firefox ~/tmp/image
 else
-    /usr/bin/feh $@
+    feh ~/tmp/image
 fi
