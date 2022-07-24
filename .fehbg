@@ -1,0 +1,2 @@
+#!/bin/sh
+feh --no-fehbg --bg-fill '/home/barts/dotfiles/wallpapers/namibia_dune.jpeg' 
