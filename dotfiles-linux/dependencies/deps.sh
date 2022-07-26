@@ -1,4 +1,10 @@
-dependencies=("python3-venv" "python-is-python3" "markdown" "software-properties-common" "fonts-powerline" "exa" "trash-cli" "urlview" "gnupg-agent" "unzip" "feh" "python3.10" "python3-pip" "silversearcher-ag" "mutt" "tmux" "bat" "lynx" "make" "alacritty" "tree" "fd-find" "poppler-utils" "antiword" "odt2txt" "tar" "p7zip-full" "unzip" "fuse" "libfuse2")
-dependencies_snap=("firefox" "whatsapp-4linux" "spotify")
-dependencies_extra=("pulseaudio-module-bluetooth" "pavucontrol" "xbacklight" "pulseaudio" "scrot" "polybar" "picom" "rofi" "xorg")
+# dependencies=("python3-venv" "python-is-python3" "markdown" "software-properties-common" "fonts-powerline" "exa" "trash-cli" "urlview" "gnupg-agent" "unzip" "feh" "python3.10" "python3-pip" "silversearcher-ag" "mutt" "tmux" "bat" "lynx" "make" "alacritty" "tree" "fd-find" "poppler-utils" "antiword" "odt2txt" "tar" "p7zip-full" "unzip" "fuse" "libfuse2")
+# dependencies_extra=("pulseaudio-module-bluetooth" "pavucontrol" "xbacklight" "pulseaudio" "scrot" "polybar" "picom" "rofi" "xorg")
+
+dependencies=("python" "python-markdown" "powerline-fonts" "exa" "trash-cli" "unzip" "feh" "python-pip" "the_silver_searcher" "mutt" "tmux" "bat" "lynx" "make" "alacritty" "tree" "fd" "poppler" "antiword" "odt2txt" "tar" "p7zip" "fuse2" "fuse3" "fuse-common" "inetutils")
+
+dependencies_aur=("") # TODO continue here
+
+dependencies_extra=("rofi") # TODO continue here
+
 

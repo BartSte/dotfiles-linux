@@ -1,7 +1,7 @@
 function enable_running_wsl () {
     echo "Enable running_wsl"
     sudo cp ~/dotfiles-linux/wsl/running_wsl /usr/bin/running_wsl
-    sudo chmod u+x /usr/bin/running_wsl
+    sudo chmod +x /usr/bin/running_wsl
 }
 
 function enable_firefox_win() {

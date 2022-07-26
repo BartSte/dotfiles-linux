@@ -1,19 +1,21 @@
-function add_ppa_python () {
-    echo "Add ppa python"
-    sudo add-apt-repository ppa:deadsnake/ppa -y
-}
-
-function add_ppa_alacritty () {
-    echo "Add ppa alacritty"
-    sudo add-apt-repository ppa:aslatter/ppa -y
-}
-
 function install_node_js () {
     echo "Install node.js"
     sudo bash -c "$(curl -sL install-node.vercel.app/lts)" -y -f
 }
 
+function install_yay () {
+    git clone https://aur.archlinux.org/yay.git ~/yay
+    cd ~/yay
+    makepkg -si --noconfirm
+    ~
+}
+
 function install_dependencies () {
-    echo "Install apt dependencies"
-    sudo apt install "$@" -y
+    echo "Install pacman dependencies"
+    sudo pacman -S "$@" --noconfirm
+}
+ 
+function install_dependencies_aur () {
+    echo "Install pacman dependencies"
+    sudo yay -Ss "$@" --noconfirm
 }
