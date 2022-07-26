@@ -12,11 +12,9 @@ alias lins='/usr/bin/git --git-dir=$HOME/dotfiles-linux.git/ --work-tree=$HOME s
 alias secs='/usr/bin/git --git-dir=$HOME/dotfiles-secret.git/ --work-tree=$HOME status --untracked-files=no'
 alias dots='bases && lins && secs'
 
-alias bat='batcat --theme gruvbox-dark'
+alias bat='bat --theme gruvbox-dark'
 alias ta='tmux attach'
 alias tn='tmux new'
-alias cc='clear'
-alias fd='fdfind'
 alias rm='trash-put'
 alias remove='/usr/bin/rm'
 
