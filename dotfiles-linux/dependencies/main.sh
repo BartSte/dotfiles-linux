@@ -2,9 +2,9 @@
 . ~/dotfiles-linux/dependencies/deps.sh
 
 echo "# Dependencies"
-sudo pacman -Syu
-sudo pacman -Syy
-sudo pacman -S --needed base-devel
+sudo pacman -Syu --noconfirm
+sudo pacman -Syy --noconfirm
+sudo pacman -S --needed base-devel --noconfirm
 install_yay
 install_dependencies "${dependencies[@]}"
 install_dependencies_aur "${dependencies_aur[@]}"
