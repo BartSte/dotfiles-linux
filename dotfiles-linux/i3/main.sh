@@ -2,11 +2,11 @@
 . ~/dotfiles-linux/dependencies/helpers.sh
 
 function install_polybar_collections() {
-    echo "Clony BartSte/polybar-collection"
+    echo "Clone BartSte/polybar-collection"
     git clone https://github.com/BartSte/polybar-collection ~/polybar-collection
     git switch develop
     git pull
-    cp ~/polybar-collection/fonts ~/.fonts
+    cp ~/polybar-collection/fonts ~/.fonts -r
     cd ~/.fonts
     fc-cache -fv
     cd ~
@@ -23,6 +23,4 @@ echo "# I3 window manager"
 install_polybar_collections 
 set_time_zone $TIME_ZONE
 install_dependencies "${dependencies_extra[@]}"
-for package in "${dependencies_snap[@]}"; do
-    sudo snap install $package
-done
+systemctl start bluetooth
