@@ -32,10 +32,9 @@ echo "# If you have permission: clone BartSte/dotfiles-secret.git as a bare repo
 clone $sec $sec_dir 
 checkout $sec_dir
 
-echo "# If you have permission: clone BartSte/dotfiles-secret.git as a bare repository"
+echo "Enable 'running_wsl' function"
 source ~/.bashrc
 bash ~/dotfiles-linux/wsl/main.sh
 
 echo "# Please complete the file ~/dotfiles-linux/config.sh"
 echo "# Next, run the ~/dotfiles-linux/main.sh"
-
