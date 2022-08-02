@@ -14,10 +14,16 @@ function set_time_zone() {
     sudo timedatectl set-timezone $1
 }
 
+function init_bluetooth() {
+    systemctl start bluetooth
+    bluetoothctl power on
+    bluetoothctl discoverable on
+}
+
 running_wsl && return
 
 echo "# I3 window manager"
 init_polybar 
 set_time_zone $TIME_ZONE
 install_dependencies "${dependencies_extra[@]}"
-systemctl start bluetooth
+init_bluetooth

@@ -20,6 +20,6 @@ alias remove='/usr/bin/rm'
 
 alias ls='exa -h --icons'
 alias lsa='exa -ah --icons'
-alias ll='exa -hal --icons'
+alias ll='exa -hl --icons'
 alias la='exa -hal --icons' 
 
