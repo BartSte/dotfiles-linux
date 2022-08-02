@@ -41,7 +41,7 @@ bindsym Print exec scrot -q 100 "~/Screenshots/%Y-%m-%d-%s-screenshot.png"
 bindsym $mod+Mod1+c reload
 bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'You pressed the exit shortcut. Do you really want to exit i3? This will end your X session.' -B 'Yes, exit i3' 'i3-msg exit'"
 bindsym $mod+Mod1+r restart
-bindsym $mod+space exec rofi -show run -theme gruvbox_custom -font "Jetbrains Mono 10"
+bindsym $mod+space exec rofi -show run -theme gruvbox_custom -font "Jetbrains Mono 14"
 bindsym Mod1+F4 kill
 
 bindsym XF86MonBrightnessUp exec xbacklight -inc 5
@@ -78,4 +78,3 @@ client.placeholder      #282828 #282828 #ebdbb2 #282828 #282828
 exec_always --no-startup-id $HOME/dotfiles-linux/i3/polybar-collection/launch.sh
 exec_always --no-startup-id feh --bg-fill "$HOME/dotfiles/wallpapers/namibia_dune.jpeg"
 exec_always --no-startup-id picom -f -e 0.8
-exec_always --no-startup-id redshift -l 52.377956:4.897070
