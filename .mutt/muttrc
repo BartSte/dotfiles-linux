@@ -1,4 +1,4 @@
-source "~/.mutt/lang/$MUTT_LANG"
+    source "~/.mutt/lang/$MUTT_LANG"
 source "~/.mutt/gruvbox/colors-gruvbox-shuber.muttrc
 source "$MUTT_ALIASES"
 
