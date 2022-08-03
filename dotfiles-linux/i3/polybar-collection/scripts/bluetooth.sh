@@ -14,7 +14,7 @@ function not_connected() {
 }
 
 function get_device() {
-    device=$(bluetoothctl info | grep 'Name' | sed 's/Name: //')
+    device=$(bluetoothctl info | grep 'Name' | sed 's/^.*Name: //')
 }
 
 function echo_power_if_off() {
