@@ -17,6 +17,7 @@ alias ta='tmux attach'
 alias tn='tmux new'
 alias rm='trash-put'
 alias remove='/usr/bin/rm'
+alias blue='bluetoothctl'
 
 alias ls='exa -h --icons'
 alias lsa='exa -ah --icons'
