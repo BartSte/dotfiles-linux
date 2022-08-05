@@ -6,7 +6,7 @@ function clone_gruvbox() {
 function copy_firefeh_to_bin() {
     echo "Make firefeh executable"
     sudo cp ~/dotfiles-linux/mutt/firefeh /usr/bin/firefeh
-    sudo chmod u+x /usr/bin/firefeh
+    sudo chmod +x /usr/bin/firefeh
 }
 
 echo "# Mutt"
