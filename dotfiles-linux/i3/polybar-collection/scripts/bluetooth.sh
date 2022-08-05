@@ -1,6 +1,7 @@
 #!/bin/sh
 
-disabled='#fb4934'
+disabled_fg='#fb4934'
+disabled_bg='#cc241d'
 connected='#2832c9'
 background='#282828'
 foreground='#fbf1c7'
@@ -18,11 +19,11 @@ function get_device() {
 }
 
 function echo_power_if_off() {
-    echo "%{T6}%{F${disabled}}%{T-} %{B${background}} %{T2}%{F${foreground}}Disabled%{T-}"
+    echo "%{T6}%{F${disabled_bg}}%{T-} %{B${background}} %{T2}%{F${disabled_fg}}Disabled%{T-}"
 }
 
 function echo_no_connection() {
-    echo "%{T6}%{F${background}}%{T-} %{B${bg}} %{T2}%{F${foreground}}No device%{T-}"
+    echo "%{T6}%{F${background}}%{T-} %{B${background}} %{T2}%{F${foreground}}No device%{T-}"
 }
 
 function echo_connected() {
