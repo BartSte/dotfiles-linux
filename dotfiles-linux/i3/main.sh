@@ -15,9 +15,11 @@ function set_time_zone() {
 }
 
 function init_bluetooth() {
-    systemctl start bluetooth
+    sudo systemctl start bluetooth
+    sudo systemctl enable bluetooth
     bluetoothctl power on
     bluetoothctl discoverable on
+    bluetoothctl pairable on
 }
 
 running_wsl && return
