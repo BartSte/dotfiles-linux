@@ -15,11 +15,13 @@ alias dots='bases && lins && secs'
 alias bat='bat --theme gruvbox-dark'
 alias ta='tmux attach'
 alias tn='tmux new'
+alias tm='~/dotfiles-linux/scripts/tmux-sessionizer.bash ~'
 alias rm='trash-put'
 alias remove='/usr/bin/rm'
 alias blue='bluetoothctl'
 alias blueon='~/dotfiles-linux/scripts/enable_bluetooth.bash'
 alias blueoff='bluetoothctl power off'
+
 
 alias ls='exa -h --icons'
 alias lsa='exa -ah --icons'

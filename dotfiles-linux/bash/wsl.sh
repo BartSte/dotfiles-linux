@@ -7,6 +7,7 @@ function winenv() {
 
 export WH=$(wslpath "$(winenv USERPROFILE)")
 alias wh='cd $WH'
-alias ps="powershell.exe -NoExit -Command 'cd ~'"
+alias ps="powershell.exe -NoExit -Command 'cls'"
+alias psh="powershell.exe -NoExit -Command 'cd ~'"
 alias ex="Explorer.exe ."
 
