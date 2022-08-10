@@ -17,6 +17,8 @@ command -v exa > /dev/null && export FZF_ALT_C_OPTS='--preview "exa --icons -T -
 export FZF_COMPLETION_TRIGGER=""
 export FZF_COMPLETION_OPTS='--border --info=inline'
 
+export HEADPHONES='28:11:A5:A4:3A:CF'
+
 _fzf_compgen_path() {
   fd --hidden --follow --max-depth 4 --ignore-file $HOME/.ignore . "$1"
 }

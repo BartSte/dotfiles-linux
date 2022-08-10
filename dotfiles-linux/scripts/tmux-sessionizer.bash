@@ -5,7 +5,7 @@ if [[ $# -eq 1 ]]; then
 elif running_wsl; then
     selected=$(find $WH/code -mindepth 1 -maxdepth 1 -type d | fzf) #TODO replace find with fd
 else
-    selected=$(fd ~/dotfiles-linux/ -mindepth 1 -maxdepth 1 -type d | fzf) #TODO replace find with fd
+    selected=$(find ~/dotfiles/ ~/dotfiles-linux/ -mindepth 1 -maxdepth 1 -type d | fzf) #TODO replace find with fd
 fi
 
 if [[ -z $selected ]]; then
