@@ -10,6 +10,17 @@ function install_yay () {
     ~
 }
 
+function install_chrysalis() {
+    echo "Install Chrysalis"
+    pushd
+    cd /tmp
+    # TODO write a function that uses curl to determine the latest release
+    # For example: https://gist.github.com/steinwaywhw/a4cd19cda655b8249d908261a62687f8
+    # Make appimage executable
+    # Move it to /usr/bin/ or ~/.local/bin
+    popd
+}
+
 function install_dependencies () {
     echo "Install pacman dependencies"
     sudo pacman -S "$@" --noconfirm

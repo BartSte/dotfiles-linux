@@ -9,3 +9,4 @@ install_yay
 install_dependencies "${dependencies[@]}"
 install_dependencies_aur "${dependencies_aur[@]}"
 install_node_js
+install_chrysalis
