@@ -16,7 +16,7 @@
                 }
             }
         },
-        "pyunit": {
+        "Unittest": {
             "adapter": "debugpy",
             "configuration": {
                 "request": "launch",
