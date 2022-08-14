@@ -3,7 +3,7 @@
 
 function init_polybar() {
     cp ~/dotfiles-linux/i3/polybar-collection/fonts ~/.fonts -r
-    pushd
+    pushd .
     cd ~/.fonts
     fc-cache -fv
     popd
@@ -28,4 +28,5 @@ echo "# I3 window manager"
 init_polybar 
 set_time_zone $TIME_ZONE
 install_dependencies "${dependencies_extra[@]}"
+install_chrysalis
 init_bluetooth

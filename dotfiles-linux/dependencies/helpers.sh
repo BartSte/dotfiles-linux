@@ -10,17 +10,6 @@ function install_yay () {
     ~
 }
 
-function install_chrysalis() {
-    echo "Install Chrysalis"
-    pushd
-    cd /tmp
-    # TODO write a function that uses curl to determine the latest release
-    # For example: https://gist.github.com/steinwaywhw/a4cd19cda655b8249d908261a62687f8
-    # Make appimage executable
-    # Move it to /usr/bin/ or ~/.local/bin
-    popd
-}
-
 function install_dependencies () {
     echo "Install pacman dependencies"
     sudo pacman -S "$@" --noconfirm
@@ -30,3 +19,23 @@ function install_dependencies_aur () {
     echo "Install pacman dependencies"
     sudo yay -Ss "$@" --noconfirm
 }
+
+function install_chrysalis() {
+    echo "Install Chrysalis"
+
+    releases='https://github.com/keyboardio/Chrysalis/releases/'
+    name=$(curl "$releases" -s|ag -o download.*\.AppImage|head -1)
+
+    echo $releases$name 
+    pushd .
+    cd /tmp
+    mkdir chrysalis
+    cd chrysalis
+    wget $releases$name --quiet
+    sudo rm /usr/bin/chrysalis
+    sudo mv *.AppImage /usr/bin/chrysalis
+    chmod +x /usr/bin/chrysalis
+    rmdir /tmp/chrysalis
+    popd
+}
+
