@@ -26,3 +26,29 @@ _fzf_compgen_path() {
 _fzf_compgen_dir() {
   fd --type d --hidden --follow --max-depth 4 --ignore-file $HOME/.ignore . "$1"
 }
+
+_fzf_help()
+{
+        program=$READLINE_LINE
+        ag_regex="\-\-([.*\S]+)"
+        sed_regex1='s/\]//g'
+        sed_regex2='s/\[//g'
+        builtin typeset READLINE_LINE_NEW="$(
+            command $program --help|ag -o $ag_regex|sed $sed_regex1|sed $sed_regex2|env fzf -m
+        )"
+
+        if
+                [[ -n $READLINE_LINE_NEW ]]
+        then
+                builtin bind '"\er": redraw-current-line'
+                builtin bind '"\e^": magic-space'
+                READLINE_LINE=${READLINE_LINE:+${READLINE_LINE:0:READLINE_POINT}}${READLINE_LINE_NEW}${READLINE_LINE:+${READLINE_LINE:READLINE_POINT}}
+                READLINE_POINT=$(( READLINE_POINT + ${#READLINE_LINE_NEW} ))
+        else
+                builtin bind '"\er":'
+                builtin bind '"\e^":'
+        fi
+}
+
+builtin bind -x '"\C-x1": __fzf_select_dir'
+builtin bind '"\C-a": "\C-x1\e^\er "'
