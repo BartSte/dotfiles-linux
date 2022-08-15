@@ -31,10 +31,14 @@ _fzf_help()
 {
         program=$READLINE_LINE
         ag_regex="\-\-([.*\S]+)"
-        sed_regex1='s/\]//g'
-        sed_regex2='s/\[//g'
+        sed_regex1='s/\[$//g'
+        sed_regex2='s/\]$//g'
         builtin typeset READLINE_LINE_NEW="$(
-            command $program --help|ag -o $ag_regex|sed $sed_regex1|sed $sed_regex2|env fzf -m
+            command $program --help|
+                ag -o $ag_regex|
+                sed $sed_regex1|
+                sed $sed_regex2|
+                env fzf -m --preview "$program --help|bat"
         )"
 
         if
