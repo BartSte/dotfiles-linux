@@ -2,10 +2,12 @@ _fzf_help()
 {
         program=$READLINE_LINE
         ag_regex="--[^=\ ]*[=\ ]"
+        preview_command="$program --help| 
+                         bat --force_colorization --theme Dracula --highlight-line 4"
         builtin typeset READLINE_LINE_NEW="$(
             command $program --help|
-                ag -o -- "$ag_regex"|
-                env fzf -m --ansi --preview "$program --help|bat -f --theme Dracula --highlight-line 4"
+                    ag --only-matching -- "$ag_regex"|
+                    env fzf --preview "$preview_command"
         )"
 
         if
