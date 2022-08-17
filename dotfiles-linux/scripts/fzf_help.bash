@@ -1,11 +1,9 @@
 _fzf_help() {
-    #TODO improve regex 
-    #TODO remove duplicates
-    #TODO use preview scroll to move to center the selected keyword
+    #TODO improve scroll -> apply better regex instead of literal search
     program=$READLINE_LINE
     scroll=0
     line_number=5
-    ag_regex="--.*\s{2,}"
+    ag_regex="(?<=[^\'\"\`])--([a-zA-Z0-9\-\=\[\]\.\,\%]*)(?=\s{2,}|\n| <)"
     builtin typeset READLINE_LINE_NEW="$(
         command $program --help|
             ag --only-matching -- "$ag_regex"|
