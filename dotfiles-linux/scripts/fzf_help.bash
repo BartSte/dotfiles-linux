@@ -5,15 +5,15 @@ _fzf_help() {
     program=$READLINE_LINE
     scroll=0
     line_number=5
-    ag_regex="--[^=\ ]*[=\ ]"
+    ag_regex="--.*\s{2,}"
     builtin typeset READLINE_LINE_NEW="$(
         command $program --help|
             ag --only-matching -- "$ag_regex"|
-            fzf --preview-window=right,75% --preview \
-                'program=$READLINE_LINE;
-                 regex=''s/[^0-9]//g'';
-                 number="$($program --help | ag --numbers -Q -- {} | head -1 | sed $regex)"; 
-                 $program --help | bat -f -p -H $number --theme Dracula | ag -B 25 -A 500 -Q -- {}'
+            fzf --preview-window=right,75% --preview ' \ 
+                program=$READLINE_LINE;
+                regex=''s/\:.*$//g'';
+                number="$($program --help | ag --numbers -Q -- {} | head -1 | sed $regex)"; 
+                $program --help | bat -f -p -H $number --theme Dracula | ag -B 25 -A 500 -Q -- {}'
     )"
 
     if
