@@ -1,9 +1,7 @@
 _fzf_help() {
     #TODO improve regex 
     #TODO remove duplicates
-    #TODO use bat highlight-line to highlight the selected keyword
     #TODO use preview scroll to move to center the selected keyword
-    #TODO "echo {} -> works, echo $({}) -> does not work???
     program=$READLINE_LINE
     scroll=0
     line_number=5
@@ -12,10 +10,10 @@ _fzf_help() {
         command $program --help|
             ag --only-matching -- "$ag_regex"|
             fzf --preview-window=right,75% --preview \
-                "$program --help |
-                 ag --numbers -Q -- {} |
-                 head -1 |
-                 sed 's/[^0-9]//g'"
+                'program=$READLINE_LINE;
+                 regex=''s/[^0-9]//g'';
+                 number="$($program --help | ag --numbers -Q -- {} | head -1 | sed $regex)"; 
+                 $program --help | bat -f -p -H $number --theme Dracula'
     )"
 
     if
