@@ -1,12 +1,13 @@
+_regex_head='(?<=[^''\"\`])'
+_regex_tail='(?=\s{2,}|\n| <)'
+_allowed_symbols='\-\=\[\]\.\,\%'
+_allowed_letters_and_numbers='a-zA-Z0-9'
+export _FZF_HELP_REGEX="$_regex_head--([$_allowed_letters_and_numbers]+[$_allowed_letters_and_numbers$_allowed_symbols]*)$_regex_tail"
+
 _get_line_number='regex="s/\:.*$//g"; number="$($_FZF_HELP_COMMAND --help | ag --numbers -Q -- {} | head -1 | sed $regex)";'
 _highlight_line='$_FZF_HELP_COMMAND --help | bat -f -p -H $number --theme Dracula | ag -B 25 -A 500 -Q -- {}'
-
-export _FZF_HELP_REGEX='(?<=[^''\"\`])--([a-zA-Z0-9\-\=\[\]\.\,\%]*)(?=\s{2,}|\n| <)'
-export _FZF_HELP_OPTS="--preview-window=right,75%" 
 export _FZF_HELP_PREVIEW_OPTS="$_get_line_number $_highlight_line"
-
-builtin bind -x '"\C-x1": __fzf_select_dir'
-builtin bind '"\C-a": "\C-x1\e^\er "'
+export _FZF_HELP_OTHER_OPTS="--preview-window=right,75%" 
 
 _fzf_help() {
     #TODO improve scroll -> apply better regex instead of literal search
@@ -14,7 +15,7 @@ _fzf_help() {
     builtin typeset READLINE_LINE_NEW="$(
         $_FZF_HELP_COMMAND --help|
         ag --only-matching -- "$_FZF_HELP_REGEX"|
-        fzf "$_FZF_HELP_OPTS" --preview "$_FZF_HELP_PREVIEW_OPTS"
+        fzf "$_FZF_HELP_OTHER_OPTS" --preview "$_FZF_HELP_PREVIEW_OPTS"
     )"
     _write_line
 }
