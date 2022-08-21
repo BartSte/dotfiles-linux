@@ -1,21 +1,29 @@
-_regex_head='(?<=[^''\"\`])'
-_regex_tail='(?=\s{2,}|\n| <)'
-_allowed_symbols='\-\=\[\]\.\,\%'
-_allowed_letters_and_numbers='a-zA-Z0-9'
-export _FZF_HELP_REGEX="$_regex_head--([$_allowed_letters_and_numbers]+[$_allowed_letters_and_numbers$_allowed_symbols]*)$_regex_tail"
+make_fzf_help_regex() {
+    _regex_head='?<=[^''"`]'
+    _regex_tail='?=\s{2,}|\n| <'
+    _obligatory_chars='--'
+    _allowed_symbols='\[\]\-\=\.\,\%'
+    _allowed_letters_and_numbers='a-zA-Z0-9'
+    _FZF_HELP_REGEX="($_regex_head)($_obligatory_chars)"
+    _FZF_HELP_REGEX+="([$_allowed_letters_and_numbers]+"
+    _FZF_HELP_REGEX+="[$_allowed_letters_and_numbers$_allowed_symbols]*)"
+    _FZF_HELP_REGEX+="($_regex_tail)"
+    export _FZF_HELP_REGEX
+}
 
-_get_line_number='regex="s/\:.*$//g"; number="$($_FZF_HELP_COMMAND --help | ag --numbers -Q -- {} | head -1 | sed $regex)";'
-_highlight_line='$_FZF_HELP_COMMAND --help | bat -f -p -H $number --theme Dracula | ag -B 25 -A 500 -Q -- {}'
-export _FZF_HELP_PREVIEW_OPTS="$_get_line_number $_highlight_line"
-export _FZF_HELP_OTHER_OPTS="--preview-window=right,75%" 
+make_fzf_help_opts() {
+    _regex_line_number='regex=''s/\:.*$//g'';'
+    _get_line_number='number=$($_FZF_HELP_COMMAND --help | ag --numbers -- {} | head -1 | sed $regex);'
+    _highlight_line='$_FZF_HELP_COMMAND --help | bat -f -p -H $number --theme Dracula | ag -B 25 -A 500 -- {}'
+    export _FZF_HELP_PREVIEW_OPTS="$_regex_line_number $_get_line_number $_highlight_line"
+    export _FZF_HELP_OTHER_OPTS="--preview-window=right,75%" 
+}
 
 _fzf_help() {
-    #TODO improve scroll -> apply better regex instead of literal search
-    export _FZF_HELP_COMMAND=$(echo "$READLINE_LINE" | sed 's/\( -\).*$//')
+    export _FZF_HELP_COMMAND=$(echo $READLINE_LINE | sed 's/\( -\).*$//')
     builtin typeset READLINE_LINE_NEW="$(
-        $_FZF_HELP_COMMAND --help|
-        ag --only-matching -- "$_FZF_HELP_REGEX"|
-        fzf "$_FZF_HELP_OTHER_OPTS" --preview "$_FZF_HELP_PREVIEW_OPTS"
+        $_FZF_HELP_COMMAND --help| ag --only-matching -- "$_FZF_HELP_REGEX"|
+        fzf $_FZF_HELP_OTHER_OPTS --preview "$_FZF_HELP_PREVIEW_OPTS"
     )"
     _write_line
 }
@@ -34,3 +42,5 @@ _write_line() {
     fi
 }
 
+make_fzf_help_regex
+make_fzf_help_opts
