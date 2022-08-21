@@ -1,4 +1,4 @@
-make_fzf_help_regex() {
+_make_fzf_help_regex() {
     _regex_head='?<=[^''"`]'
     _regex_tail='?=\s{2,}|\n| <'
     _obligatory_chars='--'
@@ -11,7 +11,7 @@ make_fzf_help_regex() {
     export _FZF_HELP_REGEX
 }
 
-make_fzf_help_opts() {
+_make_fzf_help_opts() {
     _regex_line_number='regex=''s/\:.*$//g'';'
     _get_line_number='number=$($_FZF_HELP_COMMAND --help | ag --numbers -- {} | head -1 | sed $regex);'
     _highlight_line='$_FZF_HELP_COMMAND --help | bat -f -p -H $number --theme Dracula | ag -B 25 -A 500 -- {}'
@@ -21,10 +21,11 @@ make_fzf_help_opts() {
 
 _fzf_help() {
     export _FZF_HELP_COMMAND=$(echo $READLINE_LINE | sed 's/\( -\).*$//')
-    builtin typeset READLINE_LINE_NEW="$(
-        $_FZF_HELP_COMMAND --help| ag --only-matching -- "$_FZF_HELP_REGEX"|
-        fzf $_FZF_HELP_OTHER_OPTS --preview "$_FZF_HELP_PREVIEW_OPTS"
-    )"
+    builtin typeset READLINE_LINE_NEW=$(
+        "$_FZF_HELP_COMMAND" --help|
+        ag --only-matching -- "$_FZF_HELP_REGEX"|
+        fzf "$_FZF_HELP_OTHER_OPTS" --preview "$_FZF_HELP_PREVIEW_OPTS"
+    )
     _write_line
 }
 
@@ -42,5 +43,5 @@ _write_line() {
     fi
 }
 
-make_fzf_help_regex
-make_fzf_help_opts
+_make_fzf_help_regex
+_make_fzf_help_opts
