@@ -12,9 +12,10 @@ _make_fzf_help_regex() {
 }
 
 _make_fzf_help_opts() {
-    _regex_line_number='regex=''s/\:.*$//g'';'
-    _get_line_number='number=$($_FZF_HELP_COMMAND --help | ag --numbers -- {} | head -1 | sed $regex);'
-    _highlight_line='$_FZF_HELP_COMMAND --help | bat -f -p -H $number --theme Dracula | ag -B 25 -A 500 -- {}'
+    _regex_line_number='regex=''s/.*\(?=\:\)//g'';'
+    _get_line_number='number=$(ag -Q -- {} | head -1 | sed $regex);'
+    # _highlight_line='$_FZF_HELP_COMMAND --help | bat -f -p -H $number --theme Dracula | ag -B 25 -A 500 -- {}'
+    _highlight_line='echo "$number"'
     export _FZF_HELP_PREVIEW_OPTS="$_regex_line_number $_get_line_number $_highlight_line"
     export _FZF_HELP_OTHER_OPTS="--preview-window=right,75%" 
 }
@@ -23,9 +24,8 @@ _fzf_help() {
     #TODO store the line numbers + search results of the first `ag` search. Use this later for highlighting and scrolling.
     export _FZF_HELP_COMMAND=$(echo $READLINE_LINE | sed 's/\( -\).*$//')
     builtin typeset READLINE_LINE_NEW=$(
-        "$_FZF_HELP_COMMAND" --help|
-        ag --only-matching -- "$_FZF_HELP_REGEX"|
-        fzf "$_FZF_HELP_OTHER_OPTS" --preview "$_FZF_HELP_PREVIEW_OPTS"
+        results=$("$_FZF_HELP_COMMAND" --help | ag --numbers --only-matching -- "$_FZF_HELP_REGEX");
+        echo "$results" | fzf "$_FZF_HELP_OTHER_OPTS" --preview "$_FZF_HELP_PREVIEW_OPTS"
     )
     _write_line
 }
