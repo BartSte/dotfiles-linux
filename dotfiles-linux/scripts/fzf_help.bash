@@ -33,7 +33,7 @@ _fzf_help() {
     export _FZF_HELP_COMMAND=$(echo $READLINE_LINE | sed "$regex_get_command")
     builtin typeset READLINE_LINE_NEW=$(
         regex_remove_line_number='s/^.*://g';
-        export _FZF_HELP_RESULTS=$("$_FZF_HELP_COMMAND" --help | ag -o --numbers -- "$_FZF_HELP_REGEX");
+        export _FZF_HELP_RESULTS=$($_FZF_HELP_COMMAND --help | ag -o --numbers -- "$_FZF_HELP_REGEX");
         echo "$_FZF_HELP_RESULTS" | sed "$regex_remove_line_number" | fzf $_FZF_HELP_OTHER_OPTS --preview "$_FZF_HELP_PREVIEW_OPTS"
     )
     _write_line
