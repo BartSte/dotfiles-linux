@@ -15,17 +15,17 @@ _make_fzf_help_regex() {
 
 _make_fzf_help_opts() {
     _get_line_number='number=$(echo "$_FZF_HELP_RESULTS" | ag -Q -- {} | head -1 | sed "s/:.*$//g");'
-    _get_line_number+='[ {q} == "##" ] && number=0;'
+    _get_line_number+='[ {q} ]; [ -z $number ] && number=0;'
 
     _get_scroll_number='half_page=$(($FZF_PREVIEW_LINES / 2));'
     _get_scroll_number+='scroll=$(($number-$half_page));'
     _get_scroll_number+='scroll=$(($scroll > 0 ? $scroll : 0));'
 
-    _write_to_stdout='$_FZF_HELP_COMMAND --help | bat -f -p -H $number -r $scroll: --theme Dracula;'
+    _write_to_stdout='printf "\033[2J";'
+    _write_to_stdout+='$_FZF_HELP_COMMAND --help | bat -f -p -H $number -r $scroll: --theme Dracula;'
 
     export _FZF_HELP_PREVIEW_OPTS="$_get_line_number $_get_scroll_number $_write_to_stdout"
     export _FZF_HELP_OTHER_OPTS='--preview-window=right,75%' 
-    export _FZF_HELP_HEADER='Type ## for full page view'
 }
 
 _fzf_help() {
@@ -36,7 +36,7 @@ _fzf_help() {
         export _FZF_HELP_RESULTS=$("$_FZF_HELP_COMMAND" --help | 
                                    ag -o --numbers -- "$_FZF_HELP_REGEX");
         echo "$_FZF_HELP_RESULTS" | sed "$regex_remove_line_number" | 
-             fzf $_FZF_HELP_OTHER_OPTS --preview "$_FZF_HELP_PREVIEW_OPTS" --header="$_FZF_HELP_HEADER"
+             fzf $_FZF_HELP_OTHER_OPTS --preview "$_FZF_HELP_PREVIEW_OPTS"
     )
     _write_line
 }
