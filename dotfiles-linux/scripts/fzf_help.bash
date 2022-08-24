@@ -14,6 +14,7 @@ _make_fzf_help_regex() {
 }
 
 _make_fzf_help_opts() {
+    #TODO bat -> preview window: due to line wrapping the line numbers change. For example -> git status
     _get_line_number='number=$(echo "$_FZF_HELP_RESULTS" | ag -Q -- {} | head -1 | sed "s/:.*$//g");'
     _get_line_number+='[ {q} ]; [ -z $number ] && number=0;'  # Hack, without {q} the preview window is always blank.
 

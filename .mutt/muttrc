@@ -17,6 +17,7 @@ set sort=threads
 set sort_browser=date
 set sort_aux=reverse-last-date-received
 set timeout=15
+set confirmappend=no
 unset collapse_unread
 unset mark_old
 bind index - collapse-thread
