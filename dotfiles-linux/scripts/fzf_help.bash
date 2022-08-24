@@ -1,6 +1,6 @@
 _make_fzf_help_regex() {
     _regex_head='?<=[^''"`]'
-    _regex_tail='?=\s{2,}|\n| <'
+    _regex_tail='?=\s{2,}|(?<=[^\.])\n| <'
     _obligatory_chars='--'
     _allowed_symbols='\[\]\-\=\.\,\%'
     _allowed_letters_and_numbers='a-zA-Z0-9'
@@ -26,7 +26,7 @@ _make_fzf_help_opts() {
     _write_to_stdout+='$_FZF_HELP_COMMAND --help | bat -f -p --wrap never -H $number -r $scroll: --theme Dracula;'
 
     export _FZF_HELP_PREVIEW_OPTS="$_get_line_number $_get_scroll_number $_write_to_stdout"
-    export _FZF_HELP_OTHER_OPTS='--preview-window=down,75%,nowrap' 
+    export _FZF_HELP_OTHER_OPTS='--preview-window=right,75%,nowrap --bind ctrl-a:change-preview-window(down,75%,nowrap|right,75%,nowrap)'
 }
 
 _fzf_help() {
