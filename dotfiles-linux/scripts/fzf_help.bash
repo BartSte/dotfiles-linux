@@ -26,7 +26,7 @@ _make_fzf_help_opts() {
     _write_to_stdout+='$_FZF_HELP_COMMAND --help | bat -f -p -H $number -r $scroll: --theme Dracula;'
 
     export _FZF_HELP_PREVIEW_OPTS="$_get_line_number $_get_scroll_number $_write_to_stdout"
-    export _FZF_HELP_OTHER_OPTS='--preview-window=right,75%' 
+    export _FZF_HELP_OTHER_OPTS='--preview-window=bottom,75%' 
 }
 
 _fzf_help() {
