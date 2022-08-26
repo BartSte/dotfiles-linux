@@ -9,5 +9,5 @@ source ~/dotfiles-linux/bash/bindings.sh
 running_wsl && source ~/dotfiles-linux/bash/wsl.sh
 
 OPENER=mimeo
-[[ -e "/usr/share/fzf/fzf-extras.bash" ]] \
-  && source /usr/share/fzf/fzf-extras.bash
+[[ -e "/usr/share/fzf/fzf-extras.bash" ]] && source /usr/share/fzf/fzf-extras.bash
+
