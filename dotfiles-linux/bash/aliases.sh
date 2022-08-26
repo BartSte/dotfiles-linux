@@ -11,6 +11,9 @@ alias bases='/usr/bin/git --git-dir=$HOME/dotfiles.git/ --work-tree=$HOME status
 alias lins='/usr/bin/git --git-dir=$HOME/dotfiles-linux.git/ --work-tree=$HOME status --untracked-files=no --short'
 alias secs='/usr/bin/git --git-dir=$HOME/dotfiles-secret.git/ --work-tree=$HOME status --untracked-files=no --short'
 alias dots='echo Base: && bases && echo Lin: && lins && echo Sec: && secs'
+alias pulls='base pull; lin pull; sec pull;'
+alias pushs='base push; lin push; sec push'
+alias fetchs='base fetch; lin fetch; sec fetch'
 
 alias bat='bat --theme gruvbox-dark'
 alias ta='tmux attach'
