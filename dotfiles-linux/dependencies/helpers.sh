@@ -39,3 +39,9 @@ function install_chrysalis() {
     popd
 }
 
+install_bash_tab_completion() {
+    pushd .
+    cd ~/clones
+    git clone https://github.com/lincheney/fzf-tab-completion
+    popd
+}
