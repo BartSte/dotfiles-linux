@@ -1,3 +1,50 @@
+fzf_help() {
+    local cmd
+    cmd=$(_get_command $READLINE_LINE)
+    option=$(_fzf_get_option $cmd)
+    _write_line $option
+}
+
+_get_command() {
+    echo $1 | sed 's/\( -\).*$//'
+}
+
+_fzf_get_option() {
+    local cmd
+    cmd=$1
+
+    export _FZF_HELP_RESULTS=$(_get_options $cmd);
+    _fzf_select_option $cmd
+}
+
+_get_options() {
+    $1 --help | ag -o --numbers -- "$_FZF_HELP_REGEX"
+}
+
+_fzf_select_option() {
+    export _FZF_HELP_COMMAND=$1
+
+    echo "$_FZF_HELP_RESULTS" | 
+    sed "s/^.*://g" | 
+    fzf $_FZF_HELP_OTHER_OPTS --prompt="$READLINE_LINE" --preview "$_FZF_HELP_PREVIEW_OPTS" 
+}
+
+_write_line() {
+    READLINE_LINE_NEW=$1
+    if
+        [[ -n $READLINE_LINE_NEW ]]
+    then
+        builtin bind '"\er": redraw-current-line'
+        builtin bind '"\e^": magic-space'
+        READLINE_LINE_NEW+=" "
+        READLINE_LINE=${READLINE_LINE:+${READLINE_LINE:0:READLINE_POINT}}${READLINE_LINE_NEW}${READLINE_LINE:+${READLINE_LINE:READLINE_POINT}}
+        READLINE_POINT=$(( READLINE_POINT + ${#READLINE_LINE_NEW} ))
+    else
+        builtin bind '"\er":'
+        builtin bind '"\e^":'
+    fi
+}
+
 _make_fzf_help_regex() {
     _regex_head='?<=[^''"`]'
     _regex_tail='?=\s{2,}|(?<=[^\.])\n| <'
@@ -25,32 +72,7 @@ _make_fzf_help_opts() {
     _write_to_stdout+='$_FZF_HELP_COMMAND --help | bat -f -p --wrap never -H $number -r $scroll: --theme Dracula;'
 
     export _FZF_HELP_PREVIEW_OPTS="$_get_line_number $_get_scroll_number $_write_to_stdout"
-    export _FZF_HELP_OTHER_OPTS='--preview-window=right,75%,nowrap --bind ctrl-a:change-preview-window(down,75%,nowrap|right,75%,nowrap)'
-}
-
-_fzf_help() {
-    regex_get_command='s/\( -\).*$//'
-    export _FZF_HELP_COMMAND=$(echo $READLINE_LINE | sed "$regex_get_command")
-    builtin typeset READLINE_LINE_NEW=$(
-        regex_remove_line_number='s/^.*://g';
-        export _FZF_HELP_RESULTS=$($_FZF_HELP_COMMAND --help | ag -o --numbers -- "$_FZF_HELP_REGEX");
-        echo "$_FZF_HELP_RESULTS" | sed "$regex_remove_line_number" | fzf $_FZF_HELP_OTHER_OPTS --preview "$_FZF_HELP_PREVIEW_OPTS"
-    )
-    _write_line
-}
-
-_write_line() {
-    if
-        [[ -n $READLINE_LINE_NEW ]]
-    then
-        builtin bind '"\er": redraw-current-line'
-        builtin bind '"\e^": magic-space'
-        READLINE_LINE=${READLINE_LINE:+${READLINE_LINE:0:READLINE_POINT}}${READLINE_LINE_NEW}${READLINE_LINE:+${READLINE_LINE:READLINE_POINT}}
-        READLINE_POINT=$(( READLINE_POINT + ${#READLINE_LINE_NEW} ))
-    else
-        builtin bind '"\er":'
-        builtin bind '"\e^":'
-    fi
+    export _FZF_HELP_OTHER_OPTS='--preview-window=right,75%,nowrap --bind ctrl-a:change-preview-window(down,75%,nowrap|right,75%,nowrap) '
 }
 
 _make_fzf_help_regex

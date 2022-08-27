@@ -14,6 +14,7 @@ alias dots='echo Base: && bases && echo Lin: && lins && echo Sec: && secs'
 alias pulls='base pull; lin pull; sec pull;'
 alias pushs='base push; lin push; sec push'
 alias fetchs='base fetch; lin fetch; sec fetch'
+alias reload='. ~/.bashrc'
 
 alias bat='bat --theme gruvbox-dark'
 alias ta='tmux attach'
