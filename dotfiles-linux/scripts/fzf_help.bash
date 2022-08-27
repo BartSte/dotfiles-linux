@@ -6,23 +6,22 @@ fzf_help() {
 }
 
 _get_command() {
-    echo $1 | sed 's/\( -\).*$//'
+    echo $@ | sed "s/\( -\).*$//"
 }
 
 _fzf_get_option() {
     local cmd
-    cmd=$1
-
+    cmd=$@
     export _FZF_HELP_RESULTS=$(_get_options $cmd);
     _fzf_select_option $cmd
 }
 
 _get_options() {
-    $1 --help | ag -o --numbers -- "$_FZF_HELP_REGEX"
+    $@ --help | ag -o --numbers -- "$_FZF_HELP_REGEX"
 }
 
 _fzf_select_option() {
-    export _FZF_HELP_COMMAND=$1
+    export _FZF_HELP_COMMAND=$@
 
     echo "$_FZF_HELP_RESULTS" | 
     sed "s/^.*://g" | 
