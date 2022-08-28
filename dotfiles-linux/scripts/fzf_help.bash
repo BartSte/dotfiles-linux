@@ -1,17 +1,15 @@
 fzf_help() {
-    local cmd option
-    cmd=$(get_command $READLINE_LINE)
-    option=$(fzf_get_option $cmd)
+    option=$(echo $READLINE_LINE | get_command | fzf_get_option) 
     write_line $option
 }
 
 get_command() {
-    echo $@ | sed "s/\( -\).*$//"
+    sed "s/\( -\).*$//"
 }
 
 fzf_get_option() {
     local cmd options
-    cmd=$@
+    cmd="$(cat -)"
     options=$(_get_options $cmd);
     _fzf_select_option "$cmd" "$options"
 }
@@ -72,7 +70,7 @@ _make_fzf_help_opts() {
 }
 
 write_line() {
-    READLINE_LINE_NEW=$1
+    READLINE_LINE_NEW=$@
     if
         [[ -n $READLINE_LINE_NEW ]]
     then
