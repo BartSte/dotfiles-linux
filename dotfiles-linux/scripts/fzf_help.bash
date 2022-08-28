@@ -51,9 +51,24 @@ _fzf_select_option() {
     regex_remove_line_number="s/^.*://g" 
     fzf_options='--preview-window=right,75%,nowrap '
     fzf_options+='--bind ctrl-a:change-preview-window(down,75%,nowrap|right,75%,nowrap) '
-    func='fzf $fzf_options --prompt="$READLINE_LINE" --preview "$_FZF_HELP_PREVIEW_OPTS"'
 
-    echo "$options" | sed $regex_remove_line_number| eval $func
+    echo "$options" | 
+    sed $regex_remove_line_number| 
+    fzf $fzf_options --prompt="$READLINE_LINE" --preview "$_FZF_HELP_PREVIEW_OPTS"
+}
+
+_make_fzf_help_opts() {
+    _get_line_number='number=$(echo "$_FZF_HELP_RESULTS" | ag -Q -- {} | head -1 | sed "s/:.*$//g");'
+    _get_line_number+='[ {q} ]; [ -z $number ] && number=0;'  # Hack, without {q} the preview window is always blank.
+
+    _get_scroll_number='half_page=$(($FZF_PREVIEW_LINES / 2));'
+    _get_scroll_number+='scroll=$(($number-$half_page));'
+    _get_scroll_number+='scroll=$(($scroll > 0 ? $scroll : 0));'
+
+    _write_to_stdout='printf "\033[2J";'  # Clear screen
+    _write_to_stdout+='$_FZF_HELP_COMMAND --help | bat -f -p --wrap never -H $number -r $scroll: --theme Dracula;'
+
+    export _FZF_HELP_PREVIEW_OPTS="$_get_line_number $_get_scroll_number $_write_to_stdout"
 }
 
 write_line() {
@@ -70,21 +85,6 @@ write_line() {
         builtin bind '"\er":'
         builtin bind '"\e^":'
     fi
-}
-
-
-_make_fzf_help_opts() {
-    _get_line_number='number=$(echo "$_FZF_HELP_RESULTS" | ag -Q -- {} | head -1 | sed "s/:.*$//g");'
-    _get_line_number+='[ {q} ]; [ -z $number ] && number=0;'  # Hack, without {q} the preview window is always blank.
-
-    _get_scroll_number='half_page=$(($FZF_PREVIEW_LINES / 2));'
-    _get_scroll_number+='scroll=$(($number-$half_page));'
-    _get_scroll_number+='scroll=$(($scroll > 0 ? $scroll : 0));'
-
-    _write_to_stdout='printf "\033[2J";'  # Clear screen
-    _write_to_stdout+='$_FZF_HELP_COMMAND --help | bat -f -p --wrap never -H $number -r $scroll: --theme Dracula;'
-
-    export _FZF_HELP_PREVIEW_OPTS="$_get_line_number $_get_scroll_number $_write_to_stdout"
 }
 
 _make_fzf_help_opts
