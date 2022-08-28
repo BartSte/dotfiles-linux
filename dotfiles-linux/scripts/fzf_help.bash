@@ -1,34 +1,62 @@
 fzf_help() {
-    local cmd
-    cmd=$(_get_command $READLINE_LINE)
-    option=$(_fzf_get_option $cmd)
-    _write_line $option
+    local cmd option
+    cmd=$(get_command $READLINE_LINE)
+    option=$(fzf_get_option $cmd)
+    write_line $option
 }
 
-_get_command() {
+get_command() {
     echo $@ | sed "s/\( -\).*$//"
 }
 
-_fzf_get_option() {
-    local cmd
+fzf_get_option() {
+    local cmd options
     cmd=$@
-    export _FZF_HELP_RESULTS=$(_get_options $cmd);
-    _fzf_select_option $cmd
+    options=$(_get_options $cmd);
+    _fzf_select_option "$cmd" "$options"
 }
 
 _get_options() {
-    $@ --help | ag -o --numbers -- "$_FZF_HELP_REGEX"
+    local cmd regex
+    cmd=$@
+    regex=$(_regex_get_options)
+    $cmd --help | ag --only-matching --numbers -- "$regex"
+}
+
+_regex_get_options() {
+    local HEAD TAIL OBLIGATORY_CHARS ALLOWED_SYMBOLS 
+    local ALLOWED_LETTERS_AND_NUMBERS RESULT
+
+    HEAD='?<=[^''"`]'
+    TAIL='?=\s{2,}|(?<=[^\.])\n| <'
+    OBLIGATORY_CHARS='--'
+    ALLOWED_SYMBOLS='\[\]\-\=\.\,\%'
+    ALLOWED_LETTERS_AND_NUMBERS='a-zA-Z0-9'
+
+    RESULT="($HEAD)"
+    RESULT+="($OBLIGATORY_CHARS)"
+    RESULT+="([$ALLOWED_LETTERS_AND_NUMBERS]+"
+    RESULT+="[$ALLOWED_LETTERS_AND_NUMBERS$ALLOWED_SYMBOLS]*)"
+    RESULT+="($TAIL)"
+
+    echo "$RESULT"
 }
 
 _fzf_select_option() {
-    export _FZF_HELP_COMMAND=$@
+    local regex_remove_line_number fzf_options
 
-    echo "$_FZF_HELP_RESULTS" | 
-    sed "s/^.*://g" | 
-    fzf $_FZF_HELP_OTHER_OPTS --prompt="$READLINE_LINE" --preview "$_FZF_HELP_PREVIEW_OPTS" 
+    export _FZF_HELP_COMMAND=$1
+    export _FZF_HELP_RESULTS=$2
+
+    regex_remove_line_number="s/^.*://g" 
+    fzf_options='--preview-window=right,75%,nowrap '
+    fzf_options+='--bind ctrl-a:change-preview-window(down,75%,nowrap|right,75%,nowrap) '
+    func='fzf $fzf_options --prompt="$READLINE_LINE" --preview "$_FZF_HELP_PREVIEW_OPTS"'
+
+    echo "$options" | sed $regex_remove_line_number| eval $func
 }
 
-_write_line() {
+write_line() {
     READLINE_LINE_NEW=$1
     if
         [[ -n $READLINE_LINE_NEW ]]
@@ -44,20 +72,6 @@ _write_line() {
     fi
 }
 
-_make_fzf_help_regex() {
-    _regex_head='?<=[^''"`]'
-    _regex_tail='?=\s{2,}|(?<=[^\.])\n| <'
-    _obligatory_chars='--'
-    _allowed_symbols='\[\]\-\=\.\,\%'
-    _allowed_letters_and_numbers='a-zA-Z0-9'
-
-    _FZF_HELP_REGEX="($_regex_head)($_obligatory_chars)"
-    _FZF_HELP_REGEX+="([$_allowed_letters_and_numbers]+"
-    _FZF_HELP_REGEX+="[$_allowed_letters_and_numbers$_allowed_symbols]*)"
-    _FZF_HELP_REGEX+="($_regex_tail)"
-
-    export _FZF_HELP_REGEX
-}
 
 _make_fzf_help_opts() {
     _get_line_number='number=$(echo "$_FZF_HELP_RESULTS" | ag -Q -- {} | head -1 | sed "s/:.*$//g");'
@@ -71,8 +85,6 @@ _make_fzf_help_opts() {
     _write_to_stdout+='$_FZF_HELP_COMMAND --help | bat -f -p --wrap never -H $number -r $scroll: --theme Dracula;'
 
     export _FZF_HELP_PREVIEW_OPTS="$_get_line_number $_get_scroll_number $_write_to_stdout"
-    export _FZF_HELP_OTHER_OPTS='--preview-window=right,75%,nowrap --bind ctrl-a:change-preview-window(down,75%,nowrap|right,75%,nowrap) '
 }
 
-_make_fzf_help_regex
 _make_fzf_help_opts
