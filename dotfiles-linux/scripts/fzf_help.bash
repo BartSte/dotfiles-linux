@@ -77,5 +77,3 @@ write_line() {
         builtin bind '"\e^":'
     fi
 }
-
-_make_fzf_help_opts
