@@ -1,5 +1,5 @@
 fzf_help() {
-    option=$(echo $READLINE_LINE | get_command | fzf_get_option) 
+    option=$(echo $READLINE_LINE | get_command | fzf_select_cli_option) 
     write_line $option
 }
 
@@ -7,9 +7,15 @@ get_command() {
     sed "s/\( -\).*$//"
 }
 
-fzf_get_option() {
+fzf_select_cli_option() {
     local cmd options
-    cmd="$(cat -)"
+
+    if [[ -p /dev/stdin ]]; then
+        cmd="$(cat -)"
+    else
+        cmd="${@}"
+    fi
+
     options=$(_get_options $cmd);
     _fzf_select_option "$cmd" "$options"
 }
@@ -43,7 +49,7 @@ _regex_get_options() {
 _fzf_select_option() {
     local regex_remove_line_number fzf_options
 
-    export _FZF_HELP_COMMAND=$1
+    cmd="$1"
     export _FZF_HELP_RESULTS=$2
 
     regex_remove_line_number="s/^.*://g" 
@@ -52,22 +58,9 @@ _fzf_select_option() {
 
     echo "$options" | 
     sed $regex_remove_line_number| 
-    fzf $fzf_options --prompt="$READLINE_LINE" --preview "$_FZF_HELP_PREVIEW_OPTS"
+    fzf $fzf_options --prompt="$READLINE_LINE" --preview "bat_highlight {} $cmd; [ {q} ];"
 }
 
-_make_fzf_help_opts() {
-    _get_line_number='number=$(echo "$_FZF_HELP_RESULTS" | ag -Q -- {} | head -1 | sed "s/:.*$//g");'
-    _get_line_number+='[ {q} ]; [ -z $number ] && number=0;'  # Hack, without {q} the preview window is always blank.
-
-    _get_scroll_number='half_page=$(($FZF_PREVIEW_LINES / 2));'
-    _get_scroll_number+='scroll=$(($number-$half_page));'
-    _get_scroll_number+='scroll=$(($scroll > 0 ? $scroll : 0));'
-
-    _write_to_stdout='printf "\033[2J";'  # Clear screen
-    _write_to_stdout+='$_FZF_HELP_COMMAND --help | bat -f -p --wrap never -H $number -r $scroll: --theme Dracula;'
-
-    export _FZF_HELP_PREVIEW_OPTS="$_get_line_number $_get_scroll_number $_write_to_stdout"
-}
 
 write_line() {
     READLINE_LINE_NEW=$@

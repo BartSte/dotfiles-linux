@@ -45,3 +45,7 @@ install_bash_tab_completion() {
     git clone https://github.com/lincheney/fzf-tab-completion
     popd
 }
+
+install_bathighlight() {
+    sudo ln ~/dotfiles-linux/scripts/bat_highlight /usr/bin/bat_highlight
+}
