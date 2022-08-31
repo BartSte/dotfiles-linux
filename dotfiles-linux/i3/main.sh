@@ -22,6 +22,11 @@ function init_bluetooth() {
     bluetoothctl pairable on
 }
 
+set_shadowfox() {
+    shadowfox-updater -profile-index 0
+    shadowfox-updater -set-dark-theme 1
+}
+
 running_wsl && return
 
 echo "# I3 window manager"
@@ -30,3 +35,4 @@ set_time_zone $TIME_ZONE
 install_dependencies "${dependencies_extra[@]}"
 install_chrysalis
 init_bluetooth
+set_shadowfox
