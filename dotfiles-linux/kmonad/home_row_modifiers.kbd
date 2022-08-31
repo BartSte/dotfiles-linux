@@ -12,6 +12,7 @@
 
 (defsrc
   a    s    d    f    g    h    j    k    l    ;
+  lalt
 )
 
 (defalias
@@ -27,6 +28,11 @@
 )
 
 (deflayer homerowmods
-    @met_a   @alt_s   @sft_d   @ctl_f   g   h   @ctl_j   @sft_k   @alt_l   @met_;
+@met_a   @alt_s   @sft_d   @ctl_f   g   h   @ctl_j   @sft_k   @alt_l   @met_;
+(layer-toggle hjkl)
 )
 
+(deflayer hjkl
+  a    s    d    f    g    KeyLeft  KeyDown KeyUp   KeyRight ;
+  _
+)
