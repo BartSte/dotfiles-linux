@@ -1,0 +1,19 @@
+#!/usr/bin/bash
+
+line_number_and_word="$1"
+cmd="$2"
+
+number_of_lines=$FZF_PREVIEW_LINES 
+[ -z $number_of_lines ] && number_of_lines=$LINES
+half_page=$(($number_of_lines / 2))
+
+line_number=$(echo "$_FZF_HELP_RESULTS" | ag -Q -- "$line_number_and_word" | 
+              head -1 | sed "s/:.*$//g")
+[ -z $line_number ] && line_number=0
+
+scroll=$(($line_number-$half_page));
+scroll=$(($scroll > 0 ? $scroll : 0));
+
+printf "\033[2J";
+
+"$cmd" --help | bat -f -p --wrap never -H $line_number -r $scroll: --theme Dracula;
