@@ -1,19 +1,50 @@
 #!/usr/bin/bash
 
-line_number_and_word="$1"
-cmd="$2"
+get_line_number() {
+    local line_number line_number_and_word
+    line_number_and_word="$1"
 
-number_of_lines=$FZF_PREVIEW_LINES 
-[ -z $number_of_lines ] && number_of_lines=$LINES
-half_page=$(($number_of_lines / 2))
+    #TODO _FZF_HELP_RESULTS should be eliminated
+    line_number=$(echo "$_FZF_HELP_RESULTS" | 
+                  ag -Q -- "$line_number_and_word" | 
+                  head -1 | sed "s/:.*$//g")
 
-line_number=$(echo "$_FZF_HELP_RESULTS" | ag -Q -- "$line_number_and_word" | 
-              head -1 | sed "s/:.*$//g")
-[ -z $line_number ] && line_number=0
+    [ -z $line_number ] && line_number=0
+    echo "$line_number"
+}
 
-scroll=$(($line_number-$half_page));
-scroll=$(($scroll > 0 ? $scroll : 0));
+get_scroll_lines() {
+    local half_page line_number
 
-printf "\033[2J";
+    half_page=$(get_half_page)
+    line_number=$(get_line_number)
 
-"$cmd" --help | bat -f -p --wrap never -H $line_number -r $scroll: --theme Dracula;
+    scroll=$(($line_number-$half_page));
+    scroll=$(($scroll > 0 ? $scroll : 0));
+
+    echo $scroll
+}
+
+get_half_page() {
+    local number_of_lines
+
+    number_of_lines=$FZF_PREVIEW_LINES 
+    [ -z $number_of_lines ] && number_of_lines=$LINES
+
+    echo $(($number_of_lines / 2))
+}
+
+main() {
+    local line_number_and_word cmd
+    line_number_and_word="$1" #TODO line number is missing...
+    cmd="$2"
+
+    line_number=$(get_line_number $line_number_and_word)
+    scroll=$(get_scroll_lines)
+
+    printf '\033[2J'
+    "$cmd" --help | 
+    bat -f -p --wrap never -H $line_number -r $scroll: --theme Dracula;
+}
+
+main $@

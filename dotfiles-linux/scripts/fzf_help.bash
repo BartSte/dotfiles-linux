@@ -51,6 +51,7 @@ _fzf_select_option() {
 
     cmd="$1"
     export _FZF_HELP_RESULTS=$2
+    options="$2"
 
     regex_remove_line_number="s/^.*://g" 
     fzf_options='--preview-window=right,75%,nowrap '
