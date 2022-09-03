@@ -16,8 +16,8 @@ get_line_number() {
 get_scroll_lines() {
     local half_page line_number
 
+    line_number=$1
     half_page=$(get_half_page)
-    line_number=$(get_line_number)
 
     scroll=$(($line_number-$half_page));
     scroll=$(($scroll > 0 ? $scroll : 0));
@@ -40,7 +40,7 @@ main() {
     cmd="$2"
 
     line_number=$(get_line_number $line_number_and_word)
-    scroll=$(get_scroll_lines)
+    scroll=$(get_scroll_lines $line_number)
 
     printf '\033[2J'
     "$cmd" --help | 
