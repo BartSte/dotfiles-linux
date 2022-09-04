@@ -1,0 +1,16 @@
+#!/usr/bin/bash
+cmd=$@
+
+HEAD='?<=[^''"`]'
+TAIL='?=\s{2,}|(?<=[^\.])\n| <'
+OBLIGATORY_CHARS='--'
+ALLOWED_SYMBOLS='\[\]\-\=\.\,\%'
+ALLOWED_LETTERS_AND_NUMBERS='a-zA-Z0-9'
+
+regex="($HEAD)"
+regex+="($OBLIGATORY_CHARS)"
+regex+="([$ALLOWED_LETTERS_AND_NUMBERS]+"
+regex+="[$ALLOWED_LETTERS_AND_NUMBERS$ALLOWED_SYMBOLS]*)"
+regex+="($TAIL)"
+
+$cmd --help | ag --only-matching --numbers -- "$regex"

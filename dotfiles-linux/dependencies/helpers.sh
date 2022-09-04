@@ -46,6 +46,3 @@ install_bash_tab_completion() {
     popd
 }
 
-install_bathighlight() {
-    sudo ln ~/dotfiles-linux/scripts/bat_highlight /usr/bin/bat_highlight
-}

@@ -3,9 +3,9 @@
 get_line_number() {
     local line_number line_number_and_word
     line_number_and_word="$1"
+    options="$2"
 
-    #TODO _FZF_HELP_RESULTS should be eliminated
-    line_number=$(echo "$_FZF_HELP_RESULTS" | 
+    line_number=$(echo "$options" | 
                   ag -Q -- "$line_number_and_word" | 
                   head -1 | sed "s/:.*$//g")
 
@@ -34,17 +34,14 @@ get_half_page() {
     echo $(($number_of_lines / 2))
 }
 
-main() {
-    local line_number_and_word cmd
-    line_number_and_word="$1" #TODO line number is missing...
-    cmd="$2"
+#TODO think about caching the options of the last cmd.
+cmd="$1"
+option="$2" 
 
-    line_number=$(get_line_number $line_number_and_word)
-    scroll=$(get_scroll_lines $line_number)
+options=$(get_cli_options $cmd)
+line_number=$(get_line_number $option "$options")
+scroll=$(get_scroll_lines $line_number)
 
-    printf '\033[2J'
-    "$cmd" --help | 
-    bat -f -p --wrap never -H $line_number -r $scroll: --theme Dracula;
-}
-
-main $@
+printf '\033[2J'
+"$cmd" --help | 
+bat -f -p --wrap never -H $line_number -r $scroll: --theme Dracula;

@@ -1,6 +1,6 @@
-source ~/dotfiles-linux/scripts/fzf_help.bash
 [ -f /usr/share/fzf/completion.bash ] && source /usr/share/fzf/completion.bash
 [ -f /usr/share/fzf/key-bindings.bash ] && source /usr/share/fzf/key-bindings.bash
+[ -f ~/dotfiles-linux/scripts/fzf_help.bash ] && source ~/dotfiles-linux/scripts/fzf_help.bash
 
 export FZF_DEFAULT_COMMAND="fd --hidden --no-ignore-vcs --max-depth 4 --ignore-file $HOME/.ignore --type f"
 export FZF_DEFAULT_OPTS="--height 40% --layout=reverse --preview-window=right,65%"
