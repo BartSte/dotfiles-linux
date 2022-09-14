@@ -13,3 +13,4 @@ OPENER=mimeo
 [[ -e "/usr/share/fzf/fzf-extras.bash" ]] && source /usr/share/fzf/fzf-extras.bash
 
 PATH+=":$HOME/bin"
+PATH+=":$HOME/.local/bin"
