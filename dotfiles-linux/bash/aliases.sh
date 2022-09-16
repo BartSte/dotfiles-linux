@@ -16,6 +16,7 @@ alias pushs='base push; lin push; sec push'
 alias fetchs='base fetch; lin fetch; sec fetch'
 alias reload='. ~/.bashrc'
 
+alias py='python3'
 alias bat='bat --theme gruvbox-dark'
 alias ta='tmux attach'
 alias tn='tmux new'
