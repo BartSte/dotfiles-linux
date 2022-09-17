@@ -2,22 +2,19 @@
 
 _get_cli_options() {
     # Use options from stdin if they are available
+    local cmd
+    cmd=$1
     if [[ -p /dev/stdin ]]; then
         echo "$(cat -)"
     else
-        echo $(get_cli_options $cmd)
+        echo "$(get_cli_options $cmd)"
     fi
 }
 
 get_line_number() {
     local line_number line_number_and_word
     line_number_and_word="$1"
-    options="$2"
-
-    line_number=$(echo "$options" | 
-                  ag -Q -- "$line_number_and_word" | 
-                  head -1 | sed "s/:.*$//g")
-
+    line_number=$(ag -Q -- "$line_number_and_word" | head -1 | sed "s/:.*$//g")
     [ -z $line_number ] && line_number=0
     echo "$line_number"
 }
@@ -37,17 +34,14 @@ get_half_page() {
     local number_of_lines
 
     number_of_lines=$FZF_PREVIEW_LINES 
-    [ -z $number_of_lines ] && number_of_lines=$LINES
-    [ -z $LINES ] && number_of_lines=0
+    [ -z $number_of_lines ] && number_of_lines=$(tput lines)
 
     echo $(($number_of_lines / 2))
 }
 
 cmd="$1"
 option="$2" 
-options=$(_get_cli_options)
-line_number=$(get_line_number $option "$options")
+line_number=$(_get_cli_options $cmd | get_line_number $option)
 scroll=$(get_scroll_lines $line_number)
-
 printf '\033[2J'
 $cmd --help | bat -f -p -H $line_number -r $scroll: --theme Dracula;
