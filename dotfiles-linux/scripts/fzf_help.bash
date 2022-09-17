@@ -20,9 +20,12 @@ fzf_select_cli_option() {
     else
         cmd="${@}"
     fi
+    
+    options=$(get_cli_options "$cmd")
+    fzf_preview="echo \"$options\" | bat_cli_option \"$cmd\" {}; [ {q} ];"
 
-    get_cli_options "$cmd" | _remove_line_number | 
-    fzf $FZF_HELP_OPTS --prompt="$READLINE_LINE" --preview "bat_cli_option \"$cmd\" {}; [ {q} ];"
+    echo "$options" | _remove_line_number | 
+    fzf $FZF_HELP_OPTS --prompt="$READLINE_LINE" --preview "$fzf_preview"
 }
 
 _remove_line_number() {

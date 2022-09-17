@@ -1,5 +1,14 @@
 #!/usr/bin/bash
 
+_get_cli_options() {
+    # Use options from stdin if they are available
+    if [[ -p /dev/stdin ]]; then
+        echo "$(cat -)"
+    else
+        echo "$(get_cli_options $cmd)"
+    fi
+}
+
 get_line_number() {
     local line_number line_number_and_word
     line_number_and_word="$1"
@@ -34,14 +43,11 @@ get_half_page() {
     echo $(($number_of_lines / 2))
 }
 
-#TODO think about caching the options of the last cmd.
 cmd="$1"
 option="$2" 
-
-options=$(get_cli_options $cmd)
+options=$(_get_cli_options)
 line_number=$(get_line_number $option "$options")
 scroll=$(get_scroll_lines $line_number)
 
 printf '\033[2J'
-$cmd --help | 
-bat -f -p --wrap never -H $line_number -r $scroll: --theme Dracula;
+$cmd --help | bat -f -p -H $line_number -r $scroll: --theme Dracula;
