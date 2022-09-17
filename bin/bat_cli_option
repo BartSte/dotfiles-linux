@@ -43,5 +43,5 @@ line_number=$(get_line_number $option "$options")
 scroll=$(get_scroll_lines $line_number)
 
 printf '\033[2J'
-"$cmd" --help | 
+$cmd --help | 
 bat -f -p --wrap never -H $line_number -r $scroll: --theme Dracula;

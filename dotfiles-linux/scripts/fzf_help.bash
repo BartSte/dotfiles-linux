@@ -21,8 +21,8 @@ fzf_select_cli_option() {
         cmd="${@}"
     fi
 
-    get_cli_options $cmd | _remove_line_number | 
-    fzf $FZF_HELP_OPTS --prompt="$READLINE_LINE" --preview "bat_cli_option $cmd {}; [ {q} ];"
+    get_cli_options "$cmd" | _remove_line_number | 
+    fzf $FZF_HELP_OPTS --prompt="$READLINE_LINE" --preview "bat_cli_option \"$cmd\" {}; [ {q} ];"
 }
 
 _remove_line_number() {

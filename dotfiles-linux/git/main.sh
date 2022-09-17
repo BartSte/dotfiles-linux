@@ -7,6 +7,7 @@ function init_git() {
     git config --global user.name $GIT_NAME
     git config --global user.email "$MUTT_USERNAME@$MUTT_DOMAIN"
     git config --global push.autoSetupRemote yes
+    git config --global pull.rebase false
 
     cat ~/.gitconfig
 }
