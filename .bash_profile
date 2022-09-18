@@ -1,3 +1,6 @@
+PATH+=":$HOME/bin"
+PATH+=":$HOME/.local/bin"
+
 if [ -f ~/.bashrc ]; then
         . ~/.bashrc
 fi
