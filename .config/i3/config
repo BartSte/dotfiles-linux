@@ -1,15 +1,14 @@
 set $mod Mod4
 
 # Window title
-# font pango:DejaVu Sans Mono 8
 font pango:Jetbrains Mono 10
 title_align center
 for_window [class="^.*"] border pixel 0
 for_window [title="Library"] floating enable
 
 bindsym $mod+h focus left
-bindsym $mod+j focus down
-bindsym $mod+k focus up
+bindsym $mod+n focus down
+bindsym $mod+e focus up
 bindsym $mod+l focus right
 
 bindsym $mod+Left move left
@@ -50,11 +49,10 @@ bindsym XF86AudioRaiseVolume exec "amixer -qD pulse sset Master 5%+"
 bindsym XF86AudioLowerVolume exec "amixer -qD pulse sset Master 5%-"
 bindsym XF86AudioMute exec "amixer -qD pulse sset Master toggle"
 
-
 bindsym $mod+r mode "resize"
 mode "resize" {
-        bindsym j resize shrink width 10 px or 10 ppt
-        bindsym k resize grow height 10 px or 10 ppt
+        bindsym n resize shrink width 10 px or 10 ppt
+        bindsym e resize grow height 10 px or 10 ppt
         bindsym l resize shrink height 10 px or 10 ppt
         bindsym semicolon resize grow width 10 px or 10 ppt
         bindsym Left resize shrink width 10 px or 10 ppt
