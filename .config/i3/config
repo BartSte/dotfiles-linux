@@ -76,5 +76,5 @@ client.placeholder      #282828 #282828 #ebdbb2 #282828 #282828
 exec_always --no-startup-id $HOME/dotfiles-linux/i3/polybar-collection/launch.sh
 exec_always --no-startup-id feh --bg-fill "$HOME/dotfiles/wallpapers/namibia_dune.jpeg"
 exec_always --no-startup-id picom -f -e 0.8
-exec_always --no-startup-id sudo kmonad $HOME/dotfiles-linux/kmonad/home_row_modifiers_colemak.kbd
-exec --no-startup-id redshift -l 52.373882:6.891711 -t 6500:3000
+exec_always --no-startup-id sudo kmonad $HOME/dotfiles-linux/kmonad/home_row_modifiers.kbd
+exec --no-startup-id redshift -l 52.373882:6.891711 -t 6500:2500
