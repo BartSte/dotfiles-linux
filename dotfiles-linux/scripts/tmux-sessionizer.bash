@@ -1,11 +1,11 @@
-#!/usr/bin/env bash
+#C new-window -c "#{pane_current_path}"!/usr/bin/env bash
 
 if [[ $# -eq 1 ]]; then
     selected=$1
 elif running_wsl; then
     selected=$(find $WH/code -mindepth 1 -maxdepth 1 -type d | fzf) #TODO replace find with fd
 else
-    selected=$(find ~/dotfiles/ ~/dotfiles-linux/ -mindepth 1 -maxdepth 1 -type d | fzf) #TODO replace find with fd
+    selected=$(find ~/code ~/dotfiles-secret ~/dotfiles/ ~/dotfiles-linux/ -mindepth 1 -maxdepth 1 -type d | fzf) #TODO replace find with fd
 fi
 
 if [[ -z $selected ]]; then
