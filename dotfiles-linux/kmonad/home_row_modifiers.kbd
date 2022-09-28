@@ -11,9 +11,9 @@
 )
 
 (defsrc
-            e
-  a    s    d    f    g    h    j    k    l    ;
-                                n
+            e         t       
+       a    s    d    f    g    h    j    k    l    ;
+  lsft z    x    c    v    b    n    m
   lalt
 )
 
@@ -21,7 +21,7 @@
     met_a (tap-hold-next-release 200 a lmet)
     alt_s (tap-hold-next-release 200 s lalt)
     sft_d (tap-hold-next-release 200 d lsft)
-    ctl_f (tap-hold-next-release 200 f lctl)
+    ctl_t (tap-hold-next-release 200 t lctl)
 
     ctl_n (tap-hold-next-release 200 n rctl)
     sft_e (tap-hold-next-release 200 e rsft)
@@ -30,15 +30,15 @@
 )
 
 (deflayer homerowmods
-                      j
-    @met_a   @alt_s   @sft_d   @ctl_f   g   h   @ctl_n   @sft_e   @alt_l   @met_;
-                                                k
+                      f                 b
+    @met_a   @alt_s   @sft_d   @ctl_t   g       m   @ctl_n   @sft_e   @alt_l   @met_;
+    z        x        c        v        j   j   k   h   
     (layer-toggle arrows)
 )
 
 (deflayer arrows
-                      j
-    @met_a   @alt_s   @sft_d   @ctl_f   g   KeyLeft  KeyDown KeyUp   KeyRight @met_;
-                                            k
+                      f                 b
+    @met_a   @alt_s   @sft_d   @ctl_t   g      KeyLeft  KeyDown KeyUp   KeyRight @met_;
+    z        x        c        v        j   j   k   h   
     _
 )
