@@ -14,7 +14,7 @@
             e         t       
        a    s    d    f    g    h    j    k    l    ;
   lsft z    x    c    v    b    n    m
-  lalt
+  lalt space ralt
 )
 
 (defalias
@@ -33,12 +33,12 @@
                       f                 b
     @met_a   @alt_s   @sft_d   @ctl_t   g       m   @ctl_n   @sft_e   @alt_l   @met_;
     z        x        c        v        j   j   k   h   
-    (layer-toggle arrows)
+    (layer-toggle arrows) space backspace
 )
 
 (deflayer arrows
-                      f                 b
-    @met_a   @alt_s   @sft_d   @ctl_t   g      KeyLeft  KeyDown KeyUp   KeyRight @met_;
-    z        x        c        v        j   j   k   h   
-    _
+    _ _ 
+    _ _ _ _ _ KeyLeft  KeyDown KeyUp   KeyRight @met_;
+    _ _ _ _ _ _ _ _ 
+    _ _ _
 )
