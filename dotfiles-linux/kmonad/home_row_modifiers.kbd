@@ -11,10 +11,10 @@
 )
 
 (defsrc
-            e         t       
-       a    s    d    f    g    h    j    k    l    ;
-  lsft z    x    c    v    b    n    m
-  lalt space ralt
+      q w e r t y u i o p
+      a s d f g h j k l ;
+ lsft z x c v b n m , . /
+       lalt space ralt 
 )
 
 (defalias
@@ -27,18 +27,27 @@
     sft_e (tap-hold-next-release 200 e rsft)
     alt_l (tap-hold-next-release 200 l lalt)
     met_; (tap-hold-next-release 200 ; rmet)
+
+    nav_tab (tap-hold-next-release 200 tab (layer-toggle navigation))
 )
 
 (deflayer homerowmods
-                      f                 b
-    @met_a   @alt_s   @sft_d   @ctl_t   g       m   @ctl_n   @sft_e   @alt_l   @met_;
-    z        x        c        v        j   j   k   h   
-    (layer-toggle arrows) space backspace
+    q w f r b y u i o p
+    @met_a @alt_s @sft_d @ctl_t g m @ctl_n @sft_e @alt_l @met_;
+    z x c v j j k h , . /
+    @nav_tab space backspace 
 )
 
-(deflayer arrows
-    _ _ 
-    _ _ _ _ _ KeyLeft  KeyDown KeyUp   KeyRight @met_;
-    _ _ _ _ _ _ _ _ 
-    _ _ _
+(deflayer navigation
+ _ _ _ _ _ Home     PageDown    PageUp  End         _ 
+ _ _ _ _ _ KeyLeft  KeyDown     KeyUp   KeyRight    _
+ _ _ _ _ _ _ _ _ _ _ _
+ _ _ _
+)
+
+(deflayer symbols
+   _ _ _ _ _ _ _ _ _ _ 
+   _ _ _ _ _ _ _ _ _ _
+ _ _ _ _ _ _ _ _ _ _ _
+         _ _ _
 )

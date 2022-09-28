@@ -36,3 +36,4 @@ install_dependencies "${dependencies_extra[@]}"
 install_chrysalis
 init_bluetooth
 set_shadowfox
+install_tridactyl_native
