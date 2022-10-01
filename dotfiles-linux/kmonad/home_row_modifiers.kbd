@@ -19,8 +19,8 @@
 
 (defalias
     met_a (tap-hold-next-release 200 a lmet)
-    alt_s (tap-hold-next-release 200 s lalt)
-    sft_d (tap-hold-next-release 200 d lsft)
+    alt_r (tap-hold-next-release 200 r lalt)
+    sft_s (tap-hold-next-release 200 s lsft)
     ctl_t (tap-hold-next-release 200 t lctl)
 
     ctl_n (tap-hold-next-release 200 n rctl)
@@ -34,9 +34,9 @@
 )
 
 (deflayer homerowmods
-    q w f r b y u i o p
-    @met_a @alt_s @sft_d @ctl_t g m @ctl_n @sft_e @alt_l @met_;
-    z x c v j j k h , . /
+    q w f j b y u i o p
+    @met_a @alt_r @sft_s @ctl_t g m @ctl_n @sft_e @alt_l @met_;
+    z x c d v v k h , . /
     @nav_tab @sym_space @sym_bksp return 
 )
 

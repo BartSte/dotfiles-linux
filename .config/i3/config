@@ -6,7 +6,7 @@ title_align center
 for_window [class="^.*"] border pixel 0
 for_window [title="Library"] floating enable
 
-bindsym $mod+h focus left
+bindsym $mod+m focus left
 bindsym $mod+n focus down
 bindsym $mod+e focus up
 bindsym $mod+l focus right
