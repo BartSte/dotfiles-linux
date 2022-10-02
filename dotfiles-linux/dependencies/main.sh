@@ -11,3 +11,4 @@ install_dependencies_aur "${dependencies_aur[@]}"
 install_node_js
 install_bash_tab_completion
 link_scripts_to_bin
+initialize_tulizu

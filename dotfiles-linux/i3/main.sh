@@ -32,7 +32,7 @@ running_wsl && return
 echo "# I3 window manager"
 init_polybar 
 set_time_zone $TIME_ZONE
-install_dependencies "${dependencies_extra[@]}"
+install_dependencies "${dependencies_i3[@]}"
 install_chrysalis
 init_bluetooth
 set_shadowfox
