@@ -1,0 +1,9 @@
+[Unit]
+Description=Service to check for external monitors during boot.
+
+[Service]
+Type=Simple
+ExecStart=/usr/bin/kmonad /etc/systemd/system/home_row_modifiers.kbd
+
+[Install]
+WantedBy=multi-user.target
