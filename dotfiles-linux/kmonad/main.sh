@@ -18,4 +18,6 @@ enable_service() {
     sudo systemctl enable kmonad.service
 }
 
-enable_service
+if ! running_wsl; then
+    enable_service
+fi
