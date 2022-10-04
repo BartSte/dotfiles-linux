@@ -4,6 +4,7 @@ alias ...='cd ./../../'
 alias ....='cd ./../../../'
 alias path='echo -e ${PATH//:/\\n}'
 
+alias vim='nvim'
 alias base='/usr/bin/git --git-dir=$HOME/dotfiles.git/ --work-tree=$HOME'
 alias lin='/usr/bin/git --git-dir=$HOME/dotfiles-linux.git/ --work-tree=$HOME'
 alias sec='/usr/bin/git --git-dir=$HOME/dotfiles-secret.git/ --work-tree=$HOME'
