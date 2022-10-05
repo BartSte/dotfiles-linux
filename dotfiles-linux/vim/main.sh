@@ -15,11 +15,10 @@ function install_nvim_plug () {
 sym_link_init_vim () {
     mkdir ~/.config/nvim
     rm ~/.config/nvim/init.vim
-    ln ~/.vim/init.vim ~/.config/nvim/init.vim --symbolic
+    ln ~/dotfiles/vim/init.vim ~/.config/nvim/init.vim --symbolic
 }
 
 echo "# Vim"
-install_vim_plug
-install_nvim_plug
 sym_link_init_vim 
+install_nvim_plug
 pip install pynvim
