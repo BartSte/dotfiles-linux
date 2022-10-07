@@ -22,15 +22,18 @@ bindsym $mod+F11 fullscreen toggle
 # Workspaces
 set $ws1 "T"
 set $ws2 "F"
-set $ws3 "O"
+set $ws3 "S"
+set $ws4 "H"
 
 bindsym $mod+t workspace $ws1
 bindsym $mod+f workspace $ws2
-bindsym $mod+o workspace $ws3
+bindsym $mod+s workspace $ws3
+bindsym $mod+h workspace $ws3
 
 bindsym $mod+Shift+t move container to workspace $ws1
 bindsym $mod+Shift+f move container to workspace $ws2
-bindsym $mod+Shift+o move container to workspace $ws3
+bindsym $mod+Shift+s move container to workspace $ws3
+bindsym $mod+Shift+h move container to workspace $ws4
 
 assign [class="Alacritty"] workspace $ws1
 assign [class="firefox"] workspace $ws2

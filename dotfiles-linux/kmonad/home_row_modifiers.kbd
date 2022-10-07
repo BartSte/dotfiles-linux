@@ -28,9 +28,16 @@
     alt_l (tap-hold-next-release 200 l lalt)
     met_; (tap-hold-next-release 200 ; rmet)
 
+    met_t (around rmet t)
+    met_f (around rmet f)
+    met_s (around rmet s)
+    met_h (around rmet h)
+    met_, (around rmet ,)
+    met_. (around rmet .)
+
     nav_tab (tap-hold-next-release 200 tab (layer-toggle navigation))
     sym_space (tap-hold-next-release 200 space (layer-toggle symbols))
-    sym_bksp (tap-hold-next-release 200 backspace (layer-toggle symbols2))
+    sym_bksp (tap-hold-next-release 200 backspace (layer-toggle navigation))
 )
 
 (deflayer homerowmods
@@ -41,20 +48,14 @@
 )
 
 (deflayer navigation
- _ _ _ _ _ Home     PageDown    PageUp  End         _ 
- _ _ _ _ _ KeyLeft  KeyDown     KeyUp   KeyRight    _
- _ _ _ _ _ _ _ _ _ _ _
+   _ _ @met_f _      _ Home     PageDown    PageUp  End         _ 
+   _ _ @met_s @met_t _ KeyLeft  KeyDown     KeyUp   KeyRight    _
+ _ _ _ _      _      _ _ @met_h @met_, @met_. _
          _ _ _ _
 )
 
-(deflayer symbols
-     !  @  #  $  %  *  7  8  9  +
-     {  [  \( '  `  \  4  5  6  -
-  }  ]  \) "  ~  &  |  1  2  3  _
-        =        \_       0  _
-)
 
-(deflayer symbols2
+(deflayer symbols
      !  @  #  $  %  *  7  8  9  +
      {  [  \( '  `  \  4  5  6  -
   }  ]  \) "  ~  ^  |  1  2  3  _
