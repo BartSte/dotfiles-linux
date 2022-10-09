@@ -28,12 +28,12 @@
     alt_l (tap-hold-next-release 200 l lalt)
     met_o (tap-hold-next-release 200 o rmet)
 
-    met_t (around rmet t)
-    met_f (around rmet f)
-    met_s (around rmet s)
-    met_h (around rmet h)
-    met_, (around rmet ,)
-    met_. (around rmet .)
+    met_t (around rmet 1)
+    met_f (around rmet 2)
+    met_s (around rmet 3)
+    met_h (around rmet 4)
+    met_, (around rmet 5)
+    met_. (around rmet 6)
     eq (tap-macro space = space)
 
     nav_tab (tap-hold-next-release 200 tab (layer-toggle navigation))
