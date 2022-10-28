@@ -25,34 +25,41 @@
 
     cn (tap-hold-next-release 200 n rctl)
     se (tap-hold-next-release 200 e rsft)
-    al (tap-hold-next-release 200 l lalt)
+    ai (tap-hold-next-release 200 i lalt)
     mo (tap-hold-next-release 200 o rmet)
 
-    mt (around rmet 1)
-    mf (around rmet 2)
-    ms (around rmet 3)
-    mh (around rmet 4)
-    m, (around rmet 5)
-    m. (around rmet 6)
+    mt (around rmet t)
+    mf (around rmet f)
+    ms (around rmet s)
+    mh (around rmet h)
+    m, (around rmet ,)
+    m. (around rmet .)
     eq (tap-macro space = space)
 
-    nav_tab (tap-hold-next-release 200 tab (layer-toggle navigation))
+    nav_tab (tap-hold-next-release 200 tab (layer-toggle navigation_right))
     sym_space (tap-hold-next-release 200 space (layer-toggle symbols))
     sym_bksp (tap-hold-next-release 200 backspace (layer-toggle symbols2))
-    nav_ret (tap-hold-next-release 200 return (layer-toggle navigation))
+    nav_ret (tap-hold-next-release 200 return (layer-toggle navigation_left))
 )
 
 (deflayer homerowmods
-    q   w   f   p   b   j   u   i   y   ;
-    @ma @ar @ss @ct g   m   @cn @se @al @mo
+    q   w   f   p   b   j   l   u   y   ;
+    @ma @ar @ss @ct g   m   @cn @se @ai @mo
 z   x   c   d   v   v   k   h   ,   .   /
     lmet @nav_tab @sym_space @sym_bksp @nav_ret 
 )
 
-(deflayer navigation
-   _ _ @mf _      _ Home     PageDown    PageUp  End         _ 
-   _ _ @ms @mt _ KeyLeft  KeyDown     KeyUp   KeyRight    _
- _ _ _ _      _      _ _ @mh @m, @m. _
+(deflayer navigation_right
+   _   _   @mf _   _ Home     PageDown    PageUp  End      _ 
+   @ma @ar @ss @ct _ KeyLeft  KeyDown     KeyUp   KeyRight _
+ _ _   _   _   _   _ _        @mh         @m,     @m.      _
+         _ _ _ _ _
+)
+
+(deflayer navigation_left
+   _ _ @mf _  _ _ _ _ _ _ 
+   _ _ @ms @mt _ _ _ _ _ _
+ _ _ _ _ _ _ _ @mh @m, @m. _
          _ _ _ _ _
 )
 
@@ -64,8 +71,8 @@ z   x   c   d   v   &  |  1  2  3  _
 )
 
 (deflayer symbols2
-     !  @  #  $  %  j   u   i   y   ;
-     {  [  \( '  `  m   @cn @se @al @mo
+     !  @  #  $  %  j   l   u   y   ;
+     {  [  \( '  `  m   @cn @se @ai @mo
   }  ]  \) "  ~  ^  k   h   ,   .   /
            _ @eq \_ @sym_bksp @nav_ret
 )
