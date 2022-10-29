@@ -28,12 +28,12 @@
     ai (tap-hold-next-release 200 i lalt)
     mo (tap-hold-next-release 200 o rmet)
 
-    mt (around rmet t)
-    mf (around rmet f)
-    ms (around rmet s)
-    mh (around rmet h)
-    m, (around rmet ,)
-    m. (around rmet .)
+    mt (around rmet 1)
+    mf (around rmet 2)
+    ms (around rmet 3)
+    mh (around rmet 4)
+    m, (around rmet 5)
+    m. (around rmet 6)
     eq (tap-macro space = space)
 
     nav_tab (tap-hold-next-release 200 tab (layer-toggle navigation_right))
