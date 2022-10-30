@@ -5,7 +5,7 @@ source "$MUTT_ALIASES"
 # General
 auto_view text/html
 alternative_order text/plain text/html
-set editor="vim"
+set editor="nvim"
 set index_format=" %?M?   ↳&%4C?   %Z      %D     %-15.15n    %s"
 set mail_check=120
 set pager_stop="yes"

@@ -54,3 +54,7 @@ link_scripts_to_bin() {
 install_tridactyl_native() {
     curl -fsSl https://raw.githubusercontent.com/tridactyl/native_messenger/master/installers/install.sh -o /tmp/trinativeinstall.sh && sh /tmp/trinativeinstall.sh 1.22.1
 }
+
+initialize_tulizu() {
+    sudo tulizu install ~/dotfiles-linux/dependencies/arch-linux-logo.issue
+}

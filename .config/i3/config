@@ -9,7 +9,7 @@ for_window [title="Library"] floating enable
 bindsym $mod+m focus left
 bindsym $mod+n focus down
 bindsym $mod+e focus up
-bindsym $mod+l focus right
+bindsym $mod+i focus right
 
 bindsym $mod+Left move left
 bindsym $mod+Down move down
@@ -22,15 +22,18 @@ bindsym $mod+F11 fullscreen toggle
 # Workspaces
 set $ws1 "T"
 set $ws2 "F"
-set $ws3 "O"
+set $ws3 "S"
+set $ws4 "H"
 
-bindsym $mod+t workspace $ws1
-bindsym $mod+f workspace $ws2
-bindsym $mod+o workspace $ws3
+bindsym $mod+1 workspace $ws1
+bindsym $mod+2 workspace $ws2
+bindsym $mod+3 workspace $ws3
+bindsym $mod+4 workspace $ws4
 
-bindsym $mod+Shift+t move container to workspace $ws1
-bindsym $mod+Shift+f move container to workspace $ws2
-bindsym $mod+Shift+o move container to workspace $ws3
+bindsym $mod+Shift+1 move container to workspace $ws1
+bindsym $mod+Shift+2 move container to workspace $ws2
+bindsym $mod+Shift+3 move container to workspace $ws3
+bindsym $mod+Shift+4 move container to workspace $ws4
 
 assign [class="Alacritty"] workspace $ws1
 assign [class="firefox"] workspace $ws2
@@ -77,3 +80,4 @@ exec_always --no-startup-id $HOME/dotfiles-linux/i3/polybar-collection/launch.sh
 exec_always --no-startup-id feh --bg-fill "$HOME/dotfiles/wallpapers/namibia_dune.jpeg"
 exec_always --no-startup-id picom -f -e 0.8
 exec --no-startup-id redshift -l 52.373882:6.891711 -t 6500:2500
+exec --no-startup-id /usr/bin/lxsession
