@@ -2,8 +2,8 @@
 [ -f /usr/share/fzf/key-bindings.bash ] && source /usr/share/fzf/key-bindings.bash
 [ -f ~/dotfiles-linux/scripts/fzf_help.bash ] && source ~/dotfiles-linux/scripts/fzf_help.bash
 
-export FZF_DEFAULT_COMMAND="fd --hidden --no-ignore-vcs --max-depth 4 --ignore-file $HOME/.ignore --type f"
-export FZF_ALT_C_COMMAND="fd --hidden --no-ignore-vcs --max-depth 4 --ignore-file $HOME/.ignore -t d"
+export FZF_DEFAULT_COMMAND="fd --hidden --no-ignore-vcs --max-depth 5 --ignore-file $HOME/.ignore --type f"
+export FZF_ALT_C_COMMAND="fd --hidden --no-ignore-vcs --max-depth 5 --ignore-file $HOME/.ignore -t d"
 export FZF_CTRL_T_COMMAND=$FZF_DEFAULT_COMMAND
 
 export FZF_DEFAULT_OPTS="--height 40% --layout=reverse --preview-window=right,65%"
@@ -25,10 +25,10 @@ export FZF_COMPLETION_TRIGGER="**"
 export FZF_COMPLETION_OPTS='--info=inline'
 
 _fzf_compgen_path() {
-  fd --hidden --follow --max-depth 4 --ignore-file $HOME/.ignore . "$1"
+  fd --hidden --follow --max-depth 5 --ignore-file $HOME/.ignore . "$1"
 }
 
 _fzf_compgen_dir() {
-  fd --type d --hidden --follow --max-depth 4 --ignore-file $HOME/.ignore . "$1"
+  fd --type d --hidden --follow --max-depth 5 --ignore-file $HOME/.ignore . "$1"
 }
 
