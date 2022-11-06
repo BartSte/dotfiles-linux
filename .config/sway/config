@@ -65,8 +65,8 @@ client.unfocused        #282828 #282828 #ebdbb2 #282828 #282828
 client.urgent           #282828 #282828 #fb4934 #282828 #282828
 client.placeholder      #282828 #282828 #ebdbb2 #282828 #282828
 
-# bindsym XF86MonBrightnessUp exec xbacklight -inc 5
-# bindsym XF86MonBrightnessDown exec xbacklight -dec 5 
+bindsym XF86MonBrightnessUp exec brightnessctl s 5%+
+bindsym XF86MonBrightnessDown exec brightnessctl s 5%-
 bindsym XF86AudioRaiseVolume exec "amixer -qD pulse sset Master 5%+"
 bindsym XF86AudioLowerVolume exec "amixer -qD pulse sset Master 5%-"
 bindsym XF86AudioMute exec "amixer -qD pulse sset Master toggle"
