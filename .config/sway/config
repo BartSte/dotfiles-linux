@@ -41,16 +41,10 @@ assign [class="firefox"] workspace $ws2
 # Commands
 bindsym Print exec scrot -q 100 "$HOME/Screenshots/%Y-%m-%d-%s-screenshot.png"
 bindsym $mod+Mod1+c reload
-bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'You pressed the exit shortcut. Do you really want to exit i3? This will end your X session.' -B 'Yes, exit i3' 'i3-msg exit'"
+bindsym $mod+shift+e exec "i3-nagbar -t warning -m 'do you want to exit sway?' -b 'yes, exit' 'i3-msg exit'"
 bindsym $mod+Mod1+r restart
 bindsym $mod+space exec rofi -show run -theme gruvbox_custom -font "Jetbrains Mono 14"
 bindsym Mod1+F4 kill
-
-bindsym XF86MonBrightnessUp exec xbacklight -inc 5
-bindsym XF86MonBrightnessDown exec xbacklight -dec 5 
-bindsym XF86AudioRaiseVolume exec "amixer -qD pulse sset Master 5%+"
-bindsym XF86AudioLowerVolume exec "amixer -qD pulse sset Master 5%-"
-bindsym XF86AudioMute exec "amixer -qD pulse sset Master toggle"
 
 bindsym $mod+r mode "resize"
 mode "resize" {
@@ -71,9 +65,14 @@ client.unfocused        #282828 #282828 #ebdbb2 #282828 #282828
 client.urgent           #282828 #282828 #fb4934 #282828 #282828
 client.placeholder      #282828 #282828 #ebdbb2 #282828 #282828
 
-# Run commands on startup
-exec_always --no-startup-id $HOME/dotfiles-linux/i3/polybar-collection/launch.sh
-exec_always --no-startup-id feh --bg-fill "$HOME/dotfiles/wallpapers/namibia_dune.jpeg"
-exec_always --no-startup-id picom -f -e 0.8
+# bindsym XF86MonBrightnessUp exec xbacklight -inc 5
+# bindsym XF86MonBrightnessDown exec xbacklight -dec 5 
+bindsym XF86AudioRaiseVolume exec "amixer -qD pulse sset Master 5%+"
+bindsym XF86AudioLowerVolume exec "amixer -qD pulse sset Master 5%-"
+bindsym XF86AudioMute exec "amixer -qD pulse sset Master toggle"
+
+# # Run commands on startup
+# exec_always --no-startup-id $HOME/dotfiles-linux/i3/polybar-collection/launch.sh
+# exec_always --no-startup-id feh --bg-fill "$HOME/dotfiles/wallpapers/namibia_dune.jpeg"
 exec --no-startup-id redshift -l 52.373882:6.891711 -t 6500:2500
-exec --no-startup-id /usr/bin/lxsession
+# exec --no-startup-id /usr/bin/lxsession
