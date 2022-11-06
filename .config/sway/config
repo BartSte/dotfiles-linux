@@ -74,5 +74,5 @@ bindsym XF86AudioMute exec "amixer -qD pulse sset Master toggle"
 # # Run commands on startup
 exec_always --no-startup-id waybar --config ~/.config/waybar/config.json
 exec --no-startup-id redshift -l 52.373882:6.891711 -t 6500:2500
-# exec_always --no-startup-id feh --bg-fill "$HOME/dotfiles/wallpapers/namibia_dune.jpeg"
+exec_always --no-startup-id swaybg --image "$HOME/dotfiles/wallpapers/namibia_dune.jpeg" --mode fill
 # exec --no-startup-id /usr/bin/lxsession
