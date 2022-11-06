@@ -1,0 +1,44 @@
+{
+    "layer": "top",
+    "position": "bottom", 
+
+    "modules-left": ["sway/mode", "sway/window"],
+    "modules-center": ["sway/workspaces"],
+    "modules-right": ["battery", "clock"],
+
+    "sway/mode": {
+        "format": "<span style=\"italic\">{}</span>"
+    },
+
+    "sway/window": {
+        "max-length": 50
+    },
+    "sway/workspaces": {
+        "disable-scroll": true,
+        "all-outputs": true,
+        "format": "{name}",
+        "format-icons": {
+            "1": "T",
+            "2": "F",
+            "3": "S",
+            "4": "H"
+        }
+    },
+    "battery": {
+        "states": {
+            "good": 95,
+            "warning": 30,
+            "critical": 20
+        },
+        "format-charging": "{capacity}% ",
+        "format-plugged": "{capacity}% ",
+        "format-alt": "{time} {icon}",
+        "format-good": "{capacity}% {icon}", 
+        "format-full": "{capacity}% {icon}",
+        "format": "{capacity}% {icon}",
+        "format-icons": ["", "", "", "", ""]
+    },
+    "clock": {
+        "format-alt": "{:%a, %d. %b  %H:%M}"
+    }
+}
