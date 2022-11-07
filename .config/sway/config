@@ -35,7 +35,7 @@ bindsym $mod+Shift+2 move container to workspace $ws2
 bindsym $mod+Shift+3 move container to workspace $ws3
 bindsym $mod+Shift+4 move container to workspace $ws4
 
-assign [class="Alacritty"] workspace $ws1
+assign [class="alacritty"] workspace $ws1
 assign [class="firefox"] workspace $ws2
 
 # Commands
