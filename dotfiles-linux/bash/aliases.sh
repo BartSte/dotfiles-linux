@@ -28,7 +28,6 @@ alias blue='bluetoothctl'
 alias blueon='~/dotfiles-linux/scripts/enable_bluetooth.bash'
 alias blueoff='bluetoothctl power off'
 
-
 alias ls='exa -h --icons'
 alias lsa='exa -ah --icons'
 alias ll='exa -hl --icons'
