@@ -1,52 +1,49 @@
-set $mod Mod4
-
-# Window title
 font pango:Jetbrains Mono 10
-title_align center
-for_window [class="^.*"] border pixel 0
-for_window [title="Library"] floating enable
 
-bindsym $mod+m focus left
-bindsym $mod+n focus down
-bindsym $mod+e focus up
-bindsym $mod+i focus right
-
-bindsym $mod+Left move left
-bindsym $mod+Down move down
-bindsym $mod+Up move up
-bindsym $mod+Right move right
-
-# Layout change
-bindsym $mod+F11 fullscreen toggle
-
-# Workspaces
+set $mod Mod4
+set $menu exec alacritty --class=launcher --command sway-launcher-desktop
 set $ws1 "T"
 set $ws2 "F"
 set $ws3 "S"
 set $ws4 "H"
+
+title_align center
+assign [class="alacritty"] workspace $ws1
+assign [class="firefox"] workspace $ws2
+for_window [app_id="^launcher$"] floating enable, sticky enable, resize set 30 ppt 60 ppt, border pixel 10
+for_window [class="^.*"] border pixel 0
+for_window [title="Library"] floating enable
 
 bindsym $mod+1 workspace $ws1
 bindsym $mod+2 workspace $ws2
 bindsym $mod+3 workspace $ws3
 bindsym $mod+4 workspace $ws4
 
+bindsym $mod+e focus up
+bindsym $mod+n focus down
+bindsym $mod+i focus right
+bindsym $mod+m focus left
+
+bindsym $mod+Up move up
+bindsym $mod+Down move down
+bindsym $mod+Right move right
+bindsym $mod+Left move left
+
 bindsym $mod+Shift+1 move container to workspace $ws1
 bindsym $mod+Shift+2 move container to workspace $ws2
 bindsym $mod+Shift+3 move container to workspace $ws3
 bindsym $mod+Shift+4 move container to workspace $ws4
 
-assign [class="alacritty"] workspace $ws1
-assign [class="firefox"] workspace $ws2
-
-# Commands
-bindsym Print exec scrot -q 100 "$HOME/Screenshots/%Y-%m-%d-%s-screenshot.png"
+bindsym $mod+F11 fullscreen toggle
 bindsym $mod+Mod1+c reload
-bindsym $mod+shift+e exec "i3-nagbar -t warning -m 'do you want to exit sway?' -b 'yes, exit' 'i3-msg exit'"
 bindsym $mod+Mod1+r restart
-bindsym $mod+space exec rofi -show run -theme gruvbox_custom -font "Jetbrains Mono 14"
-bindsym Mod1+F4 kill
-
 bindsym $mod+r mode "resize"
+bindsym $mod+shift+e exit
+
+bindsym $mod+space exec $menu
+bindsym Mod1+F4 kill
+bindsym Print exec scrot -q 100 "$HOME/Screenshots/%Y-%m-%d-%s-screenshot.png"
+
 mode "resize" {
         bindsym Left resize grow width 10 px or 10 ppt
         bindsym Down resize grow height 10 px or 10 ppt
@@ -72,7 +69,10 @@ bindsym XF86AudioLowerVolume exec "amixer -qD pulse sset Master 5%-"
 bindsym XF86AudioMute exec "amixer -qD pulse sset Master toggle"
 
 # # Run commands on startup
-exec_always --no-startup-id waybar --config ~/.config/waybar/config.json
-exec --no-startup-id redshift -l 52.373882:6.891711 -t 6500:2500
-exec_always --no-startup-id swaybg --image "$HOME/dotfiles/wallpapers/namibia_dune.jpeg" --mode fill
+# exec --no-startup-id redshift -l 52.373882:6.891711 -t 6500:2500
 # exec --no-startup-id /usr/bin/lxsession
+
+# Sway only
+xwayland disable
+exec_always --no-startup-id waybar --config ~/.config/waybar/config.json
+exec_always --no-startup-id swaybg --image "$HOME/dotfiles/wallpapers/namibia_dune.jpeg" --mode fill
