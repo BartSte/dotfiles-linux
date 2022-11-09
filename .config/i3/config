@@ -10,7 +10,7 @@ set $ws4 "H"
 title_align center
 assign [class="alacritty"] workspace $ws1
 assign [class="firefox"] workspace $ws2
-for_window [app_id="^launcher$"] floating enable, sticky enable, resize set 30 ppt 60 ppt, border pixel 10
+for_window [class="^launcher$"] floating enable, sticky enable, resize set 30 ppt 60 ppt, border pixel 10
 for_window [class="^.*"] border pixel 0
 for_window [title="Library"] floating enable
 

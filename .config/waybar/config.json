@@ -22,8 +22,14 @@
     "sway/mode": {
         "format": "<span style=\"italic\">{}</span>"
     },
+
     "sway/window": {
-        "max-length": 50
+        "format": "{title}",
+        "max-length": 50,
+        "rewrite": {
+            "(.*) Mozilla.*": "🌎 $1",
+            "(bart-asus.*)": " $1"
+        }
     },
     "sway/workspaces": {
         "disable-scroll": true,
@@ -63,10 +69,13 @@
         "format-alt": "{:%a, %d. %b  %H:%M}"
     },
     "cpu": {
-        "format": "{usage}% ",
-        "tooltip": false
+        "interval": 3,
+        "format": "{usage}% {icon}",
+        "tooltip": false,
+        "format-icons": ["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"]
     },
     "memory": {
+        "interval": 3,
         "format": "{}% "
     },
     "backlight": {

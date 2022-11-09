@@ -2,13 +2,13 @@ PATH+=":$HOME/bin"
 PATH+=":$HOME/.local/bin"
 
 if [ -f ~/.bashrc ]; then
-        . ~/.bashrc
+    . ~/.bashrc
 fi
 
-if ! grep -q microsoft /proc/version && [ -z "${DISPLAY}" ] && [ "${XDG_VTNR}" -eq 1 ]; then
-     exec startx
-fi
-
-if ! grep -q microsoft /proc/version && [ -z "${DISPLAY}" ] && [ "${XDG_VTNR}" -eq 2 ]; then
-     exec sway
+if ! grep -q microsoft /proc/version && [ -z "${DISPLAY}" ]; then 
+    if [[ $(tty) = /dev/tty1 ]]; then
+        exec sway
+    elif [[ $(tty) = /dev/tty2 ]]; then
+        exec startx
+    fi
 fi
