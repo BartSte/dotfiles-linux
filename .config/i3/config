@@ -1,76 +1,18 @@
-font pango:Jetbrains Mono 10
+include ~/dotfiles-linux/i3/i3_sway_shared_config
 
-set $mod Mod4
-set $menu exec alacritty --class=launcher --command sway-launcher-desktop
-set $ws1 "T"
-set $ws2 "F"
-set $ws3 "S"
-set $ws4 "H"
+# i3 only
+bindsym XF86MonBrightnessUp exec brightnessctl s 5%+
+bindsym XF86MonBrightnessDown exec brightnessctl s 5%-
 
-title_align center
-assign [class="alacritty"] workspace $ws1
+assign [class="Alacritty"] workspace $ws1
 assign [class="firefox"] workspace $ws2
+
 for_window [class="^launcher$"] floating enable, sticky enable, resize set 30 ppt 60 ppt, border pixel 10
 for_window [class="^.*"] border pixel 0
 for_window [title="Library"] floating enable
 
-bindsym $mod+1 workspace $ws1
-bindsym $mod+2 workspace $ws2
-bindsym $mod+3 workspace $ws3
-bindsym $mod+4 workspace $ws4
-
-bindsym $mod+e focus up
-bindsym $mod+n focus down
-bindsym $mod+i focus right
-bindsym $mod+m focus left
-
-bindsym $mod+Up move up
-bindsym $mod+Down move down
-bindsym $mod+Right move right
-bindsym $mod+Left move left
-
-bindsym $mod+Shift+1 move container to workspace $ws1
-bindsym $mod+Shift+2 move container to workspace $ws2
-bindsym $mod+Shift+3 move container to workspace $ws3
-bindsym $mod+Shift+4 move container to workspace $ws4
-
-bindsym $mod+F11 fullscreen toggle
-bindsym $mod+Mod1+c reload
-bindsym $mod+Mod1+r restart
-bindsym $mod+r mode "resize"
-bindsym $mod+shift+e exit
-
-bindsym $mod+space exec $menu
-bindsym Mod1+F4 kill
-bindsym Print exec scrot -q 100 "$HOME/Screenshots/%Y-%m-%d-%s-screenshot.png"
-
-mode "resize" {
-        bindsym Left resize grow width 10 px or 10 ppt
-        bindsym Down resize grow height 10 px or 10 ppt
-        bindsym Up resize shrink height 10 px or 10 ppt
-        bindsym Right resize shrink width 10 px or 10 ppt
-
-        bindsym Return mode "default"
-        bindsym Escape mode "default"
-        bindsym $mod+r mode "default"
-}
-
-# customize colors
-client.focused          #b8bb26 #b8bb26 #ebdbb2 #b8bb26 #b8bb26
-client.focused_inactive #282828 #282828 #ebdbb2 #282828 #282828
-client.unfocused        #282828 #282828 #ebdbb2 #282828 #282828
-client.urgent           #282828 #282828 #fb4934 #282828 #282828
-client.placeholder      #282828 #282828 #ebdbb2 #282828 #282828
-
-bindsym XF86MonBrightnessUp exec brightnessctl s 5%+
-bindsym XF86MonBrightnessDown exec brightnessctl s 5%-
-bindsym XF86AudioRaiseVolume exec "amixer -qD pulse sset Master 5%+"
-bindsym XF86AudioLowerVolume exec "amixer -qD pulse sset Master 5%-"
-bindsym XF86AudioMute exec "amixer -qD pulse sset Master toggle"
-
-# Run commands on startup
-exec_always --no-startup-id $HOME/dotfiles-linux/i3/polybar-collection/launch.sh
-exec_always --no-startup-id feh --bg-fill "$HOME/dotfiles/wallpapers/namibia_dune.jpeg"
-exec_always --no-startup-id picom -f -e 0.8
+exec --no-startup-id $HOME/dotfiles-linux/i3/polybar-collection/launch.sh
+exec --no-startup-id feh --bg-fill "$HOME/dotfiles/wallpapers/namibia_dune.jpeg"
+exec --no-startup-id picom -f -e 0.8
 exec --no-startup-id redshift -l 52.373882:6.891711 -t 6500:2500
 exec --no-startup-id /usr/bin/lxsession
