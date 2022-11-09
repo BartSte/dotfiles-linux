@@ -22,12 +22,11 @@
     "sway/mode": {
         "format": "<span style=\"italic\">{}</span>"
     },
-
     "sway/window": {
         "format": "{title}",
         "max-length": 50,
         "rewrite": {
-            "(.*) Mozilla.*": "🌎 $1",
+            "(.*) (.*) Mozilla.*|(Mozilla.*)": "🌎 $1$3",
             "(bart-asus.*)": " $1"
         }
     },
