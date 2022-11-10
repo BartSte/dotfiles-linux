@@ -4,8 +4,9 @@
 pushd . > /dev/null
 cd ~/dotfiles-linux/bash
 source env.sh
-source fzf.bash
 source aliases.sh
+source fzf.bash
+source bindings.sh
 running_wsl && source wsl.sh
 popd > /dev/null
 
@@ -14,4 +15,4 @@ OPENER=mimeo
 [ -f  ~/clones/fzf-tab-completion/bash/fzf-bash-completion.sh ] && source ~/clones/fzf-tab-completion/bash/fzf-bash-completion.sh
 [[ -e "/usr/share/fzf/fzf-extras.bash" ]] && source /usr/share/fzf/fzf-extras.bash
 
-source ~/dotfiles-linux/bash/bindings.sh
+

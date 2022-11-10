@@ -1,5 +1,6 @@
 set -o vi
 
+bind -r "\C-t"
 bind '"\C-t":vi-movement-mode'
 bind '"\C-h":"\C-w"'
 bind -x '"\t": fzf_bash_completion'
