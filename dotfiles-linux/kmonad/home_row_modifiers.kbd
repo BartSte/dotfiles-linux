@@ -46,7 +46,7 @@
     q   w   f   p   b   j   l   u   y   ;
     @ma @ar @ss @ct g   m   @cn @se @ai @mo
 z   x   c   d   v   v   k   h   ,   .   /
-    lmet @nav_tab @sym_space @sym_bksp @nav_ret 
+    lmet @nav_tab @sym_space @nav_ret _
 )
 
 (deflayer navigation_right
@@ -64,15 +64,22 @@ z   x   c   d   v   v   k   h   ,   .   /
 )
 
 (deflayer symbols
-    q   w   f   p   b  *  7  8  9  +
-    @ma @ar @ss @ct g  \  4  5  6  -
-z   x   c   d   v   &  |  1  2  3  _
-         lmet @nav_tab _  =  0
+     !  @  #  $  %  *  7  8  9  +
+     {  [  \( '  `  \  4  5  6  -
+  }  ]  \) "  ~  &  |  1  2  3  _
+              _ @eq \_ 0  _
+)
+
+(deflayer symbols3
+    q   w   f   p   b       *  7  8  9  +
+    @ma @ar @ss @ct g       \  4  5  6  -
+z   x   c   d   v         & |  1  2  3  _
+         lmet @nav_tab      _  0  _
 )
 
 (deflayer symbols2
-     !  @  #  $  %  j   l   u   y   ;
-     {  [  \( '  `  m   @cn @se @ai @mo
-  }  ]  \) "  ~  ^  k   h   ,   .   /
-           _ @eq \_ @sym_bksp @nav_ret
+     !  @  #  $  %          j   l   u   y   ;
+     {  [  \( '  `          m   @cn @se @ai @mo
+  }  ]  \) "  ~  ^          k   h   ,   .   /
+           _ @eq \_         @nav_ret _
 )
