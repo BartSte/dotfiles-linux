@@ -45,7 +45,7 @@
     q   w   f   p   b   j   l   u   y   ;
     @ma @ar @ss @ct g   m   @cn @se @ai @mo
 z   x   c   d   v   v   k   h   ,   .   /
-    lmet @nav_tab @sym_space @nav_ret _
+    esc @nav_tab @sym_space @nav_ret _
 )
 
 (deflayer navigation_right
