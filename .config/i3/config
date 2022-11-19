@@ -4,8 +4,8 @@ include ~/dotfiles-linux/i3/i3_sway_shared_config
 bindsym XF86MonBrightnessUp exec brightnessctl s 5%+
 bindsym XF86MonBrightnessDown exec brightnessctl s 5%-
 
-assign [class="Alacritty"] workspace $ws1
-assign [class="firefox"] workspace $ws2
+# assign [class="Alacritty"] workspace $ws1
+# assign [class="firefox"] workspace $ws2
 
 for_window [class="^launcher$"] floating enable, sticky enable, resize set 30 ppt 60 ppt, border pixel 10
 for_window [class="^.*"] border pixel 0

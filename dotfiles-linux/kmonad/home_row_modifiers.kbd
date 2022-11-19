@@ -44,8 +44,8 @@
 (deflayer homerowmods
     q   w   f   p   b   j   l   u   y   ;
     @ma @ar @ss @ct g   m   @cn @se @ai @mo
-z   x   c   d   v   v   k   h   ,   .   /
-    esc @nav_tab @sym_space @nav_ret _
+    z   x   c   d   v   v   k   h   ,   .   /
+      esc @nav_tab @sym_space @nav_ret del
 )
 
 (deflayer navigation_right
