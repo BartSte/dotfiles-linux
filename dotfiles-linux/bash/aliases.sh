@@ -24,7 +24,7 @@ alias tn='tmux new'
 alias tm='~/dotfiles-linux/scripts/tmux-sessionizer.bash ~'
 alias rm='trash-put'
 alias remove='/usr/bin/rm'
-alias blue='bluetoothctl'
+alias blue='bluetoothctl connect $HEADPHONES'
 alias blueon='~/dotfiles-linux/scripts/enable_bluetooth.bash'
 alias blueoff='bluetoothctl power off'
 
