@@ -62,7 +62,7 @@ initialize_tulizu() {
 link_qutebrowser_config() {
     echo "Link qutebrowser config"
     source=~/dotfiles/qutebrowser/config.py
-    destination=~/.config/qutebrowser/config/config.py
-    rm $destination || mkdir ~/.config/qutebrowser/config
+    destination=~/.config/qutebrowser/config.py
+    rm $destination
     ln $source $destination
 }
