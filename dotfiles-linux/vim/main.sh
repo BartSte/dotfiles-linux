@@ -27,6 +27,6 @@ make_dict(){
 
 echo "# Vim"
 symlink_config 
-make_dict nl "$HOME/.local/share/nvim/dict"
-make_dict en "$HOME/.local/share/nvim/dict"
+make_dict nl "$HOME/.config/nvim/dict"
+make_dict en "$HOME/.config/nvim/dict"
 pip install pynvim
