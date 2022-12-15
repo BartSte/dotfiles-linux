@@ -66,3 +66,4 @@ link_qutebrowser_config() {
     rm $destination
     ln $source $destination
 }
+
