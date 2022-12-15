@@ -1,3 +1,8 @@
+get_spell(){
+    lang=$1
+    mkdir ~/.config/nvim/spell --parent
+    curl -o ~/.config/nvim/spell/$lang.utf-8.spl http://ftp.vim.org/pub/vim/runtime/spell/$lang.utf-8.spl
+}
 symlink_config () {
     mkdir ~/.config/nvim --parents
     rm ~/.config/nvim/init.vim
@@ -29,4 +34,6 @@ echo "# Vim"
 symlink_config 
 make_dict nl "$HOME/.config/nvim/dict"
 make_dict en "$HOME/.config/nvim/dict"
+get_spell nl
+get_spell en
 pip install pynvim
