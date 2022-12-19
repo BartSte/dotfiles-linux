@@ -1,0 +1,20 @@
+[general]
+status_path = "~/.config/vdirsyncer/status/"
+
+[pair outlook]
+a = "outlook_local"
+b = "outlook_remote"
+metadata = ["color"]
+collections = ["from a", "from b"]
+conflict_resolution = "b wins"
+
+[storage outlook_remote]
+type = "caldav"
+url.fetch = ["shell", "echo $CALENDAR_URL"]
+username.fetch = ["shell", "echo $MUTT_USERNAME@$MUTT_DOMAIN"]
+password.fetch = ["shell", "echo $CALENDAR_PASSWORD"]
+
+[storage outlook_local]
+type = "filesystem"
+path = "~/.local/share/calendar/outlook/"
+fileext = ".ics"
