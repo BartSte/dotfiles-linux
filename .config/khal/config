@@ -1,7 +1,7 @@
 [calendars]
 
 [[outlook_local]]
-path = ~/.local/share/calendar/outlook/*
+path = ~/.local/share/calendar/outlook
 type = discover
 
 [locale]
@@ -12,4 +12,4 @@ datetimeformat = %d/%m/%Y %H:%M
 longdatetimeformat = %d/%m/%Y %H:%M
 
 [default]
-default_calendar = outlook_local
+default_calendar = outlook
