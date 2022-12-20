@@ -8,15 +8,19 @@ copy_config() {
     directory_config=$2
     destination="$directory_config/davmail.properties"
 
-    mkdir $directory_config --parents 
-    rm $destination 
-    cp $source $destination
+    sudo rm $destination 
+    sudo cp $source $destination
     echo "Davmail: copied $source to $destination"
 }
 
-directory_config=~/.config/davmail 
-source=~/dotfiles-linux/davmail/davmail.properties
+activate_as_service() {
+    source=$1
+    destination=/etc/systemd/system/davmail.service
+    sudo rm $destination
+    sudo cp $source $destination
 
-yay -S davmail
-sudo pacman -S java-openjfx
-copy_config $source $directory_config;
+    sudo useradd --system davmail
+    sudo systemctl daemon-reload
+    sudo systemctl enable davmail
+    sudo systemctl start davmail
+}

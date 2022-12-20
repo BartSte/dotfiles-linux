@@ -10,3 +10,6 @@ function enable_firefox_win() {
     sudo chmod +x /usr/bin/firefox
 }
 
+enable_systemd() {
+    sudo cp ~/dotfiles-linux/wsl/wsl.conf /etc/wsl.conf
+}
