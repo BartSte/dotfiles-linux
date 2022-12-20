@@ -11,7 +11,7 @@ conflict_resolution = "b wins"
 [storage outlook_remote]
 type = "caldav"
 url.fetch = ["shell", "echo $CALENDAR_URL"]
-username.fetch = ["shell", "echo $MUTT_USERNAME@$MUTT_DOMAIN"]
+username.fetch = ["shell", "echo $CALENDAR_EMAIL"]
 password.fetch = ["shell", "echo $CALENDAR_PASSWORD"]
 
 [storage outlook_local]

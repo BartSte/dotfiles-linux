@@ -5,4 +5,4 @@ source=~/dotfiles-linux/davmail/davmail.properties
 service=~/dotfiles-linux/davmail/davmail.service
 
 copy_config $source $directory_config;
-activate_as_service $service
+# activate_as_service $service
