@@ -2,4 +2,4 @@ dependencies=("java-openjfx" "python-gpgme" "aspell" "aspell-nl" "aspell-en" "te
 dependencies_aur=("dropbox" "dropbox-cli" "qt5-webengine-widevine" "urlview" "kmonad-bin" "fzf-extras" "shadowfox-updater" "tulizu" "nvim-packer-git", "sway-launcher-desktop")
 dependencies_i3=("spotifyd" "qutebrowser" "qt-wayland" "networkmanager" "pavucontrol" "pulseaudio-alsa" "alsa-utils" "pulseaudio-bluetooth" "bluez-utils" "pulseaudio" "xorg" "xorg-xbacklight" "scrot" "polybar" "picom" "i3-wm" "lxsession")
 dependencies_sway=("spotifyd" "brightnessctl" "waybar" "sway" "swaybg" "wayland" "gammastep")
-
+dependencies_pip=("questionary" "ics")

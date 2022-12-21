@@ -3,6 +3,7 @@
 [[outlook_local]]
 path = ~/.local/share/calendar/outlook
 type = discover
+color = dark green
 
 [locale]
 timeformat = %H:%M
@@ -10,6 +11,15 @@ dateformat = %d/%m/%Y
 longdateformat = %d/%m/%Y
 datetimeformat = %d/%m/%Y %H:%M
 longdatetimeformat = %d/%m/%Y %H:%M
+weeknumbers = right
 
 [default]
 default_calendar = outlook
+highlight_event_days = True
+show_all_days = False
+
+[highlight_days]
+color = light red
+default_color = white
+multiple = light blue
+multiple_on_overflow = True
