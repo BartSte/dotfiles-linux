@@ -3,7 +3,7 @@
 [[outlook_local]]
 path = ~/.local/share/calendar/outlook
 type = discover
-color = dark green
+color = light green
 
 [locale]
 timeformat = %H:%M
@@ -23,3 +23,9 @@ color = light red
 default_color = white
 multiple = light blue
 multiple_on_overflow = True
+
+[view]
+blank_line_before_day = True
+frame = color
+theme = dark
+bold_for_light_color = False
