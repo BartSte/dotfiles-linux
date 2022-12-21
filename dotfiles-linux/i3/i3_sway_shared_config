@@ -5,7 +5,11 @@ set $menu exec alacritty --class=launcher --command sway-launcher-desktop
 set $ws1 "T"
 set $ws2 "F"
 set $ws3 "S"
-set $ws4 "H"
+set $ws4 "C"
+set $ws5 "X"
+set $ws6 "A"
+set $ws7 "Q"
+set $ws8 "W"
 
 title_align center
 

@@ -8,19 +8,15 @@ copy_config() {
     directory_config=$2
     destination="$directory_config/davmail.properties"
 
-    sudo rm $destination 
-    sudo cp $source $destination
+    rm $destination 
+    cp $source $destination
     echo "Davmail: copied $source to $destination"
 }
 
 activate_as_service() {
-    source=$1
-    destination=/etc/systemd/system/davmail.service
-    sudo rm $destination
-    sudo cp $source $destination
-
-    sudo useradd --system davmail
-    sudo systemctl daemon-reload
-    sudo systemctl enable davmail
-    sudo systemctl start davmail
+    killall davmail
+    systemctl --user disable davmail.service
+    systemctl --user daemon-reload
+    systemctl --user enable davmail.service
+    systemctl --user start davmail.service
 }
