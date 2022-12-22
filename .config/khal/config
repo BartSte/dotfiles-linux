@@ -29,3 +29,5 @@ blank_line_before_day = True
 frame = color
 theme = dark
 bold_for_light_color = False
+event_view_weighting = 1
+agenda_event_format = {calendar-color}{cancelled}{start-end-time-style} {title}{repeat-symbol}{alarm-symbol}{reset}
