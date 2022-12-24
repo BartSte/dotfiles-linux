@@ -5,8 +5,8 @@ source ~/.mutt/binds.muttrc
 
 # Style
 source ~/.config/neomutt/gruvbox/colors-gruvbox-shuber.muttrc 
-source ~/.config/neomutt/powerline/colors/gruvbox-powerline.neomuttrc
-source ~/.config/neomutt/powerline/powerline.neomuttrc
+source ~/.config/neomutt/gruvbox/powerline/colors/gruvbox-powerline.neomuttrc
+source ~/.config/neomutt/gruvbox/powerline/powerline.neomuttrc
 # source ~/.mutt/styles.muttrc
 
 # General
