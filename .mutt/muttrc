@@ -1,5 +1,4 @@
 source "~/.mutt/lang/$MUTT_LANG"
-source "$MUTT_ALIASES"
 source ~/.mutt/khard.muttrc
 source ~/.mutt/macros.muttrc
 source ~/.mutt/binds.muttrc

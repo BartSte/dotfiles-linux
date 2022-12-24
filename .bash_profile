@@ -1,5 +1,6 @@
 PATH+=":$HOME/bin"
 PATH+=":$HOME/.local/bin"
+PATH+=":$HOME/.emacs.d/bin"
 
 if [ -f ~/.bashrc ]; then
     . ~/.bashrc
