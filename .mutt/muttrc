@@ -1,6 +1,11 @@
 source "~/.mutt/lang/$MUTT_LANG"
-source "~/.mutt/gruvbox/colors-gruvbox-shuber.muttrc
 source "$MUTT_ALIASES"
+source ~/.mutt/khard.muttrc
+source ~/.mutt/macros.muttrc
+source ~/.mutt/binds.muttrc
+source ~/.config/neomutt/powerline/colors/gruvbox-powerline.neomuttrc
+source ~/.config/neomutt/powerline/powerline.neomuttrc
+source ~/.mutt/styles.muttrc
 
 # General
 auto_view text/html
@@ -63,11 +68,8 @@ set sidebar_folder_indent = yes
 set sidebar_indent_string = ' - '
 set sidebar_non_empty_mailbox_only = yes
 set sidebar_visible = no
-set sidebar_width   = 50
+set sidebar_width   = 30
 set sidebar_next_new_wrap = yes
 set sidebar_short_path = yes
 set sidebar_component_depth = 0
 
-source ~/.mutt/macros.muttrc
-source ~/.mutt/styles.muttrc
-source ~/.mutt/binds.muttrc
