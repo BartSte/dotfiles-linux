@@ -1,0 +1,68 @@
+## Key bindings
+
+# Mailboxes
+bind    index   <F5> imap-fetch-mail
+bind    index   <esc>V noop
+bind    index   <esc>v noop
+bind    index   \Cn noop
+bind    index   \Cp noop
+bind    index   g   noop
+macro   index   gi "<change-folder>=INBOX<enter>"       "Go to Inbox"
+macro   index   ga "<change-folder>=ARCHIVE<enter>"     "Go to Archive"
+macro   index   gl "<change-folder>=Gitlab<enter>"      "Go to Gitlab"
+macro   index   gs "<change-folder>=$my_sent<enter>"    "Go to Sent"
+macro   index   gd "<change-folder>=$my_drafts<enter>"  "Go to Drafts"
+macro   index   gt "<change-folder>=$my_trash<enter>"   "Go to Trash"
+
+# Index
+bind    index   <up>        previous-entry
+bind    index   <down>      next-entry
+bind    index   <delete>    delete-message
+
+# Pager
+bind    pager   <up>        previous-line
+bind    pager   <down>      next-line
+bind    pager   <left>      previous-entry
+bind    pager   <right>     next-entry
+bind    pager   <delete>    delete-message
+bind    pager   k           previous-line
+bind    pager   j           next-line
+
+# Vim like bindings 
+bind alias,index,browser,query G last-entry
+bind pager G bottom
+
+bind alias,index,browser,query gg first-entry
+bind pager g noop
+bind pager gg top
+
+bind index,pager S create-alias
+bind index,pager a group-reply
+
+bind alias,index,pager,browser,query \Cd half-down
+bind alias,index,pager,browser,query \Cu half-up
+
+bind index n search-next
+bind index N search-opposite
+
+bind index K previous-thread
+bind pager K half-up
+
+bind index J next-thread
+bind pager J half-down
+
+bind editor <up> history-up
+bind editor <down> history-down
+
+# Limit messages quickly using ' + key.
+macro index \'d  "<limit>~D<enter>"       "limit to deleted messages"
+macro index \'f  "<limit>~F<enter>"       "limit to flagged messages"
+macro index \'n  "<limit>~N|~O<enter>"    "limit to new messages"
+macro index \'u  "<limit>!~Q<enter>"      "limit to unreplied messages"
+macro index \'\' "<limit>~A<enter>"       "reset all limits"
+
+# Sidebar
+bind index,pager \ex sidebar-toggle-visible
+#bind index,pager \Cj sidebar-next
+#bind index,pager \Ck sidebar-prev
+#bind index,pager \Co sidebar-open

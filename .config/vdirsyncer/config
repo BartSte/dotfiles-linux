@@ -1,3 +1,5 @@
+# TODO same as agenda for contacts; move all contacts to work account.
+
 [general]
 status_path = "~/.config/vdirsyncer/status/"
 
