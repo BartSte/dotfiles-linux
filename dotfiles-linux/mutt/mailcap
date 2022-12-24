@@ -1,51 +1,22 @@
-text/html; lynx -assume_charset=%{charset} -display_charset=utf-8 -collapse_br_tags -dump %s; nametemplate=%s.html; copiousoutput
+# open html emails in browser (or whatever GUI program is used to render HTML)
+text/html; openfile %s ; nametemplate=%s.html
+# render html emails inline using magic (uncomment the line below to use lynx instead)
+# text/html; lynx -assume_charset=%{charset} -display_charset=utf-8 -collapse_br_tags -dump %s; nametemplate=%s.html; copiousoutput
+text/html; beautiful_html_render %s; nametemplate=%s.html; copiousoutput;
 
-application/gpg; gpg -d %s; copiousoutput
+# show calendar invites
+text/calendar; render-calendar-attachment.py %s; copiousoutput;
+application/ics; mutt-viewical; copiousoutput;
 
-text/pdf; pdftotext -layout %s -; copiousoutput
-application/pdf; pdftotext -layout %s -; copiousoutput
-application/x-pdf; pdftotext -layout %s -; copiousoutput
-application/x-bzpdf; pdftotext -layout %s -; copiousoutput
-application/x-gzpdf; pdftotext -layout %s -; copiousoutput
+# open images externally
+image/*; openfile %s ;
 
-image/*; firefeh %s
+# open videos in mpv
+video/*; mpv --autofit-larger=90\%x90\% %s; needsterminal;
+video/*; setsid mpv --quiet %s &; copiousoutput
 
-application/msword; antiword -w 96 %s; copiousoutput
-application/vnd.openxmlformats-officedocument.wordprocessingml.document; docx2txt < %s -; copiousoutput
+# open spreadsheets in sc-im
+application/vnd.openxmlformats-officedocument.spreadsheetml.sheet; sc-im %s; needsterminal
 
-application/vnd.oasis.opendocument.text; odt2txt --width=96 %s; copiousoutput
-application/vnd.oasis.opendocument.text-master; odt2txt --width=96 %s; copiousoutput
-application/vnd.oasis.opendocument.text-template; odt2txt --width=96 %s; copiousoutput
-application/vnd.oasis.opendocument.text-web; odt2txt --width=96 %s; copiousoutput
-application/vnd.oasis.opendocument.presentation; odt2txt --width=96 %s; copiousoutput
-application/vnd.oasis.opendocument.presentation-template; odt2txt --width=96 %s; copiousoutput
-
-application/vnd.sun.xml.calc.template; odt2txt --width=96 %s; copiousoutput
-application/vnd.sun.xml.calc; odt2txt --width=96 %s; copiousoutput
-application/vnd.sun.xml.impress.template; odt2txt --width=96 %s; copiousoutput
-application/vnd.sun.xml.impress; odt2txt --width=96 %s; copiousoutput
-application/vnd.sun.xml.writer.global; odt2txt --width=96 %s; copiousoutput
-application/vnd.sun.xml.writer.template; odt2txt --width=96 %s; copiousoutput
-application/vnd.sun.xml.writer; odt2txt --width=96 %s; copiousoutput
-
-text/csv; less %s; copiousoutput
-text/tab-separated-values; less %s; copiousoutput
-
-application/x-bzip; tar --list %s; copiousoutput
-application/x-bzip1; tar --list %s; copiousoutput
-application/x-bzip-compressed-tar; tar --list %s; copiousoutput
-application/x-bzip1-compressed-tar; tar --list %s; copiousoutput
-application/x-tar; tar --list %s; copiousoutput
-application/x-tarz; tar --list %s; copiousoutput
-application/x-7z-compressed-tar; tar --list %s; copiousoutput
-
-application/x-lzma; xz -l %s; copiousoutput
-application/x-lzma-compressed-tar; xz -l %s; copiousoutput
-application/x-xz; xz -l %s; copiousoutput
-application/x-xz-compressed-tar; xz -l %s; copiousoutput
-
-application/x-7z-compressed; 7z l %s; copiousoutput
-
-application/x-zip; unzip -l %s; copiousoutput
-application/x-zip-compressed; unzip -l %s; copiousoutput
-application/zip; unzip -l %s; copiousoutput
+# open anything else externally
+application/pdf; openfile %s;
