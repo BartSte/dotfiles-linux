@@ -29,8 +29,8 @@ conflict_resolution = "b wins"
 [storage outlook_contacts_remote]
 type = "carddav"
 url.fetch = ["shell", "echo $CONTACTS_URL"]
-username.fetch = ["shell", "echo $CALENDAR_EMAIL"]
-password.fetch = ["shell", "echo $CALENDAR_PASSWORD"]
+username.fetch = ["shell", "echo $CONTACTS_EMAIL"]
+password.fetch = ["shell", "echo $CONTACTS_PASSWORD"]
 
 [storage outlook_contacts_local]
 type = "filesystem"
