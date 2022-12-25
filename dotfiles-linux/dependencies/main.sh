@@ -12,3 +12,6 @@ install_node_js
 install_bash_tab_completion
 link_scripts_to_bin
 initialize_tulizu
+link_qutebrowser_config 
+dropbox-cli autostart y
+pip "${dependencies_pip[@]}"

@@ -9,5 +9,6 @@ bash ~/dotfiles-linux/gpg/main.sh
 bash ~/dotfiles-linux/mutt/main.sh
 bash ~/dotfiles-linux/i3/main.sh
 bash ~/dotfiles-linux/kmonad/main.sh
+bash ~/dotfiles-linux/davmail/main.bash
 
 echo "Done"

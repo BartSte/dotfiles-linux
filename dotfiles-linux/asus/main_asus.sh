@@ -12,4 +12,4 @@ function copy_wireless_adapter_config() {
 
 copy_backlight_config
 copy_wireless_adapter_config
-sudo pacman -S xf86-video-intel
+sudo pacman -S xf86-video-intel intel-gpu-tools mesa mkinitcpio-firmware

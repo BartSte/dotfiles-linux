@@ -1,83 +1,18 @@
-set $mod Mod4
+include ~/dotfiles-linux/i3/i3_sway_shared_config
 
-# Window title
-font pango:Jetbrains Mono 10
-title_align center
+# i3 only
+bindsym XF86MonBrightnessUp exec brightnessctl s 5%+
+bindsym XF86MonBrightnessDown exec brightnessctl s 5%-
+
+# assign [class="Alacritty"] workspace $ws1
+# assign [class="firefox"] workspace $ws2
+
+for_window [class="^launcher$"] floating enable, sticky enable, resize set 30 ppt 60 ppt, border pixel 10
 for_window [class="^.*"] border pixel 0
 for_window [title="Library"] floating enable
 
-bindsym $mod+m focus left
-bindsym $mod+n focus down
-bindsym $mod+e focus up
-bindsym $mod+i focus right
-
-bindsym $mod+Left move left
-bindsym $mod+Down move down
-bindsym $mod+Up move up
-bindsym $mod+Right move right
-
-# Layout change
-bindsym $mod+F11 fullscreen toggle
-
-# Workspaces
-set $ws1 "T"
-set $ws2 "F"
-set $ws3 "S"
-set $ws4 "H"
-
-bindsym $mod+1 workspace $ws1
-bindsym $mod+2 workspace $ws2
-bindsym $mod+3 workspace $ws3
-bindsym $mod+4 workspace $ws4
-
-bindsym $mod+Shift+1 move container to workspace $ws1
-bindsym $mod+Shift+2 move container to workspace $ws2
-bindsym $mod+Shift+3 move container to workspace $ws3
-bindsym $mod+Shift+4 move container to workspace $ws4
-
-assign [class="Alacritty"] workspace $ws1
-assign [class="firefox"] workspace $ws2
-
-# Commands
-bindsym Print exec scrot -q 100 "$HOME/Screenshots/%Y-%m-%d-%s-screenshot.png"
-bindsym $mod+Mod1+c reload
-bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'You pressed the exit shortcut. Do you really want to exit i3? This will end your X session.' -B 'Yes, exit i3' 'i3-msg exit'"
-bindsym $mod+Mod1+r restart
-bindsym $mod+space exec rofi -show run -theme gruvbox_custom -font "Jetbrains Mono 14"
-bindsym Mod1+F4 kill
-
-bindsym XF86MonBrightnessUp exec xbacklight -inc 5
-bindsym XF86MonBrightnessDown exec xbacklight -dec 5 
-bindsym XF86AudioRaiseVolume exec "amixer -qD pulse sset Master 5%+"
-bindsym XF86AudioLowerVolume exec "amixer -qD pulse sset Master 5%-"
-bindsym XF86AudioMute exec "amixer -qD pulse sset Master toggle"
-
-bindsym $mod+r mode "resize"
-mode "resize" {
-        bindsym n resize shrink width 10 px or 10 ppt
-        bindsym e resize grow height 10 px or 10 ppt
-        bindsym l resize shrink height 10 px or 10 ppt
-        bindsym semicolon resize grow width 10 px or 10 ppt
-        bindsym Left resize shrink width 10 px or 10 ppt
-        bindsym Down resize grow height 10 px or 10 ppt
-        bindsym Up resize shrink height 10 px or 10 ppt
-        bindsym Right resize grow width 10 px or 10 ppt
-
-        bindsym Return mode "default"
-        bindsym Escape mode "default"
-        bindsym $mod+r mode "default"
-}
-
-# customize colors
-client.focused          #b8bb26 #b8bb26 #ebdbb2 #b8bb26 #b8bb26
-client.focused_inactive #282828 #282828 #ebdbb2 #282828 #282828
-client.unfocused        #282828 #282828 #ebdbb2 #282828 #282828
-client.urgent           #282828 #282828 #fb4934 #282828 #282828
-client.placeholder      #282828 #282828 #ebdbb2 #282828 #282828
-
-# Run commands on startup
-exec_always --no-startup-id $HOME/dotfiles-linux/i3/polybar-collection/launch.sh
-exec_always --no-startup-id feh --bg-fill "$HOME/dotfiles/wallpapers/namibia_dune.jpeg"
-exec_always --no-startup-id picom -f -e 0.8
+exec --no-startup-id $HOME/dotfiles-linux/i3/polybar-collection/launch.sh
+exec --no-startup-id feh --bg-fill "$HOME/dotfiles/wallpapers/namibia_dune.jpeg"
+exec --no-startup-id picom -f -e 0.8
 exec --no-startup-id redshift -l 52.373882:6.891711 -t 6500:2500
 exec --no-startup-id /usr/bin/lxsession

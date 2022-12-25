@@ -1,7 +1,7 @@
 window:
-  opacity: 0.93
+  decorations: none
+  # opacity: 0.93
 
 font:
-  size: 9.0
+  size: 12.0
 
-decorations: none

@@ -1,14 +1,12 @@
-function clone_gruvbox() {
-    echo "Get gruvbox theme"
-    git clone https://git.sthu.org/repos/mutt-gruvbox.git ~/.mutt/gruvbox
-}
+echo "# Neomutt"
+repo_gruvbox=https://git.sthu.org/repos/mutt-gruvbox.git 
+repo_powerline=https://github.com/sheoak/neomutt-powerline-nerdfonts.git
+directory=~/.config/neomutt
 
-function copy_firefeh_to_bin() {
-    echo "Make firefeh executable"
-    sudo cp ~/dotfiles-linux/mutt/firefeh /usr/bin/firefeh
-    sudo chmod +x /usr/bin/firefeh
-}
+mkdir $directory
+mkdir $directory/message_cache
+touch $directory/header_cache
+ln ~/dotfiles-linux/mutt/muttrc $directory/muttrc
+git clone $repo_gruvbox $directory/gruvbox
+git clone $repo_powerline $directory/powerline
 
-echo "# Mutt"
-copy_firefeh_to_bin
-clone_gruvbox

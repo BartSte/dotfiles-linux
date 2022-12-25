@@ -1,0 +1,76 @@
+source ~/dotfiles-linux/mutt/lang/nl_NL
+source ~/dotfiles-linux/mutt/khard.muttrc
+source ~/dotfiles-linux/mutt/macros.muttrc
+source ~/dotfiles-linux/mutt/binds.muttrc
+
+# Style
+source ~/.config/neomutt/gruvbox/colors-gruvbox-shuber.muttrc 
+source ~/.config/neomutt/gruvbox/powerline/colors/gruvbox-powerline.neomuttrc
+source ~/.config/neomutt/gruvbox/powerline/powerline.neomuttrc
+
+# General
+auto_view text/html
+alternative_order text/plain text/html
+set editor="nvim"
+set index_format=" %?M?   ↳&%4C?   %Z      %D     %-15.15n    %s"
+set mail_check=120
+set pager_stop="yes"
+set reverse_alias=yes
+set reverse_name=yes
+set reverse_realname=yes
+set smart_wrap="yes"
+set sort=threads
+set sort_browser=date
+set sort_aux=reverse-last-date-received
+set timeout=15
+set confirmappend=no
+unset collapse_unread
+unset mark_old
+bind index - collapse-thread
+bind index _ collapse-all
+
+# IMAP config
+set imap_user="$MUTT_USERNAME@$MUTT_DOMAIN"
+set imap_pass=$MUTT_PASSWORD
+set imap_authenticators="$MUTT_AUTH"
+set imap_oauth_refresh_command="python3 ~/dotfiles-linux/mutt/mutt_oauth2.py ~/.config/neomutt/${imap_user}.tokens"
+set imap_keepalive=300
+set imap_idle
+set folder="imaps://${imap_user}@outlook.office365.com/"
+set spoolfile= +INBOX
+set postponed= +$my_drafts_noquote
+set record= +$my_sent_noquote
+set trash= +$my_trash_noquote
+mailboxes =INBOX =$my_drafts_noquote =$my_sent_noquote =$my_trash_noquote =ARCHIVE
+unset imap_passive
+
+# SMTP config
+set realname = $MUTT_REALNAME
+set from = "$MUTT_USERNAME@$MUTT_DOMAIN"
+set smtp_pass = $MUTT_PASSWORD
+set hostname = $MUTT_DOMAIN
+set smtp_url = "smtp://${imap_user}@smtp.office365.com:587/"
+set ssl_force_tls = yes
+set smtp_authenticators=${imap_authenticators}
+set smtp_oauth_refresh_command=${imap_oauth_refresh_command}
+set ssl_use_sslv3=yes
+
+# Paths
+set alias_file=$MUTT_ALIASES
+set header_cache="~/.config/neomutt/header_cache"
+set message_cachedir="~/.config/neomutt/message_cache"
+set signature=$MUTT_SIGNATURE
+set tmpdir="/tmp"
+set mailcap_path = "~/dotfiles-linux/mutt/mailcap"
+
+#### Sidebar Config
+set sidebar_divider_char = ' 	░'
+set sidebar_folder_indent = yes
+set sidebar_indent_string = ' - '
+set sidebar_non_empty_mailbox_only = yes
+set sidebar_visible = no
+set sidebar_width   = 30
+set sidebar_next_new_wrap = yes
+set sidebar_short_path = yes
+set sidebar_component_depth = 0
+

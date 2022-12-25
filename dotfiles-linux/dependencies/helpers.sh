@@ -58,3 +58,12 @@ install_tridactyl_native() {
 initialize_tulizu() {
     sudo tulizu install ~/dotfiles-linux/dependencies/arch-linux-logo.issue
 }
+
+link_qutebrowser_config() {
+    echo "Link qutebrowser config"
+    source=~/dotfiles/qutebrowser/config.py
+    destination=~/.config/qutebrowser/config.py
+    rm $destination
+    ln $source $destination
+}
+

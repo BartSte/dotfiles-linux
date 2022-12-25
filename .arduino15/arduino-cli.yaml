@@ -1,0 +1,24 @@
+board_manager:
+  additional_urls:
+  - https://raw.githubusercontent.com/keyboardio/arduino-kaleidoscope-master/main/package_kaleidoscope_master_index.json
+daemon:
+  port: "50051"
+directories:
+  data: /home/barts/.arduino15
+  downloads: /home/barts/.arduino15/staging
+  user: /home/barts/Arduino
+library:
+  enable_unsafe_install: false
+logging:
+  file: 
+  format: text
+  level: debug
+metrics:
+  addr: :9090
+  enabled: true
+output:
+  no_color: false
+sketch:
+  always_export_binaries: true
+updater:
+  enable_notification: true
