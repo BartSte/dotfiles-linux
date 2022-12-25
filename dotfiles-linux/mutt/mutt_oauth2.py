@@ -75,7 +75,7 @@ registrations = {
         'scope': ('offline_access https://outlook.office.com/IMAP.AccessAsUser.All '
                   'https://outlook.office.com/POP.AccessAsUser.All '
                   'https://outlook.office.com/SMTP.Send'),
-        'client_id': os.environ['GPG_ID'],
+        'client_id': os.environ['MUTT_CLIENT_ID'],
         'client_secret': '',
     },
 }

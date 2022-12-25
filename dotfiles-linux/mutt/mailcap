@@ -9,7 +9,7 @@ text/calendar; render-calendar-attachment.py %s; copiousoutput;
 application/ics; mutt-viewical; copiousoutput;
 
 # open images externally
-image/*; openfile %s ;
+image/*; firefox %s ;
 
 # open videos in mpv
 video/*; mpv --autofit-larger=90\%x90\% %s; needsterminal;
@@ -19,4 +19,4 @@ video/*; setsid mpv --quiet %s &; copiousoutput
 application/vnd.openxmlformats-officedocument.spreadsheetml.sheet; sc-im %s; needsterminal
 
 # open anything else externally
-application/pdf; openfile %s;
+application/pdf; firefox %s;
