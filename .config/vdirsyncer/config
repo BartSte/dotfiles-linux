@@ -39,3 +39,19 @@ type = "filesystem"
 path = "~/.local/share/contacts/outlook/"
 fileext = ".vcf"
 
+[pair outlook_single_file]
+a = "outlook_single_file_local"
+b = "outlook_single_file_remote"
+metadata = ["color"]
+collections = null
+conflict_resolution = "b wins"
+
+[storage outlook_single_file_remote]
+type = "caldav"
+url.fetch = ["shell", "echo $CALENDAR_URL"]
+username.fetch = ["shell", "echo $CALENDAR_EMAIL"]
+password.fetch = ["shell", "echo $CALENDAR_PASSWORD"]
+
+[storage outlook_single_file_local]
+type = "singlefile"
+path = "~/.local/share/calendar/outlook_single_file/"
