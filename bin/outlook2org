@@ -1,0 +1,18 @@
+#!/bin/bash
+
+org_agenda=~/Dropbox/Agenda/outlook.org
+outlook_calendar=~/.local/share/calendar/outlook/*.ics
+calendar_as_single_file=$(mktemp)
+
+rm org_agenda 2> /dev/null
+echo "Removed $org_agenda"
+
+cat $outlook_calendar > "$calendar_as_single_file"
+/usr/bin/nvim --clean --headless -n -es +':2,$-1g/\(BEGIN\|END\):VCALENDAR/d' +wq $calendar_as_single_file
+echo "Cat calendar: $outlook_calendar into a single file: $calendar_as_single_file"
+
+ical2orgpy $calendar_as_single_file $org_agenda
+echo "Convert outlook_calendar: $calendar_as_single_file into org agenda: $org_agenda"
+
+rm $calendar_as_single_file
+echo "Remove: $calendar_as_single_file"
