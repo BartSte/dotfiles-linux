@@ -1,3 +1,4 @@
+# vim:filetype=i3config 
 font pango:Jetbrains Mono 10
 
 set $mod Mod4

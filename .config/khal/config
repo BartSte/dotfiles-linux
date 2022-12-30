@@ -1,7 +1,8 @@
+# vim:filetype=dosini
 [calendars]
 
 [[outlook_local]]
-path = ~/.local/share/calendar/outlook
+path = ~/.local/share/calendar/outlook/
 type = calendar
 color = light green
 

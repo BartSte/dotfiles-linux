@@ -8,7 +8,7 @@ bindsym XF86MonBrightnessDown exec brightnessctl s 5%-
 
 assign [app_id="Alacritty"] workspace $ws1
 assign [app_id="firefox"] workspace $ws2
-assign [app_id="qutebrowser"] workspace $ws2
+assign [app_id="qutebrowser"] workspace $ws8
 
 for_window [app_id="^.*"] border pixel 0
 for_window [app_id="^launcher$"] floating enable, sticky enable, resize set 30 ppt 30 ppt, border pixel 3
