@@ -5,8 +5,10 @@ calendar=outlook_local
 start=today
 end=90d
 
+chmod +w $org
+
 khal list \
-    --format "* MEETING {title} \n SCHEDULED: <{start-date} {start-time}-{end-time}> \n {location} \n {description}" \
+    --format "* {title} \n SCHEDULED: <{start-date} {start-time}-{end-time}> \n {location} \n {description}" \
     --day-format "" \
     --include-calendar $calendar \
     $start $end > $org
@@ -14,3 +16,4 @@ khal list \
 sed -i "s;\\\n;\n;g" $org
 
 echo "Converted the Khal agenda \"$calendar\" into $org"
+chmod -w $org
