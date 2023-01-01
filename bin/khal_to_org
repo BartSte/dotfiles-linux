@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# vdir is a storage format used by vdirsyncer
+
+org=~/Dropbox/Agenda/outlook.org
+calendar=outlook_local
+
+# rm org 2> /dev/null
+# echo "Removed $org"
+
+khal list \
+    --format "* MEETING {title} \n SCHEDULED: <{start-date} {start-time}-{end-time}> \n {location} \n {description}" \
+    --day-format "" \
+    --include-calendar $calendar \
+    today 90d > $org
+
+sed -i "s;\\\n;\n;g" $org
+
+echo "Converted the Khal agenda \"$calendar\" into $org"
