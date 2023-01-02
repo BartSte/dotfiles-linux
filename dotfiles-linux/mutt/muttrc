@@ -1,4 +1,4 @@
-source ~/dotfiles-linux/mutt/lang/nl_NL
+source ~/dotfiles-linux/mutt/lang/$MUTT_LANG
 source ~/dotfiles-linux/mutt/khard.muttrc
 source ~/dotfiles-linux/mutt/macros.muttrc
 source ~/dotfiles-linux/mutt/binds.muttrc

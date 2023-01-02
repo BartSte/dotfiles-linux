@@ -24,7 +24,7 @@ type = "caldav"
 url.fetch = ["shell", "echo $CALENDAR_URL"]
 username.fetch = ["shell", "echo $CALENDAR_EMAIL"]
 password.fetch = ["shell", "echo $CALENDAR_PASSWORD"]
-read_only = true
+read_only = false
 
 ################################################################################
 # Contacts
