@@ -1,19 +1,28 @@
 #!/bin/bash
 
-org=~/Dropbox/Agenda/outlook.org
-calendar=outlook_local
+calendar=$1
+org=$2
 start=today
 end=90d
 
 chmod +w $org
 
 khal list \
-    --format "* {title} \n SCHEDULED: <{start-date} {start-time}-{end-time}> \n {location} \n {description}" \
+    --format \
+$'* {title} {cancelled} 
+  SCHEDULED: <{start-date} {start-time}-{end-time}>
+  :PROPERTIES:
+  :ID: {uid}
+  :CALENDAR: {calendar}
+  :LOCATION: {location}
+  :Organizer: {organizer}
+  :URL: {url}
+  :END:
+** Description
+  {description}'\
     --day-format "" \
     --include-calendar $calendar \
     $start $end > $org
-
-sed -i "s;\\\n;\n;g" $org
 
 echo "Converted the Khal agenda \"$calendar\" into $org"
 chmod -w $org
