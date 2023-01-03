@@ -36,7 +36,6 @@ bind alias,index,browser,query gg first-entry
 bind pager g noop
 bind pager gg top
 
-bind index,pager S create-alias
 bind index,pager a group-reply
 
 bind alias,index,pager,browser,query \Cd half-down

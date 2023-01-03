@@ -2,6 +2,6 @@ set query_command = "khard email --parsable %s"
 bind editor <Tab> complete-query
 bind editor ^T    complete
 
-macro index,pager A \
+macro index,pager S \
   "<pipe-message>khard add-email<return>" \
   "add the sender email address to khard"
