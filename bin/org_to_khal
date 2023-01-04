@@ -1,0 +1,63 @@
+#!/usr/bin/env python
+
+from orgparse import loads
+from khal.cli import main_khal
+
+org = '''
+* Software Engineering Weekly Meeting  
+  SCHEDULED: <2023-01-09 Mon 14:00-15:00>
+  :PROPERTIES:
+  :ID: 040000008200E00074C5B7101A82E00800000000E04EAB857DF2D801000000000000000010000000A0555DBDE92E654B83BBBB5D001FC283
+  :CALENDAR: outlook_local
+  :LOCATION: Capec, Microsoft Teams Meeting
+  :Organizer: Bart Steensma (b.steensma@fleetcleaner.com)
+  :URL: 
+  :END:
+** Description
+  Hi Everyone,
+
+Let’s gather for the software meeting!
+
+The meeting notes can be found here:
+
+  *   https://gitlab.com/fleetcleaner/meeting-notes
+
+The general jira board containing all active sprints can be found here:
+
+  *   https://fleetcleaner.atlassian.net/jira/software/c/projects/SE/boards/45?config=filter&insightsConfigTab=board
+
+Agenda:
+
+  *   Notes previous meeting
+  *   Update Business (Alex/Cornelis)
+  *   Update Remote Control (Kes)
+  *   Roadmap items & Active sprints
+     *   Fleet Inspector
+     *   Fleet Monitor
+     *   Fleet Cleaner
+     *   Fleet Watch
+     *   Fleet Diver
+     *   Software Engineering General
+  *   General questions/announcements
+
+Regards,
+
+
+Bart Steensma
+________________________________________________________________________________
+Microsoft Teams meeting
+Join on your computer, mobile app or room device
+Click here to join the meeting<https://teams.microsoft.com/l/meetup-join/19%3ameeting_YjE0MzNjNTMtY2QyMS00Y2FlLTkxZjUtZWZkMWE1NzU4NTJm%40thread.v2/0?context=%7b%22Tid%22%3a%2246625a8a-d65c-45c0-9098-3c4790c9460d%22%2c%22Oid%22%3a%226c72a059-a36c-41ce-9c4c-6516d48e7a08%22%7d>
+Meeting ID: 345 458 053 985
+Passcode: 2esQgz
+Download Teams<https://www.microsoft.com/en-us/microsoft-teams/download-app> | Join on the web<https://www.microsoft.com/microsoft-teams/join-a-meeting>
+Learn More<https://aka.ms/JoinTeamsMeeting> | Meeting options<https://teams.microsoft.com/meetingOptions/?organizerId=6c72a059-a36c-41ce-9c4c-6516d48e7a08&tenantId=46625a8a-d65c-45c0-9098-3c4790c9460d&threadId=19_meeting_YjE0MzNjNTMtY2QyMS00Y2FlLTkxZjUtZWZkMWE1NzU4NTJm@thread.v2&messageId=0&language=en-US>
+________________________________________________________________________________
+'''
+root = loads(org)
+h1 = root.children[0]
+print(h1.heading)
+h2  = h1.children[0]
+print(h2.heading)
+
+print(main_khal.commands['new'])

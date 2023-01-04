@@ -1,0 +1,10 @@
+#!/usr/bin/bash
+
+echo Base: 
+bases
+
+echo $'\nLinux': 
+lins 
+
+echo $'\nSec': 
+secs
