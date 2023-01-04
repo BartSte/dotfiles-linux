@@ -9,6 +9,7 @@
 shorten_stdout(){
     sed 's/(use -u .*)//'
 }
+
 message="'$*'"
 common_args="commit --untracked-files=no -a"
 
