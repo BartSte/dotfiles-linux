@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-from orgparse import loads
 from khal.cli import main_khal
+from orgparse import loads
 
 org = '''
 * Software Engineering Weekly Meeting  
@@ -57,7 +57,7 @@ ________________________________________________________________________________
 root = loads(org)
 h1 = root.children[0]
 print(h1.heading)
-h2  = h1.children[0]
+h2 = h1.children[0]
 print(h2.heading)
 
 print(main_khal.commands['new'])
