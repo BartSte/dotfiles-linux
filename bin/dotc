@@ -10,13 +10,13 @@ shorten_stdout(){
     sed 's/(use -u .*)//'
 }
 message="'$*'"
-common_args="--work-tree=$HOME commit --untracked-files=no -a"
+common_args="commit --untracked-files=no -a"
 
 echo 'Base:'
-git --git-dir=$HOME/dotfiles.git/ $common_args -m "$message" | shorten_stdout
+base $common_args -m "$message" | shorten_stdout
 
 echo $'\nLinux'
-git --git-dir=$HOME/dotfiles-linux.git/ $common_args -m "$message" | shorten_stdout
+lin $common_args -m "$message" | shorten_stdout
 
 echo $'\nSecret'
-git --git-dir=$HOME/dotfiles-secret.git/ $common_args -m "$message" | shorten_stdout
+sec $common_args -m "$message" | shorten_stdout
