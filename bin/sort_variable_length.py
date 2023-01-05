@@ -1,16 +1,22 @@
 #!/usr/bin/python3
+
+"""Python variable sorter."""
+
 from sys import stdin
 
 
 def sort_variable_length(lines: str) -> str:
-    """First sort all lines based on their total length. Next, sort the lines 
-    based on the number of characters before the `=' sign. If no equal sign is
-    found, the line is ignored.
+    r"""
+    First sort all lines based on their total length.
+
+    Next, sort the lines based on the number of characters before the `=' 
+    sign. If no equal sign is found, the line is ignored.
 
     Args:
         lines (str): variable definitions separated by `\n'.
 
-    Returns:
+    Returns
+    -------
         str: sorted variable definitions separated by `\n'.
     """
     as_list = lines.splitlines()
@@ -20,12 +26,16 @@ def sort_variable_length(lines: str) -> str:
 
 
 def find_equal_sign(obj: str) -> int:
-    """Returns the index of the = sign.
+    """
+    find_equal_sign.
+
+    Returns the index of the = sign.
 
     Args:
         obj (str): a string that may contain an `=' sign.
 
-    Returns:
+    Returns
+    -------
         int: the location of the first `=' sign.
     """
     return obj.find('=')
