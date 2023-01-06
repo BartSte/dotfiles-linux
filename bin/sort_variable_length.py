@@ -9,8 +9,7 @@ def sort_variable_length(lines: str) -> str:
     r"""
     First sort all lines based on their total length.
 
-    Next, sort the lines based on the number of characters before the `=' 
-    sign. If no equal sign is found, the line is ignored.
+    Next, sort the lines based on the number of characters before the `=' sign. If no equal sign is found, the line is ignored.
 
     Args:
         lines (str): variable definitions separated by `\n'.
