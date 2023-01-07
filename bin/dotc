@@ -14,10 +14,13 @@ message="'$*'"
 common_args="commit --untracked-files=no -a"
 
 echo 'Base:'
+base add ~/dotfiles
 base $common_args -m "$message" | shorten_stdout
 
 echo $'\nLinux'
+lin add ~/dotfiles-linux
 lin $common_args -m "$message" | shorten_stdout
 
 echo $'\nSecret'
+sec add ~/dotfiles-secret
 sec $common_args -m "$message" | shorten_stdout
