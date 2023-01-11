@@ -10,7 +10,7 @@ chmod +w $org
 khal list \
     --format \
 $'* {title} {cancelled} 
-  SCHEDULED: <{start-date} {start-time}-{end-time}>
+  <{start-date} {start-time}-{end-time}>
   :PROPERTIES:
   :ID: {uid}
   :CALENDAR: {calendar}
