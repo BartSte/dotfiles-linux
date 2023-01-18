@@ -18,7 +18,6 @@ $'* {title} {cancelled}
   :Organizer: {organizer}
   :URL: {url}
   :END:
-** Description
   {description}'\
     --day-format "" \
     --include-calendar $calendar \
