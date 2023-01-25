@@ -12,17 +12,13 @@ symlink_config () {
 
     mkdir $directory_config --parents
     rm $directory_config/init.vim
-    rm $directory_config/after/queries/python -r
+    rm $directory_config/after -r
     rm $directory_config/lua -r
     rm $directory_config/ftplugin -r
     rm $vimspector_home/configurations
 
-    mkdir $directory_config/after
-    mkdir $directory_config/after/queries
-    mkdir $directory_config/after/queries/python
-
     ln $dotfiles/init.vim $directory_config/init.vim --symbolic
-    ln $dotfiles/after/queries/python/highlights.scm $directory_config/after/queries/python/highlights.scm --symbolic
+    ln $dotfiles/after $directory_config/after --symbolic
     ln $dotfiles/lua $directory_config/lua --symbolic
     ln $dotfiles/ftplugin $directory_config/ftplugin --symbolic
     ln $dotfiles/vimspector/configurations $vimspector_home/configurations --symbolic
