@@ -1,4 +1,4 @@
-export PATH=$PATH:$HOME/bin:$HOME/.local/bin:$HOME/.emacs.d/bin
+export PATH=$PATH:$HOME/bin:$HOME/.local/bin:$HOME/.emacs.d/bin:$HOME/.cargo/bin
 
 if [ -f ~/.bashrc ]; then
     . ~/.bashrc
