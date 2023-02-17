@@ -10,4 +10,4 @@ export PS1="\\$ \[$(tput sgr0)\]\[\033[38;5;14m\]\W\[$(tput sgr0)\] \[$(tput sgr
 export GPG_TTY=$(tty)
 export EDITOR='nvim'
 export HEADPHONES='28:11:A5:A4:3A:CF'
-
+export QTWEBENGINE_CHROMIUM_FLAGS=--widevine-path=/usr/lib/chromium/libwidevinecdm.so
