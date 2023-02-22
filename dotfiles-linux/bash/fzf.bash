@@ -39,3 +39,17 @@ fzf_home_file() {
 fzf_home_dir() {
     $FZF_ALT_C_COMMAND . ~ | fzf-file-widget
 }
+
+fkill() {
+  local pid
+
+  pid="$(
+    ps -ef \
+      | sed 1d \
+      | fzf -m \
+      | awk '{print $2}'
+  )" || return
+
+  kill -"${1:-9}" "$pid"
+}
+

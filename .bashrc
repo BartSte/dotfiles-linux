@@ -10,9 +10,5 @@ source bindings.sh
 running_wsl && source wsl.sh
 popd > /dev/null
 
-OPENER=mimeo
 [[ $PS1 && -f /usr/share/bash-completion/bash_completion ]] && source /usr/share/bash-completion/bash_completion
 [ -f  ~/clones/fzf-tab-completion/bash/fzf-bash-completion.sh ] && source ~/clones/fzf-tab-completion/bash/fzf-bash-completion.sh
-[[ -e /usr/share/fzf/fzf-extras.bash ]] && source /usr/share/fzf/fzf-extras.bash
-
-
