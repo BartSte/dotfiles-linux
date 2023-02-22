@@ -2,7 +2,7 @@
 Description=Synchronize vdirs
 
 [Timer]
-OnBootSec=5m
+OnBootSec=1m
 OnUnitActiveSec=15m
 AccuracySec=5m
 

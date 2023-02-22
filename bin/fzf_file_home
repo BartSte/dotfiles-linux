@@ -1,0 +1,5 @@
+#!/usr/bin/bash
+#
+# Runs fzf from the home directory
+$FZF_CTRL_T_COMMAND . ~ | fzf --height 40% --layout=reverse --preview-window=right,65% --bind 'ctrl-d:reload(fd --hidden --no-ignore-vcs --ignore-file /home/barts/.ignore -t d)+change-preview(exa --icons -T -L 1 -a {} | head -200)+change-preview-window(hidden),ctrl-o:reload(fd --hidden --no-ignore-vcs --ignore-file /home/barts/.ignore --type f)+change-preview(bat --theme=gruvbox-dark --style=numbers --color=always --line-range :500 {})+change-preview-window(hidden),ctrl-p:toggle-preview' --preview 'bat --theme=gruvbox-dark --style=numbers --color=always --line-range :500 {}' --preview-window 'hidden'
+
