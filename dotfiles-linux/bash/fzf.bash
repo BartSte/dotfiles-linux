@@ -32,3 +32,10 @@ _fzf_compgen_dir() {
   fd --type d --hidden --follow --ignore-file $HOME/.ignore . "$1"
 }
 
+fzf_home_file() {
+    $FZF_CTRL_T_COMMAND . ~ | fzf-file-widget
+}
+
+fzf_home_dir() {
+    $FZF_ALT_C_COMMAND . ~ | fzf-file-widget
+}

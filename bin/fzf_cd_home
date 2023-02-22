@@ -1,6 +1,0 @@
-#!/usr/bin/bash
-# 
-# Cd into a directorpy using fzf, starting from ~.
-$FZF_ALT_C_COMMAND . ~ | fzf --height 40% --layout=reverse --preview-window=right,65% --preview 'exa --icons -T -L 1 -a {} | head -200' --bind 'ctrl-p:toggle-preview' --preview-window hidden
-
-
