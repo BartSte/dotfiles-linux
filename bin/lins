@@ -1,3 +1,0 @@
-#!/usr/bin/bash
-lin status --untracked-files=no --short
-

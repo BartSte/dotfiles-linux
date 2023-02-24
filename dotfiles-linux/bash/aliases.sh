@@ -8,7 +8,6 @@ alias vim='nvim'
 alias mutt='neomutt'
 alias reload='. ~/.bashrc'
 
-alias rm='trash-put'
 alias py='python3'
 alias tn='tmux new'
 alias ta='tmux attach'
