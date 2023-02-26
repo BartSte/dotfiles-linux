@@ -1,0 +1,48 @@
+#!/usr/bin/bash
+#
+# For a given directory, a new tmux session is created with a name that
+# corresponds to the top folder. If this session exists, the session is
+# activatedds and no new one is created.
+#
+# If no directory is given, fzf is activated to select one. If no directory is
+# selected, the program exists. 
+#
+# For command $2 a `tmux -t $session_name` command can be specified, where $3
+# are the arguments. $2 and $3 are optional.
+
+get_directory() {
+    if [[ $# -ge 1 ]]; then
+        echo $1
+    elif running_wsl; then
+        find ~/code $WH/code -mindepth 1 -maxdepth 1 -type d | fzf
+    else
+        find ~/code ~/dotfiles-secret ~/dotfiles/ ~/dotfiles-linux/ -mindepth 1 -maxdepth 1 -type d | fzf
+    fi
+}
+
+exit_if_empty() {
+    if [[ -z $directory ]]; then
+        exit 0
+    fi
+}
+
+set_status_bar() {
+    [[ $# -eq 2 ]] && tmux set -t $session_name $@
+}
+
+directory=$(get_directory $@)
+exit_if_empty $directory
+session_name=$(basename "$directory" | tr . _)
+
+if [[ -z $TMUX ]]; then
+    tmux new-session -s $session_name -c $directory
+    set_status_bar $2 $3
+    exit 0
+fi
+
+if ! tmux has-session -t=$session_name 2> /dev/null; then
+    tmux new-session -ds $session_name -c $directory
+    set_status_bar $2 $3
+fi
+
+tmux switch-client -t $session_name
