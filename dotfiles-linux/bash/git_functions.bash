@@ -48,6 +48,7 @@ dotc() {
     base $common_args -m "$message" | shorten_stdout
 
     echo $'\nLinux'
+    lin add ~/bin
     lin add ~/dotfiles-linux
     lins
     lin $common_args -m "$message" | shorten_stdout
