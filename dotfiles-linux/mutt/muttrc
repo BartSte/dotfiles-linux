@@ -35,7 +35,6 @@ set imap_pass=$MUTT_PASSWORD
 set imap_authenticators="$MUTT_AUTH"
 set imap_oauth_refresh_command="python3 ~/dotfiles-linux/mutt/mutt_oauth2.py ~/.config/neomutt/${imap_user}.tokens"
 set imap_keepalive=300
-set imap_idle
 set folder="imaps://${imap_user}@outlook.office365.com/"
 set spoolfile= +INBOX
 set postponed= +$my_drafts_noquote
@@ -43,6 +42,7 @@ set record= +$my_sent_noquote
 set trash= +$my_trash_noquote
 mailboxes =INBOX =$my_drafts_noquote =$my_sent_noquote =$my_trash_noquote =ARCHIVE
 unset imap_passive
+unset imap_idle
 
 # SMTP config
 set realname = $MUTT_REALNAME
@@ -64,13 +64,13 @@ set tmpdir="/tmp"
 set mailcap_path = "~/dotfiles-linux/mutt/mailcap"
 
 #### Sidebar Config
+set sidebar_width = 30
+set sidebar_visible = no
+set sidebar_short_path = yes
 set sidebar_divider_char = ' 	░'
 set sidebar_folder_indent = yes
-set sidebar_indent_string = ' - '
-set sidebar_non_empty_mailbox_only = yes
-set sidebar_visible = no
-set sidebar_width   = 30
 set sidebar_next_new_wrap = yes
-set sidebar_short_path = yes
+set sidebar_indent_string = ' - '
 set sidebar_component_depth = 0
+set sidebar_non_empty_mailbox_only = yes
 
