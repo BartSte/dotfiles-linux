@@ -13,3 +13,5 @@ touch $cache/header_cache
 git clone $repo_gruvbox $directory/gruvbox
 git clone $repo_powerline $directory/powerline
 
+echo "# Downloading emails"
+mbsync $MUTT_ACCOUNT

@@ -1,5 +1,6 @@
 # vim: filetype=neomuttrc
 ## Key bindings
+bind browser y exit
 
 # Mailboxes
 bind    index   <F5> imap-fetch-mail

@@ -22,6 +22,7 @@ set forward_quote  # quote forwarded message
 set index_format=" %?M?   ↳&%4C?   %Z      %D     %-15.15n    %s"
 set mail_check=120
 set mailcap_path = "~/dotfiles-linux/mutt/mailcap"
+set markers=no # don't put '+' at the beginning of wrapped lines
 set menu_scroll            # scroll in menus
 set pager_context = 3      # number of context lines to show
 set pager_index_lines = 10 # number of index lines to show
