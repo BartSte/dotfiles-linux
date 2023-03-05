@@ -1,5 +1,4 @@
 # vim: filetype=neomuttrc
-
 source ~/dotfiles-linux/mutt/lang/$MUTT_LANG
 source ~/dotfiles-linux/mutt/khard.muttrc
 source ~/dotfiles-linux/mutt/macros.muttrc
@@ -11,87 +10,70 @@ source ~/.config/neomutt/gruvbox/powerline/colors/gruvbox-powerline.neomuttrc
 source ~/.config/neomutt/gruvbox/powerline/powerline.neomuttrc
 
 # General
-auto_view text/html
-alternative_order text/plain text/html
-# unset help
-set sleep_time = 0
-set wait_key = no
-set forward_format = "FW: %s" # format of subject when forwarding
-set forward_quote		          # quote forwarded message
-set reverse_name	            # reply as whomever it was to
-set reverse_realname=yes      # use any real name provided when replying
-set fast_reply
+set allow_ansi             # allow ansi escape codes (e.g. colors)
+set beep=no  # don't beep for errors
+set confirmappend=no
 set count_alternatives=yes    # recurse into text/multipart when looking for attachement types
+set display_filter="perl -0777pe 's/___{10,}[^_]*microsoft teams meeting.*to join the meeting<([^>]*).*(___{10,})/\\n────────────────────────────────────────────────────────────────────────\\n\\nTeams Meeting ~~\\n\\nMeeting URL:\\n$1\\n\\n────────────────────────────────────────────────────────────────────────/is'| sed 's/^\\(To\\|CC\\): \\([^<]*[^>]\\)$/\\1\:<\\2>/g' | perl -0777pe 's/(((?!.*CC:)To:|CC:).+?(?=>\\n)>)/$1!REMOVE_ME!\\n!END!/gs' | sed '/^To:/{;:l N;/!END!/b; s/\\(\\n\\|  *\\|\\t\\t*\\)/ /g; bl}' | sed '/^To:/,/>$/ s/\\([^>]*>,\\?\\)/\\1\\n/g' | sed -e 's/^ \\(CC:\\)\\(.*$\\)/\\1\\n\\2/' -e 's/^\\(To:\\)\\(.*$\\)/\\1 --------------------------------------------------------------------\\n\\2/' -e 's/^!END!$/------------------------------------------------------------------------/' -e '/!REMOVE_ME!/d' -e '/\\[-- Type: text.* --\\]/d' -e '/\\[-- Autoview.* --\\]/d' -e '/\\[-- Type.* --\\]/d' -e '/\\[-- .*unsupported.* --\\]/d' -e '/\\[-- Attachment #[0-9] --\\]/d' -e 's/Attachment #[0-9]: //g' -e '/./,/^$/!d' -e 's/\\([A-Z]*\\), *\\([A-Za-z]*\\)\\(\"\\)\\?/\\2 \\L\\u\\1\\E\\3/g'"
 set editor="nvim"
+set fast_reply
+set forward_format = "FW: %s" # format of subject when forwarding
+set forward_quote  # quote forwarded message
 set index_format=" %?M?   ↳&%4C?   %Z      %D     %-15.15n    %s"
 set mail_check=120
-set pager_stop="yes"
+set mailcap_path = "~/dotfiles-linux/mutt/mailcap"
+set menu_scroll            # scroll in menus
+set pager_context = 3      # number of context lines to show
+set pager_index_lines = 10 # number of index lines to show
+set pager_stop             # don't go to next message automatically
+set quote_regexp = "^( {0,4}[>|:#%]| {0,4}[a-z0-9]+[>|]+)+"
+set reply_regexp = "^(([Rr][Ee]?(\[[0-9]+\])?: *)?(\[[^]]+\] *)?)*"
 set reverse_alias=yes
-set reverse_name=yes
-set reverse_realname=yes
-set smart_wrap="yes"
+set reverse_name	            # reply as whomever it was to
+set reverse_realname=yes      # use any real name provided when replying
+set signature=$MUTT_SIGNATURE
+set sleep_time = 0
+set smart_wrap="no"
 set sort=threads
-set sort_browser=date
 set sort_aux=reverse-last-date-received
+set sort_browser=date
 set timeout=15
-set confirmappend=no
+set tmpdir="/tmp"
+set wait_key = no
+set wrap=0                # email view width
+
 unset collapse_unread
 unset mark_old
-bind index - collapse-thread
-bind index _ collapse-all
 
 # IMAP config
-set imap_user="$MUTT_USERNAME@$MUTT_DOMAIN"
-set imap_pass=$MUTT_PASSWORD
-set imap_authenticators="$MUTT_AUTH"
-set imap_oauth_refresh_command="python3 ~/dotfiles-linux/mutt/mutt_oauth2.py ~/.config/neomutt/${imap_user}.tokens"
+source $MUTT_IMAP_CONFIG
+
+set header_cache="~/.cache/neomutt/$MUTT_ACCOUNT/header_cache"
 set imap_keepalive=300
-set folder="imaps://${imap_user}@outlook.office365.com/"
-set spoolfile= +INBOX
 set postponed= +$my_drafts_noquote
 set record= +$my_sent_noquote
+set spoolfile= +INBOX
 set trash= +$my_trash_noquote
-mailboxes =INBOX =$my_drafts_noquote =$my_sent_noquote =$my_trash_noquote =ARCHIVE
-unset imap_passive
+
 unset imap_idle
+unset imap_passive
 
 # SMTP config
-set realname = $MUTT_REALNAME
 set from = "$MUTT_USERNAME@$MUTT_DOMAIN"
-set smtp_pass = $MUTT_PASSWORD
 set hostname = $MUTT_DOMAIN
-set smtp_url = "smtp://${imap_user}@smtp.office365.com:587/"
-set ssl_force_tls = yes
+set realname = $MUTT_REALNAME
 set smtp_authenticators=${imap_authenticators}
 set smtp_oauth_refresh_command=${imap_oauth_refresh_command}
+set smtp_pass = $MUTT_PASSWORD
+set smtp_url = "smtp://${imap_user}@smtp.office365.com:587/"
+set ssl_force_tls = yes
 set ssl_use_sslv3=yes
-
-# Paths
-set alias_file=$MUTT_ALIASES
-set header_cache="~/.config/neomutt/header_cache"
-set message_cachedir="~/.config/neomutt/message_cache"
-set signature=$MUTT_SIGNATURE
-set tmpdir="/tmp"
-set mailcap_path = "~/dotfiles-linux/mutt/mailcap"
 
 #### Header Options
 ignore *                                # ignore all headers
 unignore to: cc:                        # ..then selectively show only these headers
 unhdr_order *                           # some distros order things by default
 hdr_order from: to: cc: date: subject:  # header item ordering
-
-#### View Settings
-set allow_ansi             # allow ansi escape codes (e.g. colors)
-set pager_index_lines = 10 # number of index lines to show
-set pager_context = 3      # number of context lines to show
-set pager_stop             # don't go to next message automatically
-set menu_scroll            # scroll in menus
-set smart_wrap             # wrap lines at word boundaries rather than splitting up words
-set wrap=90                # email view width
-set quote_regexp = "^( {0,4}[>|:#%]| {0,4}[a-z0-9]+[>|]+)+"
-set reply_regexp = "^(([Rr][Ee]?(\[[0-9]+\])?: *)?(\[[^]]+\] *)?)*"
-# Tidy up emails significantly
-set display_filter="perl -0777pe 's/___{10,}[^_]*microsoft teams meeting.*to join the meeting<([^>]*).*(___{10,})/\\n────────────────────────────────────────────────────────────────────────\\n\\nTeams Meeting ~~\\n\\nMeeting URL:\\n$1\\n\\n────────────────────────────────────────────────────────────────────────/is'| sed 's/^\\(To\\|CC\\): \\([^<]*[^>]\\)$/\\1\:<\\2>/g' | perl -0777pe 's/(((?!.*CC:)To:|CC:).+?(?=>\\n)>)/$1!REMOVE_ME!\\n!END!/gs' | sed '/^To:/{;:l N;/!END!/b; s/\\(\\n\\|  *\\|\\t\\t*\\)/ /g; bl}' | sed '/^To:/,/>$/ s/\\([^>]*>,\\?\\)/\\1\\n/g' | sed -e 's/^ \\(CC:\\)\\(.*$\\)/\\1\\n\\2/' -e 's/^\\(To:\\)\\(.*$\\)/\\1 --------------------------------------------------------------------\\n\\2/' -e 's/^!END!$/------------------------------------------------------------------------/' -e '/!REMOVE_ME!/d' -e '/\\[-- Type: text.* --\\]/d' -e '/\\[-- Autoview.* --\\]/d' -e '/\\[-- Type.* --\\]/d' -e '/\\[-- .*unsupported.* --\\]/d' -e '/\\[-- Attachment #[0-9] --\\]/d' -e 's/Attachment #[0-9]: //g' -e '/./,/^$/!d' -e 's/\\([A-Z]*\\), *\\([A-Za-z]*\\)\\(\"\\)\\?/\\2 \\L\\u\\1\\E\\3/g'"
 
 #### Notmuch Config
 set nm_query_type=threads                                   # bring in the whole thread instead of just the matched message, really useful
@@ -118,12 +100,6 @@ set sidebar_next_new_wrap = yes
 set sidebar_indent_string = ' - '
 set sidebar_component_depth = 0
 set sidebar_non_empty_mailbox_only = yes
-
-#### Lists
-set auto_subscribe
-
-### Sounds
-set beep=no  # don't beep for errors
 
 #### Markdown to html email conversion
 # macro compose M "F pandoc -s -f markdown -t html \ny^T^Utext/html; charset=UTF-8\n" "Convert from MD to HTML"

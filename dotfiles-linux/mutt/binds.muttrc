@@ -1,3 +1,4 @@
+# vim: filetype=neomuttrc
 ## Key bindings
 
 # Mailboxes
@@ -7,11 +8,12 @@ bind    index   <esc>v noop
 bind    index   \Cn noop
 bind    index   \Cp noop
 bind    index   g   noop
-macro   index   gi "<change-folder>=INBOX<enter>"       "Go to Inbox"
-macro   index   ga "<change-folder>=ARCHIVE<enter>"     "Go to Archive"
-macro   index   gl "<change-folder>=Gitlab<enter>"      "Go to Gitlab"
-macro   index   gs "<change-folder>=$my_sent<enter>"    "Go to Sent"
+bind    index   - collapse-thread
+bind    index   _ collapse-all
+macro   index   ga "<change-folder>=Archive<enter>"     "Go to Archive"
 macro   index   gd "<change-folder>=$my_drafts<enter>"  "Go to Drafts"
+macro   index   gi "<change-folder>=INBOX<enter>"       "Go to Inbox"
+macro   index   gs "<change-folder>=$my_sent<enter>"    "Go to Sent"
 macro   index   gt "<change-folder>=$my_trash<enter>"   "Go to Trash"
 
 # Index
@@ -25,8 +27,6 @@ bind    pager   <down>      next-line
 bind    pager   <left>      previous-entry
 bind    pager   <right>     next-entry
 bind    pager   <delete>    delete-message
-bind    pager   k           previous-line
-bind    pager   j           next-line
 
 # Vim like bindings 
 bind alias,index,browser,query G last-entry
