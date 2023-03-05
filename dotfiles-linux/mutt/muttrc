@@ -47,14 +47,15 @@ unset collapse_unread
 unset mark_old
 
 # IMAP config
-source $MUTT_IMAP_CONFIG
-
 set header_cache="~/.cache/neomutt/$MUTT_ACCOUNT/header_cache"
 set imap_authenticators="$MUTT_AUTH"
 set imap_keepalive=300
-set imap_oauth_refresh_command="python3 ~/dotfiles-linux/mutt/mutt_oauth2.py ~/.config/neomutt/${imap_user}.tokens"
+set imap_oauth_refresh_command="python3 ~/dotfiles-linux/mutt/mutt_oauth2.py ~/.config/neomutt/$MUTT_USERNAME@$MUTT_DOMAIN.tokens"
 set imap_pass=$MUTT_PASSWORD
 set imap_user="$MUTT_USERNAME@$MUTT_DOMAIN"
+
+source $MUTT_IMAP_CONFIG
+
 set postponed= +$my_drafts_noquote
 set record= +$my_sent_noquote
 set spoolfile= +INBOX
@@ -62,6 +63,7 @@ set trash= +$my_trash_noquote
 
 unset imap_idle
 unset imap_passive
+
 
 # SMTP config
 set from = "$MUTT_USERNAME@$MUTT_DOMAIN"
