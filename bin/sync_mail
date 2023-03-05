@@ -1,4 +1,0 @@
-#!/bin/bash
-# Synchronize mbsync 
-
-mbsync $MUTT_ACCOUNT
