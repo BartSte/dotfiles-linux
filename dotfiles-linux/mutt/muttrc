@@ -50,7 +50,11 @@ unset mark_old
 source $MUTT_IMAP_CONFIG
 
 set header_cache="~/.cache/neomutt/$MUTT_ACCOUNT/header_cache"
+set imap_authenticators="$MUTT_AUTH"
 set imap_keepalive=300
+set imap_oauth_refresh_command="python3 ~/dotfiles-linux/mutt/mutt_oauth2.py ~/.config/neomutt/${imap_user}.tokens"
+set imap_pass=$MUTT_PASSWORD
+set imap_user="$MUTT_USERNAME@$MUTT_DOMAIN"
 set postponed= +$my_drafts_noquote
 set record= +$my_sent_noquote
 set spoolfile= +INBOX
@@ -63,10 +67,10 @@ unset imap_passive
 set from = "$MUTT_USERNAME@$MUTT_DOMAIN"
 set hostname = $MUTT_DOMAIN
 set realname = $MUTT_REALNAME
-set smtp_authenticators=${imap_authenticators}
-set smtp_oauth_refresh_command=${imap_oauth_refresh_command}
+set smtp_authenticators="$MUTT_AUTH"
+set smtp_oauth_refresh_command="python3 ~/dotfiles-linux/mutt/mutt_oauth2.py ~/.config/neomutt/${imap_user}.tokens"
 set smtp_pass = $MUTT_PASSWORD
-set smtp_url = "smtp://${imap_user}@smtp.office365.com:587/"
+set smtp_url = "smtp://$MUTT_USERNAME@$MUTT_DOMAIN@smtp.office365.com:587/"
 set ssl_force_tls = yes
 set ssl_use_sslv3=yes
 
