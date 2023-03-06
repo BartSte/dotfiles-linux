@@ -1,8 +1,8 @@
 # vim: filetype=neomuttrc
 macro index,pager y "<change-folder>?<toggle-mailboxes>" "show incoming mailboxes list"
 macro index,pager U "<enter-command>set pipe_decode = yes<enter><pipe-message>urlview<enter><enter-command>set pipe_decode = no<enter>""view URLs"
-macro index R "<shell-escape>mailsync<enter>"
+macro index R "<shell-escape>mailsync<enter>" "Sync mailbox"
 
 macro attach B "<pipe-entry>iconv -c --to-code=UTF8 > $tmpdir/mail.html<enter><shell-escape>firefox $tmpdir/mail.html<enter>"
 
-
+macro index,pager A "<save-message>=Archive<enter>" "Archive Message"

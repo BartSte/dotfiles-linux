@@ -1,6 +1,0 @@
-# vim: filetype=neomuttrc
-set folder="imaps://$MUTT_USERNAME@$MUTT_DOMAIN@outlook.office365.com/"
-
-mailboxes =INBOX =$my_drafts_noquote =$my_sent_noquote =$my_trash_noquote =ARCHIVE
-
-macro index,pager A "<save-message>=ARCHIVE<enter>" "Archive Message"

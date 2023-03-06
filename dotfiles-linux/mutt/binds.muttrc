@@ -12,10 +12,10 @@ bind    index   g   noop
 bind    index   - collapse-thread
 bind    index   _ collapse-all
 macro   index   ga "<change-folder>=Archive<enter>"     "Go to Archive"
-macro   index   gd "<change-folder>=$my_drafts<enter>"  "Go to Drafts"
+macro   index   gd "<change-folder>=Drafts<enter>"  "Go to Drafts"
 macro   index   gi "<change-folder>=INBOX<enter>"       "Go to Inbox"
-macro   index   gs "<change-folder>=$my_sent<enter>"    "Go to Sent"
-macro   index   gt "<change-folder>=$my_trash<enter>"   "Go to Trash"
+macro   index   gs "<change-folder>=Sent<enter>"    "Go to Sent"
+macro   index   gt "<change-folder>=Deleted<enter>"   "Go to Deleted"
 
 # Index
 bind    index   <up>        previous-entry

@@ -1,5 +1,4 @@
 # vim: filetype=neomuttrc
-source ~/dotfiles-linux/mutt/lang/$MUTT_LANG
 source ~/dotfiles-linux/mutt/khard.muttrc
 source ~/dotfiles-linux/mutt/macros.muttrc
 source ~/dotfiles-linux/mutt/binds.muttrc
@@ -47,6 +46,8 @@ unset collapse_unread
 unset mark_old
 
 # IMAP config
+set folder="~/.local/share/mail/$MUTT_ACCOUNT"
+set mbox_type = Maildir
 set header_cache="~/.cache/neomutt/$MUTT_ACCOUNT/header_cache"
 set imap_authenticators="$MUTT_AUTH"
 set imap_keepalive=300
@@ -54,16 +55,10 @@ set imap_oauth_refresh_command="python3 ~/dotfiles-linux/mutt/mutt_oauth2.py ~/.
 set imap_pass=$MUTT_PASSWORD
 set imap_user="$MUTT_USERNAME@$MUTT_DOMAIN"
 
-source $MUTT_IMAP_CONFIG
-
-set postponed= +$my_drafts_noquote
-set record= +$my_sent_noquote
-set spoolfile= +INBOX
-set trash= +$my_trash_noquote
+source "~/dotfiles-linux/mutt/mailboxes/$MUTT_ACCOUNT"
 
 unset imap_idle
 unset imap_passive
-
 
 # SMTP config
 set from = "$MUTT_USERNAME@$MUTT_DOMAIN"
