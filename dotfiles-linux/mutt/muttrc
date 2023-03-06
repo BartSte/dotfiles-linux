@@ -1,6 +1,5 @@
 # vim: filetype=neomuttrc
 source ~/dotfiles-linux/mutt/khard.muttrc
-source ~/dotfiles-linux/mutt/macros.muttrc
 source ~/dotfiles-linux/mutt/binds.muttrc
 
 # Style
@@ -9,10 +8,10 @@ source ~/.config/neomutt/gruvbox/powerline/colors/gruvbox-powerline.neomuttrc
 source ~/.config/neomutt/gruvbox/powerline/powerline.neomuttrc
 
 # General
-set allow_ansi             # allow ansi escape codes (e.g. colors)
+set allow_ansi  # allow ansi escape codes (e.g. colors)
 set beep=no  # don't beep for errors
 set confirmappend=no
-set count_alternatives=yes    # recurse into text/multipart when looking for attachement types
+set count_alternatives=yes  # recurse into text/multipart when looking for attachement types
 set display_filter="perl -0777pe 's/___{10,}[^_]*microsoft teams meeting.*to join the meeting<([^>]*).*(___{10,})/\\n────────────────────────────────────────────────────────────────────────\\n\\nTeams Meeting ~~\\n\\nMeeting URL:\\n$1\\n\\n────────────────────────────────────────────────────────────────────────/is'| sed 's/^\\(To\\|CC\\): \\([^<]*[^>]\\)$/\\1\:<\\2>/g' | perl -0777pe 's/(((?!.*CC:)To:|CC:).+?(?=>\\n)>)/$1!REMOVE_ME!\\n!END!/gs' | sed '/^To:/{;:l N;/!END!/b; s/\\(\\n\\|  *\\|\\t\\t*\\)/ /g; bl}' | sed '/^To:/,/>$/ s/\\([^>]*>,\\?\\)/\\1\\n/g' | sed -e 's/^ \\(CC:\\)\\(.*$\\)/\\1\\n\\2/' -e 's/^\\(To:\\)\\(.*$\\)/\\1 --------------------------------------------------------------------\\n\\2/' -e 's/^!END!$/------------------------------------------------------------------------/' -e '/!REMOVE_ME!/d' -e '/\\[-- Type: text.* --\\]/d' -e '/\\[-- Autoview.* --\\]/d' -e '/\\[-- Type.* --\\]/d' -e '/\\[-- .*unsupported.* --\\]/d' -e '/\\[-- Attachment #[0-9] --\\]/d' -e 's/Attachment #[0-9]: //g' -e '/./,/^$/!d' -e 's/\\([A-Z]*\\), *\\([A-Za-z]*\\)\\(\"\\)\\?/\\2 \\L\\u\\1\\E\\3/g'"
 set editor="nvim"
 set fast_reply
@@ -21,16 +20,16 @@ set forward_quote  # quote forwarded message
 set index_format=" %?M?   ↳&%4C?   %Z      %D     %-15.15n    %s"
 set mail_check=120
 set mailcap_path = "~/dotfiles-linux/mutt/mailcap"
-set markers=no # don't put '+' at the beginning of wrapped lines
-set menu_scroll            # scroll in menus
-set pager_context = 3      # number of context lines to show
+set markers=no  # don't put '+' at the beginning of wrapped lines
+set menu_scroll  # scroll in menus
+set pager_context = 3  # number of context lines to show
 set pager_index_lines = 10 # number of index lines to show
-set pager_stop             # don't go to next message automatically
+set pager_stop  # don't go to next message automatically
 set quote_regexp = "^( {0,4}[>|:#%]| {0,4}[a-z0-9]+[>|]+)+"
 set reply_regexp = "^(([Rr][Ee]?(\[[0-9]+\])?: *)?(\[[^]]+\] *)?)*"
 set reverse_alias=yes
-set reverse_name	            # reply as whomever it was to
-set reverse_realname=yes      # use any real name provided when replying
+set reverse_name  # reply as whomever it was to
+set reverse_realname=yes  # use any real name provided when replying
 set signature=$MUTT_SIGNATURE
 set sleep_time = 0
 set smart_wrap="no"
@@ -40,23 +39,19 @@ set sort_browser=date
 set timeout=15
 set tmpdir="/tmp"
 set wait_key = no
-set wrap=0                # email view width
-
+set wrap=0  # email view width
 unset collapse_unread
 unset mark_old
 
 # IMAP config
 set folder="~/.local/share/mail/$MUTT_ACCOUNT"
-set mbox_type = Maildir
 set header_cache="~/.cache/neomutt/$MUTT_ACCOUNT/header_cache"
 set imap_authenticators="$MUTT_AUTH"
 set imap_keepalive=300
 set imap_oauth_refresh_command="python3 ~/dotfiles-linux/mutt/mutt_oauth2.py ~/.config/neomutt/$MUTT_USERNAME@$MUTT_DOMAIN.tokens"
 set imap_pass=$MUTT_PASSWORD
 set imap_user="$MUTT_USERNAME@$MUTT_DOMAIN"
-
-source "~/dotfiles-linux/mutt/mailboxes/$MUTT_ACCOUNT"
-
+set mbox_type = Maildir
 unset imap_idle
 unset imap_passive
 
@@ -65,11 +60,19 @@ set from = "$MUTT_USERNAME@$MUTT_DOMAIN"
 set hostname = $MUTT_DOMAIN
 set realname = $MUTT_REALNAME
 set smtp_authenticators="$MUTT_AUTH"
-set smtp_oauth_refresh_command="python3 ~/dotfiles-linux/mutt/mutt_oauth2.py ~/.config/neomutt/${imap_user}.tokens"
+set smtp_oauth_refresh_command="python3 ~/dotfiles-linux/mutt/mutt_oauth2.py ~/.config/neomutt/$MUTT_USERNAME@$MUTT_DOMAIN.tokens"
 set smtp_pass = $MUTT_PASSWORD
 set smtp_url = "smtp://$MUTT_USERNAME@$MUTT_DOMAIN@smtp.office365.com:587/"
 set ssl_force_tls = yes
 set ssl_use_sslv3=yes
+
+# Mailboxes
+mailboxes =INBOX =Drafts =Sent =Deleted =Archive
+
+set postponed= +Drafts
+set record= +Sent
+set spoolfile= +INBOX
+set trash= +Deleted
 
 #### Header Options
 ignore *                                # ignore all headers
@@ -82,7 +85,6 @@ set nm_query_type=threads                                   # bring in the whole
 set nm_default_url = "notmuch:///$HOME/.local/share/mail"   # default notmuch URL
 set nm_record_tags = "sent"                                 # default 'sent' tag
 set virtual_spoolfile=yes                                   # allow using virtual mailboxes as spoolfile 
-macro index \Cg "<enter-command>unset wait_key<enter><shell-escape>read -p 'Enter a search: ' x; echo \$x >~/.cache/mutt_terms<enter><change-folder>All Accounts<enter><limit>~i \"\`notmuch --config ~/.config/notmuch/notmuchrc search --output=messages \$(/bin/cat ~/.cache/mutt_terms) | head -n 1000 | perl -le '@a=<>;chomp@a;s/\^id:// for@a;$,=\"|\";print@a' | sed 's/id://g' \`\"<enter>" "Search all mailboxes in all accounts (Global search)"
 
 #### Content/Autoview
 auto_view application/ics

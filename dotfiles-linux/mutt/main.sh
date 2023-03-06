@@ -6,7 +6,7 @@ cache="$HOME/.cache/neomutt/$MUTT_ACCOUNT"
 
 mkdir $directory
 rm $directory/muttrc
-ln ~/dotfiles-linux/mutt/muttrc $directory/muttrc
+ln --symbolic ~/dotfiles-linux/mutt/muttrc $directory/muttrc
 
 mkdir -p $cache
 touch $cache/header_cache

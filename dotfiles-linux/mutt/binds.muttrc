@@ -66,3 +66,11 @@ bind index,pager \ex sidebar-toggle-visible
 #bind index,pager \Cj sidebar-next
 #bind index,pager \Ck sidebar-prev
 #bind index,pager \Co sidebar-open
+
+# vim: filetype=neomuttrc
+macro attach B "<pipe-entry>iconv -c --to-code=UTF8 > $tmpdir/mail.html<enter><shell-escape>firefox $tmpdir/mail.html<enter>"
+macro index,pager R "<pipe-entry>mailsync<enter>" "Sync mailbox"
+macro index,pager A "<save-message>=Archive<enter>" "Archive Message"
+macro index,pager U "<enter-command>set pipe_decode = yes<enter><pipe-message>urlview<enter><enter-command>set pipe_decode = no<enter>""view URLs"
+macro index,pager y "<change-folder>?<toggle-mailboxes>" "show incoming mailboxes list"
+macro index \Cg "<enter-command>unset wait_key<enter><shell-escape>read -p 'Enter a search: ' x; echo \$x >~/.cache/mutt_terms<enter><change-folder>All Accounts<enter><limit>~i \"\`notmuch --config ~/.config/notmuch/notmuchrc search --output=messages \$(/bin/cat ~/.cache/mutt_terms) | head -n 1000 | perl -le '@a=<>;chomp@a;s/\^id:// for@a;$,=\"|\";print@a' | sed 's/id://g' \`\"<enter>" "Search all mailboxes in all accounts (Global search)"

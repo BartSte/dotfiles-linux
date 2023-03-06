@@ -1,3 +1,4 @@
+# vim: filetype=neomuttrc
 set query_command = "khard email --parsable %s"
 bind editor <Tab> complete-query
 bind editor ^T    complete

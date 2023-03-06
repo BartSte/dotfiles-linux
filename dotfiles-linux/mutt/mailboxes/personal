@@ -1,7 +1,0 @@
-# vim: filetype=neomuttrc
-set folder="~/.local/share/mail/$MUTT_ACCOUNT"
-set mbox_type = Maildir
-
-mailboxes =INBOX =$my_drafts_noquote =$my_sent_noquote =$my_trash_noquote =Archive
-
-macro index,pager A "<save-message>=Archive<enter>" "Archive Message"
