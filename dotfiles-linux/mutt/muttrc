@@ -43,8 +43,8 @@ unset collapse_unread
 unset mark_old
 
 # IMAP config
-set folder="~/.local/share/mail/$MUTT_ACCOUNT"
-set header_cache="~/.cache/neomutt/$MUTT_ACCOUNT/header_cache"
+set folder="~/.local/share/mail"
+set header_cache="~/.cache/neomutt/header_cache"
 set imap_authenticators="$MUTT_AUTH"
 set imap_keepalive=300
 set imap_oauth_refresh_command="python3 ~/dotfiles-linux/mutt/mutt_oauth2.py ~/.config/neomutt/$MUTT_USERNAME@$MUTT_DOMAIN.tokens"
@@ -81,7 +81,7 @@ hdr_order from: to: cc: date: subject:  # header item ordering
 
 #### Notmuch Config
 set nm_query_type=threads  # bring in the whole thread instead of just the matched message, really useful
-set nm_default_url = "notmuch:///$HOME/.local/share/mail/$MUTT_ACCOUNT"  # default notmuch URL
+set nm_default_url = "notmuch:///$HOME/.local/share/mail"  # default notmuch URL
 set nm_record_tags = "sent"  # default 'sent' tag
 set virtual_spoolfile=yes  # allow using virtual mailboxes as spoolfile 
 macro index / "<enter-command>unset wait_key<enter><shell-escape>read -p 'Enter a search: ' x; echo \$x >~/.cache/mutt_terms<enter><limit>~i \"\`notmuch search --output=messages \$(/bin/cat ~/.cache/mutt_terms) | head -n 1000 | perl -le '@a=<>;chomp@a;s/\^id:// for@a;$,=\"|\";print@a' | sed 's/id://g' \`\"<enter>" "Global search"
