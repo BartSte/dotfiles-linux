@@ -1,12 +1,12 @@
 echo "# Neomutt"
 repo_gruvbox=https://git.sthu.org/repos/mutt-gruvbox.git 
 repo_powerline=https://github.com/sheoak/neomutt-powerline-nerdfonts.git
-directory=~/.config/neomutt
+directory="$HOME/.config/neomutt"
 cache="$HOME/.cache/neomutt"
 
 mkdir $directory
 rm $directory/muttrc
-ln --symbolic ~/dotfiles-linux/mutt/muttrc $directory/muttrc
+ln --symbolic $HOME/dotfiles-linux/mutt/muttrc $directory/muttrc
 
 mkdir -p $cache
 touch $cache/header_cache
