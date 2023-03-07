@@ -8,6 +8,7 @@ sync(){
     check
     start_davmail
     start_mbsyncer
+    start_notmuch
     kill_davmail
     echo 'Email sync done.'
 }
@@ -29,6 +30,12 @@ start_mbsyncer() {
     pgrep -x mbsync >/dev/null && { echo "mbsync is already running." ; kill_davmail; exit ;}
     mbsync -a -q -q || { echo 'Email sync failed.'; kill_davmail; exit ;}
 }
+
+start_notmuch() {
+    pgrep -x notmuch >/dev/null && { echo "notmuch is already running." ; kill_davmail; exit ;}
+    notmuch new --quiet 2>/dev/null || { echo 'Email sync failed.'; kill_davmail; exit ;}
+}
+
 
 kill_davmail() {
     kill $(pgrep -f davmail)
