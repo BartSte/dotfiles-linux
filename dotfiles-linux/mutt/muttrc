@@ -16,6 +16,7 @@ set editor="nvim"
 set fast_reply
 set forward_format = "FW: %s" # format of subject when forwarding
 set forward_quote  # quote forwarded message
+set date_format = "%H:%M %d-%b-%y"
 set index_format=" %?M?   ↳&%4C?   %Z      %D     %-15.15n    %s"
 set mail_check=120
 set mailcap_path = "~/dotfiles-linux/mutt/mailcap"
