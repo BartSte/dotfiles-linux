@@ -1,11 +1,6 @@
-#!/bin/bash
-#
-# 
-
-#TODO: docs + make similar one for vdirsyncer
-
-sync(){
-    check
+main(){
+    is_logged_in || { echo "$USER not logged in; sync will not run."; exit ;}
+    has_internet || { echo "No internet connection detected."; exit ;}    
     start_davmail
     start_mbsyncer
     start_notmuch
@@ -13,17 +8,9 @@ sync(){
     echo 'Email sync done.'
 }
 
-check() {
-    # Run only if user logged in (prevents systemd errors)
-    pgrep -u "${USER:=$LOGNAME}" >/dev/null || { echo "$USER not logged in; sync will not run."; exit ;}
-
-    # Checks for internet connection and set notification script.
-    ping -q -c 1 1.1.1.1 > /dev/null || { echo "No internet connection detected."; exit ;}
-}
-
 start_davmail() {
     pgrep -f davmail >/dev/null || davmail $HOME/.config/davmail/davmail.properties &
-    sleep 2
+    sleep 0.5
 }
 
 start_mbsyncer() {
@@ -31,21 +18,20 @@ start_mbsyncer() {
     mbsync -a -q -q || { echo 'Email sync failed.'; kill_davmail; exit ;}
 }
 
+kill_davmail() {
+    kill $(pgrep -f davmail)
+}
+
 start_notmuch() {
     pgrep -x notmuch >/dev/null && { echo "notmuch is already running." ; kill_davmail; exit ;}
     notmuch new --quiet 2>/dev/null || { echo 'Email sync failed.'; kill_davmail; exit ;}
 }
 
-
-kill_davmail() {
-    kill $(pgrep -f davmail)
-}
-
 start_message='Email sync started'
 if [[ -z $TMUX ]]; then
     echo "$start_message"
-    sync 
+    main 
 else
     tmux display -d 1000 "$start_message"
-    tmux display -d 2000 "$(sync)"
+    tmux display -d 2000 "$(main)"
 fi

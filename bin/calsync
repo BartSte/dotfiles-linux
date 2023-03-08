@@ -1,0 +1,36 @@
+#!/bin/bash
+#
+# TODO ad docs
+
+
+main(){
+    is_logged_in || { echo "$USER not logged in; sync will not run."; exit ;}
+    has_internet || { echo "No internet connection detected."; exit ;}
+    start_davmail
+    vdirsyncer -v CRITICAL sync || { echo "vdirsyncer failed"; kill_davmail; exit ; }
+    khalorg_export || { echo "khalorg failed"; kill_davmail; exit; }
+    kill_davmail
+    echo 'Calendar sync done.'
+}
+
+start_davmail() {
+    pgrep -f davmail >/dev/null || davmail $HOME/.config/davmail/davmail.properties &
+    sleep 0.5
+}
+
+khalorg_export() {
+    khalorg export outlook_local today 90d > $HOME/Dropbox/org/outlook.org 
+}
+
+kill_davmail() {
+    kill $(pgrep -f davmail)
+}
+
+start_message='Calendar sync started'
+if [[ -z $TMUX ]]; then
+    echo "$start_message"
+    main 
+else
+    tmux display -d 1000 "$start_message"
+    tmux display -d 2000 "$(main)"
+fi
