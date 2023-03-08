@@ -1,15 +1,20 @@
 #!/bin/bash
 
-usage="Usage: $(basename "$0") [-h | --help] <davmail-config> 
+usage="Usage: $(basename "$0") [-h | --help] <davmail-config> <org file> <khalorg export arg> 
 
-Sychronize all \`vdirsyncer\` calendars and export them to org with \`khalorg\`. Davmail is used as the CalDav server. If it is not already running, it will be activated temporarly.
+Sychronize all \`vdirsyncer\` calendars and export them to org with \`khalorg\`. 
+Davmail is used as the CalDav server. If it is not already running, it will be 
+activated temporarly.
 
 where:
     options
     -h --help   shows this help messages
 
     positional
-    <davmail-config> your davmailconfig"
+    <davmail-config>        your davmailconfig
+    <org file>              the output file
+    <khalorg export arg>    see \`khalorg export -h\`
+    "
 
 options=$(getopt -o h --long help -- "$@")
 
@@ -31,7 +36,12 @@ while true; do
 done
 
 [ $# -eq 0 ] && { echo "$usage"; exit ;}
-davmailconfig="$1"
+[ $# -lt 5 ] && { echo "Missing positional arguments"; exit ;}
+
+davmailconfig=$1
+orgfile=$2
+shift 2
+khalorg=$@
 
 main(){
     is_logged_in || { echo "$USER not logged in; sync will not run."; exit ;}
@@ -51,7 +61,7 @@ start_davmail() {
 }
 
 khalorg_export() {
-    khalorg export outlook_local today 180d > $HOME/Dropbox/org/outlook.org 
+    khalorg export $khalorg > $orgfile
 }
 
 start_message='Calendar sync started'
