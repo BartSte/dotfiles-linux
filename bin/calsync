@@ -1,7 +1,37 @@
 #!/bin/bash
-#
-# TODO ad docs
 
+usage="Usage: $(basename "$0") [-h | --help] <davmail-config> 
+
+Sychronize all \`vdirsyncer\` calendars and export them to org with \`khalorg\`. Davmail is used as the CalDav server. If it is not already running, it will be activated temporarly.
+
+where:
+    options
+    -h --help   shows this help messages
+
+    positional
+    <davmail-config> your davmailconfig"
+
+options=$(getopt -o h --long help -- "$@")
+
+[ $? -eq 0 ] || { echo "Incorrect options provided"; exit 1; }
+
+eval set -- "$options"
+while true; do
+    case "$1" in
+    -h | --help)
+        echo "$usage"
+        exit
+        ;;
+    --)
+        shift
+        break
+        ;;
+    esac
+    shift
+done
+
+[ $# -eq 0 ] && { echo "$usage"; exit ;}
+davmailconfig="$1"
 
 main(){
     is_logged_in || { echo "$USER not logged in; sync will not run."; exit ;}
@@ -9,28 +39,26 @@ main(){
     start_davmail
     vdirsyncer -v CRITICAL sync || { echo "vdirsyncer failed"; kill_davmail; exit ; }
     khalorg_export || { echo "khalorg failed"; kill_davmail; exit; }
-    kill_davmail
+    [[ $pid_davmail ]] && kill $pid_davmail
     echo 'Calendar sync done.'
 }
 
 start_davmail() {
-    pgrep -f davmail >/dev/null || davmail $HOME/.config/davmail/davmail.properties &
+    pgrep -f davmail\.jar >/dev/null && return
+    davmail $davmailconfig &
+    pid_davmail=$!
     sleep 0.5
 }
 
 khalorg_export() {
-    khalorg export outlook_local today 90d > $HOME/Dropbox/org/outlook.org 
-}
-
-kill_davmail() {
-    kill $(pgrep -f davmail)
+    khalorg export outlook_local today 180d > $HOME/Dropbox/org/outlook.org 
 }
 
 start_message='Calendar sync started'
-if [[ -z $TMUX ]]; then
-    echo "$start_message"
-    main 
-else
+if [[ $TMUX ]]; then
     tmux display -d 1000 "$start_message"
     tmux display -d 2000 "$(main)"
+else
+    echo "$start_message"
+    main 
 fi

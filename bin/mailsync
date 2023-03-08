@@ -1,6 +1,4 @@
 #!/bin/bash
-#
-# TODO: all davmail processes are killed, not only the one started here
 
 usage="Usage: $(basename "$0") [-h | --help] <davmail-config> 
 
@@ -11,8 +9,7 @@ where:
     -h --help   shows this help messages
 
     positional
-    <davmail-config> your davmailconfig
-    "
+    <davmail-config> your davmailconfig"
 
 options=$(getopt -o h --long help -- "$@")
 
