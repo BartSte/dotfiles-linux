@@ -42,12 +42,14 @@ main(){
     start_davmail
     start_mbsyncer
     start_notmuch
-    kill_davmail
+    [[ $pid_davmail ]] && kill $pid_davmail
     echo 'Email sync done.'
 }
 
 start_davmail() {
-    pgrep -f davmail\.jar >/dev/null || davmail $davmailconfig &
+    pgrep -f davmail\.jar >/dev/null && return
+    davmail $davmailconfig &
+    pid_davmail=$!
     sleep 0.5
 }
 
@@ -56,20 +58,17 @@ start_mbsyncer() {
     mbsync -a -q -q || { echo 'Email sync failed.'; kill_davmail; exit ;}
 }
 
-kill_davmail() {
-    kill $(pgrep -f davmail\.jar)
-}
-
 start_notmuch() {
     pgrep -x notmuch >/dev/null && { echo "notmuch is already running." ; kill_davmail; exit ;}
     notmuch new --quiet 2>/dev/null || { echo 'Email sync failed.'; kill_davmail; exit ;}
 }
 
 start_message='Email sync started'
-if [[ -z $TMUX ]]; then
-    echo "$start_message"
-    main 
-else
+if [[ $TMUX ]]; then
     tmux display -d 1000 "$start_message"
     tmux display -d 2000 "$(main)"
+else
+    echo "$start_message"
+    main 
 fi
+
