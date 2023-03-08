@@ -1,3 +1,39 @@
+#!/bin/bash
+
+usage="Usage: $(basename "$0") [-h | --help] <davmail-config> 
+
+Sychronize all \`mbsyncer\` channels and index them with \`notmuch\` using an imap connection with \`davmail\`.
+
+where:
+    options
+    -h --help   shows this help messages
+
+    positional
+    <davmail-config> your davmailconfig
+    "
+
+options=$(getopt -o h --long help -- "$@")
+
+[ $? -eq 0 ] || { echo "Incorrect options provided"; exit 1; }
+
+eval set -- "$options"
+while true; do
+    case "$1" in
+    -h | --help)
+        echo "$usage"
+        exit
+        ;;
+    --)
+        shift
+        break
+        ;;
+    esac
+    shift
+done
+
+# [ $# -eq 0 ] && { echo "$usage"; exit ;}
+# davmailconfig=$1
+
 main(){
     is_logged_in || { echo "$USER not logged in; sync will not run."; exit ;}
     has_internet || { echo "No internet connection detected."; exit ;}    
