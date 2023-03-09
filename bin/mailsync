@@ -47,7 +47,7 @@ start_davmail() {
     pgrep -f davmail\.jar >/dev/null && return
     davmail $davmailconfig &
     pid_davmail=$!
-    sleep 0.5
+    sleep 1
 }
 
 start_mbsyncer() {
