@@ -2,7 +2,7 @@
 
 usage="Usage: $(basename "$0") [-h | --help] <davmail-config> 
 
-Sychronize all \`mbsyncer\` channels and index them with \`notmuch\` using an imap connection with \`davmail\`.
+Sychronize all \`vdirsyncer\` calendars and export them to org with \`khalorg\`. Davmail is used as the CalDav server. If it is not already running, it will be activated temporarly.
 
 where:
     options
@@ -35,12 +35,12 @@ davmailconfig="$1"
 
 main(){
     is_logged_in || { echo "$USER not logged in; sync will not run."; exit ;}
-    has_internet || { echo "No internet connection detected."; exit ;}    
+    has_internet || { echo "No internet connection detected."; exit ;}
     start_davmail
-    start_mbsyncer
-    start_notmuch
+    vdirsyncer -v CRITICAL sync || { echo "vdirsyncer failed"; kill_davmail; exit ; }
+    khalorg_export || { echo "khalorg failed"; kill_davmail; exit; }
     [[ $pid_davmail ]] && kill $pid_davmail
-    echo 'Email sync done.'
+    echo 'Calendar sync done.'
 }
 
 start_davmail() {
@@ -50,17 +50,11 @@ start_davmail() {
     sleep 0.5
 }
 
-start_mbsyncer() {
-    pgrep -x mbsync >/dev/null && { echo "mbsync is already running." ; kill_davmail; exit ;}
-    mbsync -a -q -q || { echo 'Email sync failed.'; kill_davmail; exit ;}
+khalorg_export() {
+    khalorg export outlook_local today 180d > $HOME/Dropbox/org/outlook.org 
 }
 
-start_notmuch() {
-    pgrep -x notmuch >/dev/null && { echo "notmuch is already running." ; kill_davmail; exit ;}
-    notmuch new --quiet 2>/dev/null || { echo 'Email sync failed.'; kill_davmail; exit ;}
-}
-
-start_message='Email sync started'
+start_message='Calendar sync started'
 if [[ $TMUX ]]; then
     tmux display -d 1000 "$start_message"
     tmux display -d 2000 "$(main)"
@@ -68,4 +62,3 @@ else
     echo "$start_message"
     main 
 fi
-

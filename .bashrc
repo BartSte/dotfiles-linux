@@ -3,7 +3,6 @@
 
 cd ~/dotfiles-linux/bash
 source env.sh
-source git_functions.bash
 source aliases.sh
 source fzf.bash
 source bindings.sh
