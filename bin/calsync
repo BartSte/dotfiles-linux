@@ -39,7 +39,7 @@ main(){
     start_davmail
     vdirsyncer -v CRITICAL sync || { echo "vdirsyncer failed"; kill_davmail; exit ; }
     khalorg_export || { echo "khalorg failed"; kill_davmail; exit; }
-    [[ $pid_davmail ]] && kill $pid_davmail
+    kill_davmail
     echo 'Calendar sync done.'
 }
 
@@ -48,6 +48,10 @@ start_davmail() {
     davmail $davmailconfig &
     pid_davmail=$!
     sleep 0.5
+}
+
+kill_davmail() {
+    [[ $pid_davmail ]] && kill $pid_davmail
 }
 
 khalorg_export() {
