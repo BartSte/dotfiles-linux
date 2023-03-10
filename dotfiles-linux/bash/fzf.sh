@@ -1,6 +1,7 @@
-[ -f /usr/share/fzf/completion.bash ] && source /usr/share/fzf/completion.bash
-[ -f /usr/share/fzf/key-bindings.bash ] && source /usr/share/fzf/key-bindings.bash
-[ -f ~/dotfiles-linux/scripts/fzf_help.bash ] && source ~/dotfiles-linux/scripts/fzf_help.bash
+source ~/dotfiles-linux/bash/functions.sh
+save_source /usr/share/fzf/key-bindings.bash
+save_source ~/dotfiles-linux/scripts/fzf_help.bash
+save_source ~/clones/fzf-tab-completion/bash/fzf-bash-completion.sh
 
 export FZF_DEFAULT_COMMAND="fd --hidden --no-ignore-vcs --ignore-file $HOME/.ignore --type f"
 export FZF_ALT_C_COMMAND="fd --hidden --no-ignore-vcs --ignore-file $HOME/.ignore -t d"
@@ -53,3 +54,8 @@ fkill() {
   kill -"${1:-9}" "$pid"
 }
 
+bind -x '"\C-a": fzf_help;'
+bind -x '"\ed": fzf_home_dir' 
+bind -x '"\eo": fzf-file-widget'
+bind -x '"\eh": fzf_home_file'
+bind -x '"\t": fzf_bash_completion'
