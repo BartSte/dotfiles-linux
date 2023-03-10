@@ -1,4 +1,38 @@
 #!/usr/bin/bash
+
+usage="Usage: $(basename "$0") [-h | --help] <cmd>
+
+Returns the positional command line arguments for <cmd>. Only long (--arg)
+optional arguments are supported.
+
+where:
+    options:
+    -h --help   shows this help messages
+
+    positional:
+    <cmd>   an existing command"
+
+options=$(getopt -o h --long help -- "$@")
+
+[ $? -eq 0 ] || { echo "Incorrect options provided"; exit 1; }
+
+eval set -- "$options"
+while true; do
+    case "$1" in
+    -h | --help)
+        echo "$usage"
+        exit
+        ;;
+    --)
+        shift
+        break
+        ;;
+    esac
+    shift
+done
+
+[ $# -eq 0 ] && { echo "$usage"; exit ;}
+
 cmd=$@
 
 HEAD='?<=[^''"`]'
