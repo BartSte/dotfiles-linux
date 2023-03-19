@@ -23,8 +23,13 @@ secs() {
 }
 
 dot() {
+    echo "Base:"
     git --git-dir=$HOME/dotfiles.git/ --work-tree=$HOME "$@"
+    echo -e
+    echo -e "Linux:"
     git --git-dir=$HOME/dotfiles-linux.git/ --work-tree=$HOME "$@"
+    echo -e
+    echo -e "Secret:"
     git --git-dir=$HOME/dotfiles-secret.git/ --work-tree=$HOME "$@"
 }
 
