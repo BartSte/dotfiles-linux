@@ -16,6 +16,11 @@ fzf_home() {
     append_line $value
 }
 
+fzf_home_cd() {
+    dir=$($FZF_ALT_D_COMMAND | eval "fzf $FZF_DEFAULT_OPTS $FZF_ALT_D_OPTS")
+    buildin cd -- $dir
+}
+
 fkill() {
   local pid
 
@@ -30,10 +35,12 @@ fkill() {
 }
 set -o vi
 
+bind -m vi-command -x '"\ed": fzf_home_cd'
 bind -m vi-command -x '"\eh": fzf_home'
 bind -m vi-command -x '"\eo": fzf-file-widget'
 
-bind -m vi-insert -x '"\em": fzf_help'
+bind -m vi-insert -x '"\ed": fzf_home_cd'
 bind -m vi-insert -x '"\eh": fzf_home'
+bind -m vi-insert -x '"\em": fzf_help'
 bind -m vi-insert -x '"\eo": fzf-file-widget'
 bind -m vi-insert -x '"\t": fzf_bash_completion'

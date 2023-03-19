@@ -6,6 +6,7 @@ export FZF_DEFAULT_COMMAND="fd --hidden --no-ignore-vcs --ignore-file $HOME/.ign
 export FZF_ALT_C_COMMAND="fd --hidden --no-ignore-vcs --ignore-file $HOME/.ignore -t d"
 export FZF_CTRL_T_COMMAND=$FZF_DEFAULT_COMMAND
 export FZF_ALT_H_COMMAND="$FZF_DEFAULT_COMMAND . $HOME"
+export FZF_ALT_D_COMMAND="$FZF_ALT_C_COMMAND . $HOME"
 
 export FZF_DEFAULT_OPTS="--height 40% --layout=reverse --preview-window=right,65%"
 
@@ -31,6 +32,8 @@ FZF_ALT_C_OPTS="--preview '$_FZF_CTRL_T_OPTS_DIR' "
 FZF_ALT_C_OPTS+="--bind 'ctrl-p:toggle-preview' "
 FZF_ALT_C_OPTS+="--preview-window hidden"
 export FZF_ALT_C_OPTS
+
+export FZF_ALT_D_OPTS=$FZF_ALT_C_OPTS
 
 export FZF_COMPLETION_OPTS='--info=inline'
 
