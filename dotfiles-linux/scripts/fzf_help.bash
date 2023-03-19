@@ -5,7 +5,7 @@ export FZF_HELP_OPTS+='--bind ctrl-a:change-preview-window(down,75%,nowrap|right
 
 fzf_help() {
     option=$(echo $READLINE_LINE | _get_command | fzf_select_cli_option)
-    _append_line "$option"
+    append_line "$option"
 }
 
 _get_command() {
@@ -30,26 +30,5 @@ fzf_select_cli_option() {
 
 _remove_line_number() {
     sed "s/^.*://g" 
-}
-
-_append_line() {
-    if [[ -p /dev/stdin ]]; then
-        READLINE_LINE_NEW=$(cat -)
-    else
-        READLINE_LINE_NEW=$@
-    fi
-
-    if
-        [[ -n $READLINE_LINE_NEW ]]
-    then
-        builtin bind '"\er": redraw-current-line'
-        builtin bind '"\e^": magic-space'
-        READLINE_LINE_NEW+=" "
-        READLINE_LINE=${READLINE_LINE:+${READLINE_LINE:0:READLINE_POINT}}${READLINE_LINE_NEW}${READLINE_LINE:+${READLINE_LINE:READLINE_POINT}}
-        READLINE_POINT=$(( READLINE_POINT + ${#READLINE_LINE_NEW} ))
-    else
-        builtin bind '"\er":'
-        builtin bind '"\e^":'
-    fi
 }
 

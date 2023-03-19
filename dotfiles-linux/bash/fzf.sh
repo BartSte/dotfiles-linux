@@ -11,12 +11,9 @@ _fzf_compgen_dir() {
   fd --type d --hidden --follow --ignore-file $HOME/.ignore . "$1"
 }
 
-fzf_home_file() {
-    $FZF_CTRL_T_COMMAND . ~ | fzf-file-widget
-}
-
-fzf_home_dir() {
-    $FZF_ALT_C_COMMAND . ~ | fzf-file-widget
+fzf_home() {
+    value=$($FZF_ALT_H_COMMAND | eval "fzf $FZF_DEFAULT_OPTS $FZF_ALT_H_OPTS")
+    append_line $value
 }
 
 fkill() {
@@ -31,13 +28,12 @@ fkill() {
 
   kill -"${1:-9}" "$pid"
 }
+set -o vi
 
-bind -m vi-command -x '"\ed": fzf_home_dir' 
-bind -m vi-command -x '"\eh": fzf_home_file'
+bind -m vi-command -x '"\eh": fzf_home'
 bind -m vi-command -x '"\eo": fzf-file-widget'
 
-bind -m vi-insert -x '"\C-a": fzf_help;'
-bind -m vi-insert -x '"\ed": fzf_home_dir' 
-bind -m vi-insert -x '"\eh": fzf_home_file'
+bind -m vi-insert -x '"\em": fzf_help'
+bind -m vi-insert -x '"\eh": fzf_home'
 bind -m vi-insert -x '"\eo": fzf-file-widget'
 bind -m vi-insert -x '"\t": fzf_bash_completion'
