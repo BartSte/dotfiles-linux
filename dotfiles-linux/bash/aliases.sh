@@ -16,7 +16,7 @@ alias bat='bat --theme gruvbox-dark'
 alias act='source .venv/bin/activate'
 alias dact='deactivate'
 alias blue='bluetoothctl connect $HEADPHONES'
-alias blueon='~/dotfiles-linux/scripts/enable_bluetooth.bash'
+alias blueon='bluetoothctl power on; bluetoothctl discoverable on; bluetoothctl pairable on;'
 alias blueoff='bluetoothctl power off'
 
 alias ls='exa -h --icons'

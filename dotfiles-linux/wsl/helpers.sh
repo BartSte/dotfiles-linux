@@ -1,15 +1,10 @@
-function enable_running_wsl () {
-    echo "Enable running_wsl"
-    sudo cp ~/dotfiles-linux/wsl/running_wsl /usr/bin/running_wsl
-    sudo chmod +x /usr/bin/running_wsl
-}
-
-function enable_firefox_win() {
+enable_firefox_win() {
     echo "Use windows's firefox for linux"
-    sudo cp ~/dotfiles-linux/wsl/firefox_win /usr/bin/firefox
-    sudo chmod +x /usr/bin/firefox
+    rm $HOME/bin/firefox
+    sudo ln --symbolic $HOME/dotfiles-linux/wsl/firefox_win $HOME/bin/firefox
 }
 
 enable_systemd() {
+    echo "Enable systemd for WSL"
     sudo cp ~/dotfiles-linux/wsl/wsl.conf /etc/wsl.conf
 }

@@ -1,0 +1,12 @@
+#!/bin/bash
+
+if [[ running_wsl ]]; then
+    dropbox=$WH/Dropbox/org
+else
+    dropbox=$HOME/Dropbox/org
+fi
+
+calsync \
+    $HOME/.config/davmail/davmail.properties \
+    $dropbox/outlook.org \
+    outlook_local today 180d 

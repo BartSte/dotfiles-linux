@@ -1,7 +1,5 @@
-source ~/dotfiles-linux/bash/functions.sh
-save_source /usr/share/fzf/key-bindings.bash
-save_source ~/dotfiles-linux/scripts/fzf_help.bash
-save_source ~/clones/fzf-tab-completion/bash/fzf-bash-completion.sh
+source /usr/share/fzf/key-bindings.bash
+source ~/dotfiles-linux/bash/fzf_bash_completion.sh
 
 export FZF_DEFAULT_COMMAND="fd --hidden --no-ignore-vcs --ignore-file $HOME/.ignore --type f"
 export FZF_ALT_C_COMMAND="fd --hidden --no-ignore-vcs --ignore-file $HOME/.ignore -t d"
@@ -21,9 +19,6 @@ export FZF_CTRL_T_OPTS+="--preview-window 'hidden'"
 export FZF_ALT_C_OPTS="--preview '$_FZF_CTRL_T_OPTS_DIR' "
 export FZF_ALT_C_OPTS+="--bind 'ctrl-p:toggle-preview' "
 export FZF_ALT_C_OPTS+="--preview-window hidden"
-
-export FZF_COMPLETION_TRIGGER="**"
-export FZF_COMPLETION_OPTS='--info=inline'
 
 _fzf_compgen_path() {
   fd --hidden --follow --ignore-file $HOME/.ignore . "$1"
@@ -54,8 +49,3 @@ fkill() {
   kill -"${1:-9}" "$pid"
 }
 
-bind -x '"\C-a": fzf_help;'
-bind -x '"\ed": fzf_home_dir' 
-bind -x '"\eo": fzf-file-widget'
-bind -x '"\eh": fzf_home_file'
-bind -x '"\t": fzf_bash_completion'

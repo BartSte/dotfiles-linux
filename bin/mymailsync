@@ -1,0 +1,5 @@
+#!/bin/bash
+
+mailsync $HOME/.config/davmail/davmail.properties
+
+
