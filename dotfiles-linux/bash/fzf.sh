@@ -16,7 +16,7 @@ fzf_home() {
 
 fzf_home_cd() {
     dir=$($FZF_ALT_D_COMMAND | eval "fzf $FZF_DEFAULT_OPTS $FZF_ALT_D_OPTS")
-    buildin cd -- $dir
+    cd $dir
 }
 
 fkill() {
