@@ -45,23 +45,22 @@ shorten_stdout(){
 #######################################
 dotc() {
     message="'$*'"
-    common_args="commit --untracked-files=no -a"
 
     echo 'Base:'
     base add ~/dotfiles
     bases
-    base $common_args -m "$message" | shorten_stdout
+    base commit --untracked-files=no -a -m "$message" | shorten_stdout
 
     echo $'\nLinux'
     lin add ~/bin
     lin add ~/dotfiles-linux
     lins
-    lin $common_args -m "$message" | shorten_stdout
+    lin commit --untracked-files=no -a -m "$message" | shorten_stdout
 
     echo $'\nSecret'
     sec add ~/dotfiles-secret
     secs
-    sec $common_args -m "$message" | shorten_stdout
+    sec commit --untracked-files=no -a -m "$message" | shorten_stdout
 }
 
 dots() {
