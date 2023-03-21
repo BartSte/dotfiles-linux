@@ -1,7 +1,7 @@
 function winenv() {
     cwd=$pwd
     cd /mnt/c
-    cmd.exe /C "echo %$*%" | tr -d '\r'
+    /mnt/c/Windows/System32/cmd.exe /C "echo %$*%" | tr -d '\r'
     cd $cwd
 }
 

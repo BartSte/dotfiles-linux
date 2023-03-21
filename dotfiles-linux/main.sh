@@ -10,5 +10,6 @@ bash ~/dotfiles-linux/mutt/main.sh
 bash ~/dotfiles-linux/i3/main.sh
 bash ~/dotfiles-linux/kmonad/main.sh
 bash ~/dotfiles-linux/davmail/main.bash
+bash ~/dotfiles-linux/zsh/main.sh
 
 echo "Done"

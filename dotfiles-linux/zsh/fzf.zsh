@@ -26,12 +26,3 @@ fzf_home() {
     return $ret
 }
 
-zle -N fzf_home_dir
-zle -N fzf_home_file
-bindkey -M vicmd "\eh" fzf_home
-bindkey -M vicmd "\eo" fzf-file-widget
-
-bindkey -M viins "^A" fzf_help;
-bindkey -M viins "\eh" fzf_home
-bindkey -M viins "\eo" fzf-file-widget
-
