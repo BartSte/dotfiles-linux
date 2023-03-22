@@ -1,6 +1,11 @@
 export ZSH=/usr/share/oh-my-zsh/
 export FZF_BASE=/usr/share/fzf/
-export DISABLE_FZF_AUTO_COMPLETION="false"
+
+VI_MODE_SET_CURSOR=true
+VI_MODE_CURSOR_NORMAL=2
+VI_MODE_CURSOR_VISUAL=2
+VI_MODE_CURSOR_INSERT=6
+VI_MODE_CURSOR_OPPEND=0
 
 HISTSIZE=1000
 SAVEHIST=1000
@@ -20,8 +25,7 @@ plugins=(
     copypath
     fd
     vi-mode
-    virtualenv
-    virtualenvwrapper
+    # virtualenv
     )
 
 ZSH_THEME="robbyrussell"
