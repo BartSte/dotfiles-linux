@@ -16,8 +16,8 @@ function install_dependencies () {
 }
  
 function install_dependencies_aur () {
-    echo "Install pacman dependencies"
-    sudo yay -Ss "$@" --noconfirm
+    echo "Install yay dependencies"
+    sudo yay -S "$@" --noconfirm
 }
 
 function install_chrysalis() {

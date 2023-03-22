@@ -15,4 +15,4 @@ link_scripts_to_bin
 initialize_tulizu
 link_qutebrowser_config 
 dropbox-cli autostart y
-pip "${dependencies_pip[@]}"
+pip install "${dependencies_pip[@]}"
