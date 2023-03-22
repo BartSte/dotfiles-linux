@@ -11,8 +11,9 @@ mymailsync() {
 }
 
 mycalsync() {
+    running_wsl && dropbox=$WH/Dropbox || dropbox=$HOME/Dropbox
     calsync \
         $HOME/.config/davmail/davmail.properties \
-        $HOME/Dropbox/org/outlook.org \
+        $dropbox/org/outlook.org \
         outlook_local today 180d 
 }
