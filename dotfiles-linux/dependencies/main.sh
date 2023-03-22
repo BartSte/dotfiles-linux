@@ -5,7 +5,6 @@
 
 echo "# Dependencies"
 sudo pacman -Syu --noconfirm
-sudo pacman -Syy --noconfirm
 sudo pacman -S --needed base-devel --noconfirm
 install_yay
 install_dependencies "${dependencies[@]}"

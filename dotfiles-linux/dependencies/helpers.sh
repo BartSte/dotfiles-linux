@@ -17,7 +17,7 @@ function install_dependencies () {
  
 function install_dependencies_aur () {
     echo "Install yay dependencies"
-    sudo yay -S "$@" --noconfirm
+    yay -S "$@" --noconfirm
 }
 
 function install_chrysalis() {
