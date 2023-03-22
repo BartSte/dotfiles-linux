@@ -77,3 +77,7 @@ dots() {
 dotp() {
     dot push
 }
+
+dotcp() {
+    dotc && dotp
+}
