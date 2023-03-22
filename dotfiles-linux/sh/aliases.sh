@@ -6,7 +6,6 @@ alias ....='cd ./../../../'
 alias path='echo -e ${PATH//:/\\n}'
 alias vim='nvim'
 alias mutt='neomutt'
-alias reload='. ~/.bashrc'
 
 alias py='python3'
 alias tn='tmux new'

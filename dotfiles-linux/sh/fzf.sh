@@ -1,5 +1,5 @@
 source /usr/share/fzf/key-bindings.bash
-source ~/dotfiles-linux/bash/fzf_bash_completion.sh
+source ~/dotfiles-linux/bash/fzf_bash_completion.bash
 
 _fzf_compgen_path() {
   fd --hidden --follow --ignore-file $HOME/.ignore . "$1"

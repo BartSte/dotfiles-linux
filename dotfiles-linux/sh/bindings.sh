@@ -1,4 +1,4 @@
-source ~/dotfiles-linux/bash/fzf.sh
+source ~/dotfiles-linux/sh/fzf.sh
 source ~/dotfiles-linux/scripts/fzf_help.bash
 
 set -o vi
