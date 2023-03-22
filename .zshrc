@@ -26,8 +26,10 @@ source $ZSH/oh-my-zsh.sh
 source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
 
+source $dir_bash/git.sh
 source $dir_bash/env.sh
 source $dir_bash/aliases.sh
+running_wsl && source $dir_bash/wsl.sh
 
 source $dir_zsh/functions.zsh
 source $dir_zsh/settings.zsh
