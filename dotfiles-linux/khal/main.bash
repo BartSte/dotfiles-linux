@@ -1,3 +1,5 @@
+#!/bin/bash
+#
 . ~/dotfiles-linux/khal/helpers.bash
 
 directory=~/clones/khal

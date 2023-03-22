@@ -1,3 +1,5 @@
+#!/bin/bash
+
 function install_font () {
     echo "Install JetBrainsMono Nerd Font"
     unzip -u ~/dotfiles/fonts/JetBrainsMono.zip -d ~/.fonts

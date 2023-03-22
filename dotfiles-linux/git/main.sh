@@ -1,3 +1,5 @@
+#!/bin/bash
+
 function init_git() {
     echo "# Git"
     echo "Setting config..."

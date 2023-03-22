@@ -1,3 +1,5 @@
+#!/bin/bash
+
 . ~/dotfiles-linux/wsl/helpers.sh
 
 echo "# WSL"

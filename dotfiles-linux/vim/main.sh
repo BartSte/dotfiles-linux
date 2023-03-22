@@ -1,3 +1,5 @@
+#!/bin/bash
+
 get_spell(){
     lang=$1
     mkdir ~/.config/nvim/spell --parent

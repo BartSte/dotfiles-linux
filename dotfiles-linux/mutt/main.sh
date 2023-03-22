@@ -1,3 +1,5 @@
+#!/bin/bash
+
 echo "# Neomutt"
 repo_gruvbox=https://git.sthu.org/repos/mutt-gruvbox.git 
 repo_powerline=https://github.com/sheoak/neomutt-powerline-nerdfonts.git

@@ -1,3 +1,5 @@
+#!/bin/bash
+
 enable_service() {
     sudo killall kmonad
     sudo systemctl disable kmonad.service

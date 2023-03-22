@@ -1,3 +1,5 @@
+#!/bin/bash
+
 . ~/dotfiles-linux/dependencies/helpers.sh
 . ~/dotfiles-linux/dependencies/deps.sh
 

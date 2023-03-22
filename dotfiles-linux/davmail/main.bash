@@ -1,3 +1,5 @@
+#!/bin/bash
+
 . ~/dotfiles-linux/davmail/helpers.bash
 
 source=~/dotfiles-linux/davmail/davmail.properties
