@@ -19,11 +19,12 @@ source $dir_sh/aliases.sh
 source $dir_sh/functions.sh
 running_wsl && source $dir_sh/wsl.sh
 
-source $dir_zsh/oh-my-zsh.zsh
 source $dir_zsh/settings.zsh
 source $dir_zsh/bindings.zsh
 source $dir_zsh/aliases.zsh
 source $dir_zsh/functions.zsh
+source $dir_zsh/vi-mode.zsh
+source $dir_zsh/colorize.zsh
 save_source $HOME/dotfiles-linux/config.sh
 save_source $HOME/dotfiles-secret/secret-config.sh
 
