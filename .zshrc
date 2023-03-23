@@ -5,10 +5,6 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
-HISTSIZE=1000
-SAVEHIST=1000
-HISTFILE=~/.histfile
-
 dir_sh="$HOME/dotfiles-linux/sh"
 dir_zsh="$HOME/dotfiles-linux/zsh"
 dir_plugins=/usr/share/zsh/plugins
@@ -25,12 +21,12 @@ source $dir_zsh/aliases.zsh
 source $dir_zsh/functions.zsh
 source $dir_zsh/vi-mode.zsh
 source $dir_zsh/colorize.zsh
+source $dir_zsh/completion.zsh
 save_source $HOME/dotfiles-linux/config.sh
 save_source $HOME/dotfiles-secret/secret-config.sh
 
 source $dir_plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
 source $dir_plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-source $dir_plugins/fzf-tab-git/fzf-tab.zsh
 source /usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.

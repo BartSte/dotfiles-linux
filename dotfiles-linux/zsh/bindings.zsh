@@ -6,6 +6,7 @@ zle -N fzf_home
 
 bindkey -M vicmd "\eh" fzf_home
 bindkey -M vicmd "\eo" fzf-file-widget
+bindkey -M vicmd -r '^T'
 
 bindkey -M viins "\eh" fzf_home
 bindkey -M viins "\eo" fzf-file-widget
