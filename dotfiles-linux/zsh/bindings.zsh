@@ -10,5 +10,6 @@ bindkey -M vicmd -r '^T'
 
 bindkey -M viins "\eh" fzf_home
 bindkey -M viins "\eo" fzf-file-widget
-bindkey -M viins '^T' vi-cmd-mode
 bindkey -M viins -s '^H' '^W'
+
+ZVM_VI_INSERT_ESCAPE_BINDKEY='^T'
