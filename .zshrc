@@ -1,5 +1,5 @@
-dir_sh="$HOME/dotfiles-linux/sh"
-dir_zsh="$HOME/dotfiles-linux/zsh"
+dir_sh=$HOME/dotfiles-linux/sh
+dir_zsh=$HOME/dotfiles-linux/zsh
 dir_plugins=/usr/share/zsh/plugins
 
 source $dir_zsh/p10k_init.zsh  # must stay at the top
