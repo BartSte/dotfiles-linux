@@ -1,12 +1,12 @@
 source /usr/share/fzf/key-bindings.zsh
 
-_fzf_compgen_path() {
-  fd --hidden --follow --ignore-file $HOME/.ignore . "$1"
-}
+# _fzf_compgen_path() {
+#   fd --hidden --follow --ignore-file $HOME/.ignore . "$1"
+# }
 
-_fzf_compgen_dir() {
-  fd --type d --hidden --follow --ignore-file $HOME/.ignore . "$1"
-}
+# _fzf_compgen_dir() {
+#   fd --type d --hidden --follow --ignore-file $HOME/.ignore . "$1"
+# }
 
 __select() {
   setopt localoptions pipefail no_aliases 2> /dev/null
