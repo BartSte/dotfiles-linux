@@ -43,6 +43,14 @@ main(){
     echo 'Email sync done.'
 }
 
+is_logged_in() {
+    pgrep -u "${USER:=$LOGNAME}" >/dev/null
+}
+
+has_internet() {
+    ping -q -c 1 1.1.1.1 > /dev/null
+}
+
 start_davmail() {
     pgrep -f davmail\.jar >/dev/null && return
     davmail $davmailconfig &
