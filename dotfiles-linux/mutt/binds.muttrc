@@ -45,21 +45,8 @@ bind alias,index,pager,browser,query \Cu half-up
 bind index n search-next
 bind index N search-opposite
 
-bind index K previous-thread
-bind pager K half-up
-
-bind index J next-thread
-bind pager J half-down
-
 bind editor <up> history-up
 bind editor <down> history-down
-
-# Limit messages quickly using ' + key.
-macro index \'d  "<limit>~D<enter>"       "limit to deleted messages"
-macro index \'f  "<limit>~F<enter>"       "limit to flagged messages"
-macro index \'n  "<limit>~N|~O<enter>"    "limit to new messages"
-macro index \'u  "<limit>!~Q<enter>"      "limit to unreplied messages"
-macro index \'\' "<limit>~A<enter>"       "reset all limits"
 
 # vim: filetype=neomuttrc
 macro attach B "<pipe-entry>iconv -c --to-code=UTF8 > $tmpdir/mail.html<enter><shell-escape>firefox $tmpdir/mail.html &<enter>"

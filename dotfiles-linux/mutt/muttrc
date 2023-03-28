@@ -23,7 +23,6 @@ set mailcap_path = "~/dotfiles-linux/mutt/mailcap"
 set markers=no  # don't put '+' at the beginning of wrapped lines
 set menu_scroll  # scroll in menus
 set pager_context = 3  # number of context lines to show
-set abort_key = "<Esc>"
 set pager_index_lines = 10 # number of index lines to show
 set pager_stop  # don't go to next message automatically
 set quote_regexp = "^( {0,4}[>|:#%]| {0,4}[a-z0-9]+[>|]+)+"
@@ -95,20 +94,3 @@ auto_view text/html
 auto_view application/pgp-encrypted
 alternative_order text/calendar application/ics text/plain text/enriched text/html
 
-#### Sidebar Config
-set sidebar_width = 30
-set sidebar_visible = no
-set sidebar_short_path = yes
-set sidebar_divider_char = ' 	░'
-set sidebar_folder_indent = yes
-set sidebar_next_new_wrap = yes
-set sidebar_indent_string = ' - '
-set sidebar_component_depth = 0
-set sidebar_non_empty_mailbox_only = yes
-
-#### Markdown to html email conversion
-# macro compose M "F pandoc -s -f markdown -t html \ny^T^Utext/html; charset=UTF-8\n" "Convert from MD to HTML"
-
-#### Show patch files (requires git-split-diffs)
-# macro attach P "|git-split-diffs --color | less -RF<enter>" "View a patch file as a diff"
-# set wait_key=no
