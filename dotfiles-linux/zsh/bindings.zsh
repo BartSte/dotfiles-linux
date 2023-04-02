@@ -1,14 +1,13 @@
-source $dir_zsh/fzf.zsh
+source /usr/share/fzf/key-bindings.zsh
 
 bindkey -v
+bindkey -r "^T"
+bindkey -r "^R"
 
-zle -N fzf_home
-
-bindkey -M vicmd "\eh" fzf_home
+bindkey -M vicmd "^R" fzf-history-widget
 bindkey -M vicmd "\eo" fzf-file-widget
-bindkey -M vicmd -r '^T'
 
-bindkey -M viins "\eh" fzf_home
+bindkey -M viins "^R" fzf-history-widget
 bindkey -M viins "\eo" fzf-file-widget
 bindkey -M viins -s '^H' '^W'
 

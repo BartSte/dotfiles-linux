@@ -25,3 +25,4 @@ source /usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme
 source $dir_zsh/bindings.zsh
 
 source ~/.p10k.zsh  # must stay at the bottom
+
