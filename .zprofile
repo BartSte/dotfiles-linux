@@ -4,11 +4,17 @@ if [ -f ~/.zshrc ]; then
     . ~/.zshrc
 fi
 
-if ! grep -q microsoft /proc/version && [ -z "${DISPLAY}" ]; then 
+if ! running_wsl && [ -z "${DISPLAY}" ]; then 
     if [[ $(tty) = /dev/tty1 ]]; then
         exec sway
     elif [[ $(tty) = /dev/tty2 ]]; then
         exec startx
     fi
+else
+    wsl_path=/mnt/c/Windows/System32:
+    wsl_path+=/mnt/c/Windows/System32/WindowsPowerShell/v1.0/:
+    wsl_path+=/mnt/c/Program\ Files/PowerShell/7-preview
+
+    export PATH=$PATH:$wsl_path
 fi
 
