@@ -4,7 +4,6 @@ alias ...='cd ./../../'
 alias ....='cd ./../../../'
 
 alias path='echo -e ${PATH//:/\\n}'
-alias vim='nvim'
 alias mutt='neomutt'
 
 alias py='python3'
