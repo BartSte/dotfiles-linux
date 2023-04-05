@@ -1,7 +1,8 @@
 export PATH=$PATH:$HOME/bin:$HOME/.local/bin:$HOME/.cargo/bin
 
 if [ -f ~/.zshrc ]; then
-    . ~/.zshrc
+    source ~/.env
+    source ~/.zshrc
 fi
 
 if ! running_wsl && [ -z "${DISPLAY}" ]; then 

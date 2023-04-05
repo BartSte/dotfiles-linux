@@ -6,6 +6,7 @@ alias ....='cd ./../../../'
 alias path='echo -e ${PATH//:/\\n}'
 alias mutt='neomutt'
 
+alias vim='[ -f Session.vim ] && nvim -S Session.vim $@ || nvim $@'
 alias py='python3'
 alias tn='tmux new'
 alias ta='tmux attach'
