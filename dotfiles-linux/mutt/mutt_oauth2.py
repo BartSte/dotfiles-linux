@@ -19,18 +19,17 @@
 #   along with this program; if not, write to the Free Software
 #   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 #   02110-1301, USA.
-'''Mutt OAuth2 token management'''
+'''Mutt OAuth2 token management.'''
 
 import argparse
 import base64
-from datetime import datetime, timedelta
 import hashlib
 import http.server
 import imaplib
 import json
 import os
-from pathlib import Path
 import poplib
+import re
 import secrets
 import smtplib
 import socket
@@ -39,6 +38,12 @@ import sys
 import time
 import urllib.parse
 import urllib.request
+from datetime import datetime, timedelta
+from pathlib import Path
+from subprocess import check_output
+
+client_id: str = check_output(['rbw', 'get', 'mutt_client_id']).decode()
+client_id = re.sub(r'\n', '', client_id)
 
 # The token file must be encrypted because it contains multi-use bearer tokens
 # whose usage does not require additional verification. Specify whichever
@@ -75,7 +80,7 @@ registrations = {
         'scope': ('offline_access https://outlook.office.com/IMAP.AccessAsUser.All '
                   'https://outlook.office.com/POP.AccessAsUser.All '
                   'https://outlook.office.com/SMTP.Send'),
-        'client_id': os.environ['MUTT_CLIENT_ID'],
+        'client_id': client_id,
         'client_secret': '',
     },
 }
@@ -87,12 +92,22 @@ tokens have expired, optionally with "--authflow" to override the default author
 flow.  To truly start over from scratch, first delete TOKENFILE.  Use "--verbose --test"
 to test the IMAP/POP/SMTP endpoints.
 ''')
-ap.add_argument('-v', '--verbose', action='store_true', help='increase verbosity')
-ap.add_argument('-d', '--debug', action='store_true', help='enable debug output')
+ap.add_argument(
+    '-v',
+    '--verbose',
+    action='store_true',
+    help='increase verbosity')
+ap.add_argument(
+    '-d',
+    '--debug',
+    action='store_true',
+    help='enable debug output')
 ap.add_argument('tokenfile', help='persistent token storage')
-ap.add_argument('-a', '--authorize', action='store_true', help='manually authorize new tokens')
+ap.add_argument('-a', '--authorize', action='store_true',
+                help='manually authorize new tokens')
 ap.add_argument('--authflow', help='authcode | localhostauthcode | devicecode')
-ap.add_argument('-t', '--test', action='store_true', help='test IMAP/POP/SMTP endpoints')
+ap.add_argument('-t', '--test', action='store_true',
+                help='test IMAP/POP/SMTP endpoints')
 args = ap.parse_args()
 
 token = {}
@@ -101,13 +116,17 @@ if path.exists():
     if 0o777 & path.stat().st_mode != 0o600:
         sys.exit('Token file has unsafe mode. Suggest deleting and starting over.')
     try:
-        sub = subprocess.run(DECRYPTION_PIPE, check=True, input=path.read_bytes(),
-                             capture_output=True)
+        sub = subprocess.run(
+            DECRYPTION_PIPE,
+            check=True,
+            input=path.read_bytes(),
+            capture_output=True)
         token = json.loads(sub.stdout)
     except subprocess.CalledProcessError:
-        sys.exit('Difficulty decrypting token file. Is your decryption agent primed for '
-                 'non-interactive usage, or an appropriate environment variable such as '
-                 'GPG_TTY set to allow interactive agent usage from inside a pipe?')
+        sys.exit(
+            'Difficulty decrypting token file. Is your decryption agent primed for '
+            'non-interactive usage, or an appropriate environment variable such as '
+            'GPG_TTY set to allow interactive agent usage from inside a pipe?')
 
 
 def writetokenfile():
@@ -116,8 +135,11 @@ def writetokenfile():
         path.touch(mode=0o600)
     if 0o777 & path.stat().st_mode != 0o600:
         sys.exit('Token file has unsafe mode. Suggest deleting and starting over.')
-    sub2 = subprocess.run(ENCRYPTION_PIPE, check=True, input=json.dumps(token).encode(),
-                          capture_output=True)
+    sub2 = subprocess.run(
+        ENCRYPTION_PIPE,
+        check=True,
+        input=json.dumps(token).encode(),
+        capture_output=True)
     path.write_bytes(sub2.stdout)
 
 
@@ -128,8 +150,9 @@ if not token:
         sys.exit('You must run script with "--authorize" at least once.')
     print('Available app and endpoint registrations:', *registrations)
     token['registration'] = input('OAuth2 registration: ')
-    token['authflow'] = input('Preferred OAuth2 flow ("authcode" or "localhostauthcode" '
-                              'or "devicecode"): ')
+    token['authflow'] = input(
+        'Preferred OAuth2 flow ("authcode" or "localhostauthcode" '
+        'or "devicecode"): ')
     token['email'] = input('Account e-mail address: ')
     token['access_token'] = ''
     token['access_token_expiration'] = ''
@@ -137,8 +160,9 @@ if not token:
     writetokenfile()
 
 if token['registration'] not in registrations:
-    sys.exit(f'ERROR: Unknown registration "{token["registration"]}". Delete token file '
-             f'and start over.')
+    sys.exit(
+        f'ERROR: Unknown registration "{token["registration"]}". Delete token file '
+        f'and start over.')
 registration = registrations[token['registration']]
 
 authflow = token['authflow']
@@ -160,13 +184,17 @@ def access_token_valid():
 def update_tokens(r):
     '''Takes a response dictionary, extracts tokens out of it, and updates token file.'''
     token['access_token'] = r['access_token']
-    token['access_token_expiration'] = (datetime.now() +
-                                        timedelta(seconds=int(r['expires_in']))).isoformat()
+    token['access_token_expiration'] = (
+        datetime.now() +
+        timedelta(
+            seconds=int(
+                r['expires_in']))).isoformat()
     if 'refresh_token' in r:
         token['refresh_token'] = r['refresh_token']
     writetokenfile()
     if args.verbose:
-        print(f'NOTICE: Obtained new access token, expires {token["access_token_expiration"]}.')
+        print(
+            f'NOTICE: Obtained new access token, expires {token["access_token_expiration"]}.')
 
 
 if args.authorize:
@@ -175,7 +203,8 @@ if args.authorize:
 
     if authflow in ('authcode', 'localhostauthcode'):
         verifier = secrets.token_urlsafe(90)
-        challenge = base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest())[:-1]
+        challenge = base64.urlsafe_b64encode(
+            hashlib.sha256(verifier.encode()).digest())[:-1]
         redirect_uri = registration['redirect_uri']
         listen_port = 0
         if authflow == 'localhostauthcode':
@@ -184,8 +213,9 @@ if args.authorize:
             s.bind(('127.0.0.1', 0))
             listen_port = s.getsockname()[1]
             s.close()
-            redirect_uri = 'http://localhost:'+str(listen_port)+'/'
-            # Probably should edit the port number into the actual redirect URL.
+            redirect_uri = 'http://localhost:' + str(listen_port) + '/'
+            # Probably should edit the port number into the actual redirect
+            # URL.
 
         p.update({'login_hint': token['email'],
                   'response_type': 'code',
@@ -197,11 +227,14 @@ if args.authorize:
 
         authcode = ''
         if authflow == 'authcode':
-            authcode = input('Visit displayed URL to retrieve authorization code. Enter '
-                             'code from server (might be in browser address bar): ')
+            authcode = input(
+                'Visit displayed URL to retrieve authorization code. Enter '
+                'code from server (might be in browser address bar): ')
         else:
-            print('Visit displayed URL to authorize this application. Waiting...',
-                  end='', flush=True)
+            print(
+                'Visit displayed URL to authorize this application. Waiting...',
+                end='',
+                flush=True)
 
             class MyHandler(http.server.BaseHTTPRequestHandler):
                 '''Handles the browser query resulting from redirect to redirect_uri.'''
@@ -222,9 +255,11 @@ if args.authorize:
                     if 'code' in querydict:
                         authcode = querydict['code'][0]
                     self.do_HEAD()
-                    self.wfile.write(b'<html><head><title>Authorizaton result</title></head>')
-                    self.wfile.write(b'<body><p>Authorization redirect completed. You may '
-                                     b'close this window.</p></body></html>')
+                    self.wfile.write(
+                        b'<html><head><title>Authorizaton result</title></head>')
+                    self.wfile.write(
+                        b'<body><p>Authorization redirect completed. You may '
+                        b'close this window.</p></body></html>')
             with http.server.HTTPServer(('127.0.0.1', listen_port), MyHandler) as httpd:
                 try:
                     httpd.handle_request()
@@ -241,8 +276,9 @@ if args.authorize:
                   'client_secret': registration['client_secret'],
                   'code_verifier': verifier})
         try:
-            response = urllib.request.urlopen(registration['token_endpoint'],
-                                              urllib.parse.urlencode(p).encode())
+            response = urllib.request.urlopen(
+                registration['token_endpoint'],
+                urllib.parse.urlencode(p).encode())
         except urllib.error.HTTPError as err:
             print(err.code, err.reason)
             response = err
@@ -258,8 +294,9 @@ if args.authorize:
 
     elif authflow == 'devicecode':
         try:
-            response = urllib.request.urlopen(registration['devicecode_endpoint'],
-                                              urllib.parse.urlencode(p).encode())
+            response = urllib.request.urlopen(
+                registration['devicecode_endpoint'],
+                urllib.parse.urlencode(p).encode())
         except urllib.error.HTTPError as err:
             print(err.code, err.reason)
             response = err
@@ -283,10 +320,12 @@ if args.authorize:
             time.sleep(interval)
             print('.', end='', flush=True)
             try:
-                response = urllib.request.urlopen(registration['token_endpoint'],
-                                                  urllib.parse.urlencode(p).encode())
+                response = urllib.request.urlopen(
+                    registration['token_endpoint'],
+                    urllib.parse.urlencode(p).encode())
             except urllib.error.HTTPError as err:
-                # Not actually always an error, might just mean "keep trying..."
+                # Not actually always an error, might just mean "keep
+                # trying..."
                 response = err
             response = response.read()
             if args.debug:
@@ -308,8 +347,9 @@ if args.authorize:
         print()
 
     else:
-        sys.exit(f'ERROR: Unknown OAuth2 flow "{token["authflow"]}. Delete token file and '
-                 f'start over.')
+        sys.exit(
+            f'ERROR: Unknown OAuth2 flow "{token["authflow"]}. Delete token file and '
+            f'start over.')
 
     update_tokens(response)
 
@@ -365,12 +405,16 @@ if args.test:
     errors = False
 
     imap_conn = imaplib.IMAP4_SSL(registration['imap_endpoint'])
-    sasl_string = build_sasl_string(token['email'], registration['imap_endpoint'], 993,
-                                    token['access_token'])
+    sasl_string = build_sasl_string(
+        token['email'],
+        registration['imap_endpoint'],
+        993, token['access_token'])
     if args.debug:
         imap_conn.debug = 4
     try:
-        imap_conn.authenticate(registration['sasl_method'], lambda _: sasl_string.encode())
+        imap_conn.authenticate(
+            registration['sasl_method'],
+            lambda _: sasl_string.encode())
         # Microsoft has a bug wherein a mismatch between username and token can still report a
         # successful login... (Try a consumer login with the token from a work/school account.)
         # Fortunately subsequent commands fail with an error. Thus we follow AUTH with another
@@ -383,8 +427,10 @@ if args.test:
         errors = True
 
     pop_conn = poplib.POP3_SSL(registration['pop_endpoint'])
-    sasl_string = build_sasl_string(token['email'], registration['pop_endpoint'], 995,
-                                    token['access_token'])
+    sasl_string = build_sasl_string(
+        token['email'],
+        registration['pop_endpoint'],
+        995, token['access_token'])
     if args.debug:
         pop_conn.set_debuglevel(2)
     try:
@@ -392,17 +438,23 @@ if args.test:
         # Microsoft requires a two-line SASL for POP
         # pylint: disable=W0212
         pop_conn._shortcmd('AUTH ' + registration['sasl_method'])
-        pop_conn._shortcmd(base64.standard_b64encode(sasl_string.encode()).decode())
+        pop_conn._shortcmd(
+            base64.standard_b64encode(
+                sasl_string.encode()).decode())
         if args.verbose:
             print('POP authentication succeeded')
     except poplib.error_proto as e:
-        print('POP authentication FAILED (does your account allow POP?):', e.args[0].decode())
+        print(
+            'POP authentication FAILED (does your account allow POP?):',
+            e.args[0].decode())
         errors = True
 
     # SMTP_SSL would be simpler but Microsoft does not answer on port 465.
     smtp_conn = smtplib.SMTP(registration['smtp_endpoint'], 587)
-    sasl_string = build_sasl_string(token['email'], registration['smtp_endpoint'], 587,
-                                    token['access_token'])
+    sasl_string = build_sasl_string(
+        token['email'],
+        registration['smtp_endpoint'],
+        587, token['access_token'])
     smtp_conn.ehlo('test')
     smtp_conn.starttls()
     smtp_conn.ehlo('test')

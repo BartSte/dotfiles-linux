@@ -1,0 +1,35 @@
+# Example Office365/Outlook (DavMail method) profile ####################
+#
+# Change ACCOUNT_ALIAS to something meaningful (e.g. personal, work) - this should
+# match the account alias used in .config/mutt/accounts/*
+#
+# To use this method you will need to install DavMail
+# (http://davmail.sourceforge.net/) and have it running. This config assumes
+# you have it running locally as opposed to on a server somewhere
+IMAPAccount work
+# Address to connect to
+Host 127.0.0.1
+Port 1143
+UserCmd "echo $MUTT_USERNAME@$MUTT_DOMAIN"
+PassCmd "rbw get $MUTT_PASSWORD_ID"
+SSLType None
+AuthMechs LOGIN
+Timeout 0
+
+IMAPStore work-remote
+Account work
+
+MaildirStore work-local
+Subfolders Verbatim
+Path ~/.local/share/mail/
+Inbox ~/.local/share/mail/INBOX
+Flatten .
+
+Channel work
+Expunge Both
+Far :work-remote:
+Near :work-local:
+Patterns *
+Create Both
+SyncState *
+MaxMessages 0
