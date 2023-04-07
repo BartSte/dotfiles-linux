@@ -2,6 +2,7 @@
 
 echo "Installing BartSte/dotfiles-linux repository"
 
+~/dotfiles-linux/bitwarden/main.sh
 ~/dotfiles-linux/git/main.sh
 ~/dotfiles-linux/dependencies/main.sh
 ~/dotfiles-linux/wsl/main.sh
