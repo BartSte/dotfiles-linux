@@ -14,9 +14,6 @@ base_dir="$HOME/dotfiles.git"
 lin="$github/dotfiles-linux.git"
 lin_dir="$HOME/dotfiles-linux.git"
 
-sec="$github/dotfiles-secret.git"
-sec_dir="$HOME/dotfiles-secret.git"
-
 echo "# Installing git"
 sudo  pacman -S git exa inetutils
 
@@ -27,10 +24,6 @@ checkout $base_dir
 echo "# Clone BartSte/dotfiles-linux.git as a bare repository"
 clone $lin $lin_dir 
 checkout $lin_dir
-
-echo "# If you have permission: clone BartSte/dotfiles-secret.git as a bare repository"
-clone $sec $sec_dir 
-checkout $sec_dir
 
 echo "Enable 'running_wsl' function"
 source ~/.bashrc

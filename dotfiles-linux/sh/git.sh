@@ -14,23 +14,12 @@ lins() {
     lin status --untracked-files=no --short
 }
 
-sec() {
-    git --git-dir=$HOME/dotfiles-secret.git/ --work-tree=$HOME "$@"
-}
-
-secs() {
-    sec status --untracked-files=no --short
-}
-
 dot() {
     echo "Base:"
     git --git-dir=$HOME/dotfiles.git/ --work-tree=$HOME "$@"
     echo -e
     echo -e "Linux:"
     git --git-dir=$HOME/dotfiles-linux.git/ --work-tree=$HOME "$@"
-    echo -e
-    echo -e "Secret:"
-    git --git-dir=$HOME/dotfiles-secret.git/ --work-tree=$HOME "$@"
 }
 
 shorten_stdout(){
@@ -56,11 +45,6 @@ dotc() {
     lin add ~/dotfiles-linux
     lins
     lin commit --untracked-files=no -a -m "$message" | shorten_stdout
-
-    echo $'\nSecret'
-    sec add ~/dotfiles-secret
-    secs
-    sec commit --untracked-files=no -a -m "$message" | shorten_stdout
 }
 
 dots() {
@@ -69,9 +53,6 @@ dots() {
 
     echo $'\nLinux': 
     lins 
-
-    echo $'\nSec': 
-    secs
 }
 
 dotp() {
