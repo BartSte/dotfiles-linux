@@ -42,15 +42,18 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from subprocess import check_output
 
-client_id: str = check_output(['rbw', 'get', 'mutt_client_id']).decode()
+client_id: str = check_output(['rbw_get', 'MuttClientId', os.environ['MICROSOFT_ACCOUNT'], ]).decode()
 client_id = re.sub(r'\n', '', client_id)
+
+gpg_user: str = check_output(['rbw_get', 'username', os.environ['MICROSOFT_ACCOUNT'], ]).decode()
+gpg_user = re.sub(r'\n', '', gpg_user)
 
 # The token file must be encrypted because it contains multi-use bearer tokens
 # whose usage does not require additional verification. Specify whichever
 # encryption and decryption pipes you prefer. They should read from standard
 # input and write to standard output. The example values here invoke GPG,
 # although won't work until an appropriate identity appears in the first line.
-ENCRYPTION_PIPE = ['gpg', '--encrypt', '--recipient', os.environ['GPG_USER']]
+ENCRYPTION_PIPE = ['gpg', '--encrypt', '--recipient', gpg_user]
 DECRYPTION_PIPE = ['gpg', '--decrypt']
 
 registrations = {

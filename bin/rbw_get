@@ -1,0 +1,28 @@
+#!/usr/bin/bash
+# 
+usage="Usage: $(basename "$0") [-h | --help] <field> <other rbw options> <rbw args>
+
+This script wraps rbw to filter the \"{field}: \" from stdout. Make sure the
+first argument is the field, the other args can be used as normally.
+
+where:
+    -h --help           shows this help messages
+    <the field>         the argument for \`rbw -f\`
+    <other rbw opts>    check \`rbw -h\` 
+    <other rbw args>    check \`rbw -h\`     
+    "
+field=$1
+other=$2
+
+while true; do
+    case "$1" in
+    -h | --help)
+        echo "$usage"
+        exit
+        ;;
+    esac
+    shift
+    [ $1 ] || break
+done
+
+rbw get -f $field $other | sed "s/$field: //i"

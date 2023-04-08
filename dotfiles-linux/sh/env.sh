@@ -1,8 +1,9 @@
 export EDITOR='nvim'
 export GPG_TTY=$(tty)
-export MANPAGER="sh -c 'col -bx | bat -l man -p'"
-export HEADPHONES='28:11:A5:A4:3A:CF'
 export ESCDELAY=0
+export MANPAGER="sh -c 'col -bx | bat -l man -p'"
+export TIME_ZONE="Europe/Amsterdam"
+export HEADPHONES='28:11:A5:A4:3A:CF'
 
 export FZF_DEFAULT_COMMAND="fd --hidden --no-ignore-vcs --ignore-file $HOME/.ignore --type f"
 export FZF_ALT_C_COMMAND="fd --hidden --no-ignore-vcs --ignore-file $HOME/.ignore -t d"

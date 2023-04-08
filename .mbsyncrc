@@ -10,8 +10,8 @@ IMAPAccount work
 # Address to connect to
 Host 127.0.0.1
 Port 1143
-UserCmd "echo $MUTT_USERNAME@$MUTT_DOMAIN"
-PassCmd "rbw get $MUTT_PASSWORD_ID"
+UserCmd "rbw_get Username $MICROSOFT_ACCOUNT"
+PassCmd "rbw get $MICROSOFT_ACCOUNT"
 SSLType None
 AuthMechs LOGIN
 Timeout 0

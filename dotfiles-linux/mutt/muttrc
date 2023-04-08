@@ -7,6 +7,10 @@ source ~/.config/neomutt/gruvbox/colors-gruvbox-shuber.muttrc
 source ~/.config/neomutt/gruvbox/powerline/colors/gruvbox-powerline.neomuttrc
 source ~/.config/neomutt/gruvbox/powerline/powerline.neomuttrc
 
+# Variables
+set my_email=`rbw_get username $MICROSOFT_ACCOUNT`
+set my_password=`rbw get $MICROSOFT_ACCOUNT`
+
 # General
 set allow_ansi  # allow ansi escape codes (e.g. colors)
 set beep=no  # don't beep for errors
@@ -30,7 +34,7 @@ set reply_regexp = "^(([Rr][Ee]?(\[[0-9]+\])?: *)?(\[[^]]+\] *)?)*"
 set reverse_alias=yes
 set reverse_name  # reply as whomever it was to
 set reverse_realname=yes  # use any real name provided when replying
-set signature=$MUTT_SIGNATURE
+set signature="`rbw_get notes $MICROSOFT_ACCOUNT > /tmp/mutt_signature | echo '/tmp/mutt_signature'`"
 set sleep_time = 0
 set smart_wrap="no"
 set sort=threads
@@ -46,23 +50,23 @@ unset mark_old
 # IMAP config
 set folder="~/.local/share/mail"
 set header_cache="~/.cache/neomutt/header_cache"
-set imap_authenticators="$MUTT_AUTH"
+set imap_authenticators=`rbw_get MuttImapAuth $MICROSOFT_ACCOUNT`
 set imap_keepalive=300
-set imap_oauth_refresh_command="python3 ~/dotfiles-linux/mutt/mutt_oauth2.py ~/.config/neomutt/$MUTT_USERNAME@$MUTT_DOMAIN.tokens"
-set imap_pass=`rbw get $MUTT_PASSWORD_ID`
-set imap_user="$MUTT_USERNAME@$MUTT_DOMAIN"
+set imap_oauth_refresh_command="python3 ~/dotfiles-linux/mutt/mutt_oauth2.py ~/.config/neomutt/$my_email.tokens"
+set imap_pass=$my_password
+set imap_user=$my_email
 set mbox_type = Maildir
 unset imap_idle
 unset imap_passive
 
 # SMTP config
-set from = "$MUTT_USERNAME@$MUTT_DOMAIN"
-set hostname = $MUTT_DOMAIN
-set realname = $MUTT_REALNAME
-set smtp_authenticators="$MUTT_AUTH"
-set smtp_oauth_refresh_command="python3 ~/dotfiles-linux/mutt/mutt_oauth2.py ~/.config/neomutt/$MUTT_USERNAME@$MUTT_DOMAIN.tokens"
-set smtp_pass = $imap_pass
-set smtp_url = "smtp://$MUTT_USERNAME@$MUTT_DOMAIN@smtp.office365.com:587/"
+set from = $my_email
+set hostname = `rbw_get Domain $MICROSOFT_ACCOUNT`
+set realname = "`rbw_get Name $MICROSOFT_ACCOUNT`"
+set smtp_authenticators=`rbw_get MuttSmtpAuth $MICROSOFT_ACCOUNT`
+set smtp_oauth_refresh_command="python3 ~/dotfiles-linux/mutt/mutt_oauth2.py ~/.config/neomutt/$my_email.tokens"
+set smtp_pass = $my_password
+set smtp_url = "smtp://$my_email@smtp.office365.com:587/"
 set ssl_force_tls = yes
 set ssl_use_sslv3=yes
 

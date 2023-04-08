@@ -21,9 +21,9 @@ read_only = false
 
 [storage outlook_remote]
 type = "caldav"
-url.fetch = ["shell", "echo $CALENDAR_URL"]
-username.fetch = ["shell", "echo $CALENDAR_EMAIL"]
-password.fetch = ["shell", "rbw get MicrosoftWork"]
+url.fetch = ["shell", "rbw_get Calendar $MICROSOFT_ACCOUNT"]
+username.fetch = ["shell", "rbw_get Username $MICROSOFT_ACCOUNT"]
+password.fetch = ["shell", "rbw get $MICROSOFT_ACCOUNT"]
 read_only = false
 
 ################################################################################
@@ -37,9 +37,9 @@ conflict_resolution = "b wins"
 
 [storage outlook_contacts_remote]
 type = "carddav"
-url.fetch = ["shell", "echo $CONTACTS_URL"]
-username.fetch = ["shell", "echo $CONTACTS_EMAIL"]
-password.fetch = ["shell", "rbw get MicrosoftWork"]
+url.fetch = ["shell", "rbw_get Contacts $MICROSOFT_ACCOUNT"]
+username.fetch = ["shell", "rbw_get Username $MICROSOFT_ACCOUNT"]
+password.fetch = ["shell", "rbw get $MICROSOFT_ACCOUNT"]
 
 [storage outlook_contacts_local]
 type = "filesystem"
