@@ -1,5 +1,5 @@
 #!/usr/bin/bash
-# 
+
 usage="Usage: $(basename "$0") [-h | --help] <field> <other rbw options> <rbw args>
 
 This script wraps rbw to filter the \"{field}: \" from stdout. Make sure the
@@ -11,18 +11,28 @@ where:
     <other rbw opts>    check \`rbw -h\` 
     <other rbw args>    check \`rbw -h\`     
     "
-field=$1
-other=$2
 
-while true; do
-    case "$1" in
-    -h | --help)
-        echo "$usage"
-        exit
-        ;;
-    esac
-    shift
-    [ $1 ] || break
+function error_exit {
+  echo "$1" 1>&2
+  exit 1
+}
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -h|--help)
+      echo "$usage"
+      exit 0
+      ;;
+    *)
+      break
+      ;;
+  esac
 done
 
-rbw get -f $field $other | sed "s/$field: //i"
+if [[ $# -lt 2 ]]; then
+  error_exit "Error: Missing arguments."
+fi
+
+field=$1
+
+rbw get -f $@ | sed "s/$field: //i"
