@@ -33,8 +33,8 @@ path=.local/share/mail
 
 [user]
 
-name=shell:echo $MUTT_REALNAME
-primary_email=shell:echo "$MUTT_USERNAME@$MUTT_DOMAIN"
+name=shell:rbw_get name $MICROSOFT_ACCOUNT
+primary_email=shell:rbw_get username $MICROSOFT_ACCOUNT
 other_email=
 
 # Configuration for "notmuch new"

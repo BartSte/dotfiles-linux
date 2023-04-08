@@ -4,7 +4,8 @@ dir_plugins=/usr/share/zsh/plugins
 
 . $dir_zsh/p10k_init.zsh  # must stay at the top
 
-. $HOME/dotfiles-linux/config.sh
+. $HOME/.dotfiles_config.sh
+
 . $dir_sh/git.sh
 . $dir_sh/env.sh
 . $dir_sh/aliases.sh

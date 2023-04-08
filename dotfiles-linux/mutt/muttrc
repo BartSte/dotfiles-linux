@@ -9,7 +9,7 @@ source ~/.config/neomutt/gruvbox/powerline/powerline.neomuttrc
 
 # Variables
 set my_email=`rbw_get username $MICROSOFT_ACCOUNT`
-set my_password=`rbw get $MICROSOFT_ACCOUNT`
+set my_password=`rbw_get MuttPassword $MICROSOFT_ACCOUNT`
 
 # General
 set allow_ansi  # allow ansi escape codes (e.g. colors)
