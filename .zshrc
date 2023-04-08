@@ -4,6 +4,7 @@ dir_plugins=/usr/share/zsh/plugins
 
 . $dir_zsh/p10k_init.zsh  # must stay at the top
 
+. $HOME/dotfiles-linux/config.sh
 . $dir_sh/git.sh
 . $dir_sh/env.sh
 . $dir_sh/aliases.sh
@@ -18,8 +19,6 @@ running_wsl && . $dir_sh/wsl.sh
 . $dir_zsh/vi-mode.zsh
 . $dir_zsh/fzf.zsh  # after vi-mode
 . $dir_zsh/bindings.zsh  # after fzf
-save_source $HOME/dotfiles-linux/config.sh
-save_source $HOME/dotfiles-secret/secret-config.sh
 
 . $dir_plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
 . $dir_plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
