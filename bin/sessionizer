@@ -16,7 +16,7 @@ get_directory() {
     elif running_wsl; then
         find ~/code $WH/code -mindepth 1 -maxdepth 1 -type d | fzf
     else
-        find ~/code ~/dotfiles-secret ~/dotfiles/ ~/dotfiles-linux/ -mindepth 1 -maxdepth 1 -type d | fzf
+        find ~/code ~/dotfiles-secret ~/dotfiles/ ~/dotfiles-linux/ ~/clones/ -mindepth 1 -maxdepth 1 -type d | fzf
     fi
 }
 
