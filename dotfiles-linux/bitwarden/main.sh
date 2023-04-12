@@ -2,8 +2,10 @@
 #
 
 echo "Setting up bitwarden cli."
-source ~/dotfiles-linux/sh/env.sh
-rbw config set email $BW_EMAIL
+echo "Which bitwarden email to use? Enter below:"
+read email
+rbw config set email $email
+rbw config set lock_timeout 86400
 rbw login
 rbw sync
-
+echo "Finished setting up bitwarden."
