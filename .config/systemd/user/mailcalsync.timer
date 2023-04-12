@@ -1,0 +1,10 @@
+[Unit]
+Description=Runs outlooksync perodically
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=15min
+Unit=mailcalsync.service
+
+[Install]
+WantedBy=timers.target

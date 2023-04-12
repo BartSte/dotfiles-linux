@@ -1,0 +1,9 @@
+[Unit]
+Description=Runs outlooksync perodically
+
+[Service]
+Type=simple
+ExecStart=/home/barts/bin/outlooksync
+
+[Install]
+WantedBy=default.target
