@@ -1,0 +1,5 @@
+#!/usr/bin/bash
+
+mycalsync
+sleep 1
+mymailsync
