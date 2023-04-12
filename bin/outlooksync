@@ -1,5 +1,5 @@
 #!/usr/bin/bash
 
-mycalsync
+/home/barts/bin/mycalsync
 sleep 1
-mymailsync
+/home/barts/bin/mymailsync
