@@ -1,3 +1,0 @@
-#!/usr/bin/bash
-khard --skip-unparsable email --parsable --remove-first-line | sed 's/[ \t].*$//'
-
