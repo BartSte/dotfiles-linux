@@ -3,7 +3,7 @@ Description=Runs outlooksync perodically
 
 [Service]
 Type=simple
-ExecStart=/home/barts/bin/outlooksync
+ExecStart=/bin/bash -c "PATH=/home/barts/bin:$PATH exec /home/barts/bin/outlooksync"
 
 [Install]
 WantedBy=default.target
