@@ -14,7 +14,7 @@ get_directory() {
     if [[ $# -ge 1 ]]; then
         echo $1
     elif running_wsl; then
-        find ~/code $WH/code -mindepth 1 -maxdepth 1 -type d | fzf
+        find ~/code ~/dotfiles/ ~/dotfiles-linux/ ~/clones/ $WH/code -mindepth 1 -maxdepth 1 -type d | fzf
     else
         find ~/code ~/dotfiles/ ~/dotfiles-linux/ ~/clones/ -mindepth 1 -maxdepth 1 -type d | fzf
     fi
