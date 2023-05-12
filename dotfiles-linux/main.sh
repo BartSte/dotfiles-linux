@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "Installing BartSte/dotfiles-linux repository"
-
+#TODO -> automate creating the .dotfiles_config file
 ~/dotfiles-linux/bitwarden/main.sh
 ~/dotfiles-linux/git/main.sh
 ~/dotfiles-linux/dependencies/main.sh
