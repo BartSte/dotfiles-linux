@@ -1,5 +1,6 @@
 #!/bin/bash
+# Use fzf to select 1 of the rbw entries, which we call `id`. Next, feed this
+# `id` to `rbw get` and send the stdout to the clipboard.
 
 id=$(rbw list | fzf)
 rbw get $id | wl-copy
-
