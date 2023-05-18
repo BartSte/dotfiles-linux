@@ -1,0 +1,5 @@
+#!/bin/bash
+
+id=$(rbw list | fzf)
+rbw get $id | wl-copy
+
