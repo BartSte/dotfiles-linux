@@ -2,6 +2,11 @@
 # Use fzf to select 1 of the rbw entries, which we call `id`. Next, feed this
 # `id` to `rbw get` and send the stdout to the clipboard.
 
+rbw_to_clipboard(){
+    id=$(rbw list | fzf)
+    rbw_get $cmd $id | wl-copy
+}
+
 if [[ $# -eq 1 ]]; then
   cmd=$1
 elif [[  $# -gt 1  ]]; then
@@ -11,5 +16,4 @@ else
   cmd=password
 fi
 
-id=$(rbw list | fzf)
-rbw_get $cmd $id | wl-copy
+rbw unlock && rbw_to_clipboard
