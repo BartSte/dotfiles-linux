@@ -2,5 +2,14 @@
 # Use fzf to select 1 of the rbw entries, which we call `id`. Next, feed this
 # `id` to `rbw get` and send the stdout to the clipboard.
 
+if [[ $# -eq 1 ]]; then
+  cmd=$1
+elif [[  $# -gt 1  ]]; then
+  echo "Error: Only one argument allowed."
+  exit 1
+else
+  cmd=password
+fi
+
 id=$(rbw list | fzf)
-rbw get $id | wl-copy
+rbw_get $cmd $id | wl-copy
