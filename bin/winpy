@@ -1,0 +1,21 @@
+#!/bin/bash
+#
+# winpy: A script to check for a python virtual environment in the $WH/venvs directory
+# Usage: winpy [--help]
+
+if [[ $1 == "--help" ]]; then
+  echo "winpy: A script to check for a python virtual environment in the \$WH/venvs directory"
+  echo "Usage: winpy [--help]"
+  exit 0
+fi
+
+running_wsl || { echo "Not running WSL"; exit 0; }
+
+current_dir=$(basename "$PWD")
+venv_dir="$WH/venvs/$current_dir"
+
+if [[ -d "$venv_dir" ]]; then
+  "$WH/venvs/$current_dir/Scripts/python.exe" $@
+else
+  python.exe $@
+fi

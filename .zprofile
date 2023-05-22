@@ -13,7 +13,8 @@ if ! running_wsl && [ -z "${DISPLAY}" ]; then
 else
     wsl_path=/mnt/c/Windows/System32:
     wsl_path+=/mnt/c/Windows/System32/WindowsPowerShell/v1.0/:
-    wsl_path+=/mnt/c/Program\ Files/PowerShell/7-preview
+    wsl_path+=/mnt/c/Program\ Files/PowerShell/7-preview/:
+    wsl_path+=/mnt/c/Python310/
 
     export PATH=$PATH:$wsl_path
 fi
