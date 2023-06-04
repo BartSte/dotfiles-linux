@@ -23,3 +23,13 @@ fkill() {
 
   kill -"${1:-9}" "$pid"
 }
+
+act() {
+    source .venv/bin/activate > /dev/null 2>&1
+}
+
+vims() {
+    [ -f Session.vim ] && {act;nvim -S Session.vim $@} || echo "No session found."
+}
+
+
