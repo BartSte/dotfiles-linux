@@ -7,7 +7,6 @@ dir_plugins=/usr/share/zsh/plugins
 . $HOME/.dotfiles_config.sh
 
 . $dir_sh/git.sh
-. $dir_sh/env.sh
 . $dir_sh/aliases.sh
 . $dir_sh/functions.sh
 running_wsl && . $dir_sh/wsl.sh
