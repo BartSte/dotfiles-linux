@@ -1,5 +1,5 @@
 export EDITOR='nvim'
-export GPG_TTY=$(tty)
+# export GPG_TTY=$(tty)
 export ESCDELAY=0
 export MANPAGER="sh -c 'col -bx | bat -l man -p'"
 export TIME_ZONE="Europe/Amsterdam"
