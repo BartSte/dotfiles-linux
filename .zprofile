@@ -1,6 +1,5 @@
-if [ -f ~/.zshrc ]; then
-    source ~/.zshrc
-fi
+[ -f ~/.zshenv ] && source ~/.zshenv
+[ -f ~/.zshrc ] && source ~/.zshrc
 
 if ! running_wsl && [[ -z $DISPLAY ]]; then 
     if [[ $(tty) = /dev/tty1 ]]; then

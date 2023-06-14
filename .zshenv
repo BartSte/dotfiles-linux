@@ -13,14 +13,19 @@ wsl_env(){
     export PATH=$PATH:$wsl_path
 }
 
-typeset -U PATH path  # remove duplicat entries from $PATH
-export PATH=$PATH:$HOME/bin:$HOME/.local/bin:$HOME/.cargo/bin
-source ~/dotfiles-linux/sh/env.sh
+general_env() {
+    typeset -U PATH path  # remove duplicat entries from $PATH
+    export PATH=$PATH:$HOME/bin:$HOME/.local/bin:$HOME/.cargo/bin
+    source ~/dotfiles-linux/sh/env.sh
+}
 
-if ! running_wsl && [[ -z $DISPLAY ]]; then 
+general_env
+
+if ! running_wsl && [[ -z $DISPLAY ]]; then
     if [[ $(tty) = /dev/tty1 ]]; then
         wayland_env
     fi
+    # No environment variables need to be set for X11
 else
     wsl_env
 fi
