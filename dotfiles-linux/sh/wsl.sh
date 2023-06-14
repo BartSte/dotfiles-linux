@@ -5,6 +5,12 @@ function winenv() {
     cd $cwd
 }
 
+path_wsl=/mnt/c/Windows/System32:
+path_wsl+=/mnt/c/Windows/System32/WindowsPowerShell/v1.0/:
+path_wsl+=/mnt/c/Program\ Files/PowerShell/7-preview/:
+path_wsl+=/mnt/c/Python310/
+typeset -U PATH path  # remove duplicat entries from $PATH
+export PATH=$PATH:$path_wsl
 export WH=$(wslpath "$(winenv USERPROFILE)")
 
 set_tmux="\$Env:TMUX=\"$TMUX\""

@@ -1,7 +1,3 @@
-# For obs studio screen capture to work
-exec systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP
-exec dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=sway
-
 include ~/dotfiles-linux/i3/i3_sway_shared_config
 
 xwayland disable
@@ -15,10 +11,7 @@ assign [app_id="qutebrowser"] workspace $ws7
 
 for_window [app_id="^.*"] border pixel 0
 for_window [app_id="^launcher$"] floating enable, sticky enable, resize set 30 ppt 30 ppt, border pixel 3
-for_window [app_id="one.alynx.showmethekey" title="Floating Window - Show Me The Key"] {
-  floating enable
-  sticky enable
-}
+
 exec --no-startup-id waybar --config ~/.config/waybar/config.json
 exec --no-startup-id swaybg --image "$HOME/dotfiles/wallpapers/namibia_dune.jpeg" --mode fill
 exec --no-startup-id gammastep -m wayland -l 52.373882:6.891711 -t 6500:2500
