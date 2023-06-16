@@ -12,11 +12,11 @@ symlink_config () {
     directory_config=~/.config/nvim
 
     mkdir $directory_config --parents
-    rm $directory_config/init.vim
+    rm $directory_config/init.lua
     rm $directory_config/lua -r
     rm $directory_config/ftplugin -r
 
-    ln $dotfiles/init.vim $directory_config/init.vim --symbolic
+    ln $dotfiles/init.lua $directory_config/init.lua --symbolic
     ln $dotfiles/lua $directory_config/lua --symbolic
     ln $dotfiles/ftplugin $directory_config/ftplugin --symbolic
     ln $dotfiles/vim $directory_config/vim --symbolic
