@@ -19,6 +19,7 @@ symlink_config () {
     ln $dotfiles/init.vim $directory_config/init.vim --symbolic
     ln $dotfiles/lua $directory_config/lua --symbolic
     ln $dotfiles/ftplugin $directory_config/ftplugin --symbolic
+    ln $dotfiles/vim $directory_config/vim --symbolic
 }
 
 make_dict(){
