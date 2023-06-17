@@ -14,12 +14,11 @@ symlink_config () {
     mkdir $directory_config --parents
     rm $directory_config/init.lua
     rm $directory_config/lua -r
-    rm $directory_config/ftplugin -r
+    rm $directory_config/after -r
 
     ln $dotfiles/init.lua $directory_config/init.lua --symbolic
     ln $dotfiles/lua $directory_config/lua --symbolic
-    ln $dotfiles/ftplugin $directory_config/ftplugin --symbolic
-    ln $dotfiles/vim $directory_config/vim --symbolic
+    ln $dotfiles/after $directory_config/after --symbolic
 }
 
 make_dict(){
