@@ -16,11 +16,13 @@ symlink_config () {
     rm $directory_config/lua -r
     rm $directory_config/after -r
     rm $directory_config/plugin -r
+    rm $directory_config/vim -r
 
     ln $dotfiles/init.lua $directory_config/init.lua --symbolic
     ln $dotfiles/lua $directory_config/lua --symbolic
     ln $dotfiles/after $directory_config/after --symbolic
     ln $dotfiles/plugin $directory_config/plugin --symbolic
+    ln $dotfiles/vim $directory_config/vim --symbolic
 }
 
 make_dict(){
