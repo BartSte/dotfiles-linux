@@ -1,20 +1,20 @@
 #!/bin/bash
 
-usage="Usage: $(basename "$0") [-h | --help] <davmail-config> <org file> <khalorg list arg> 
+usage="Usage: $(basename "$0") [-h | --help] <davmail-config> <org file> <khalorg list arg>
 
-Sychronize all \`vdirsyncer\` calendars and export them to org with \`khalorg\`. 
-Davmail is used as the CalDav server. If it is not already running, it will be 
+Sychronize all \`vdirsyncer\` calendars and export them to org with \`khalorg\`.
+Davmail is used as the CalDav server. If it is not already running, it will be
 activated temporarly.
 
 where:
-    options
-    -h --help   shows this help messages
+options
+-h --help   shows this help messages
 
-    positional
-    <davmail-config>        your davmailconfig
-    <org file>              the output file
-    <khalorg list arg>    see \`khalorg list -h\`
-    "
+positional
+<davmail-config>        your davmailconfig
+<org file>              the output file
+<khalorg list arg>    see \`khalorg list -h\`
+"
 
 options=$(getopt -o h --long help -- "$@")
 
@@ -82,5 +82,5 @@ if [[ $TMUX ]]; then
     tmux display -d 2000 "$(main)"
 else
     echo "$start_message"
-    main 
+    main
 fi
