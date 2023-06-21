@@ -53,6 +53,7 @@ texlive-core
 the_silver_searcher
 tmux
 tree
+ttf-jetbrains-mono-nerd
 unzip
 urlscan
 vdirsyncer

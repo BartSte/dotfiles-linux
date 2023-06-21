@@ -9,7 +9,7 @@ link_bookmarks() {
     if running_wsl; then
         target="/mnt/c/Users/$(whoami)/Dropbox/config/urls"
     else
-        target=~/Dropbox/config/urls
+        target=~/Dropbox/Config/urls
     fi
     link=~/.config/qutebrowser/bookmarks/urls
     ln -sf $target $link
