@@ -1,0 +1,6 @@
+#!/bin/bash
+
+. $HOME/dotfiles-linux/qutebrowser/helpers.sh
+
+link_config
+link_bookmarks
