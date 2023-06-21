@@ -1,0 +1,8 @@
+brightnessctl
+gammastep
+qt5-wayland
+qt6-wayland
+sway
+swaybg
+waybar
+wayland

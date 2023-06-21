@@ -1,9 +1,10 @@
 link_config() {
     target=~/dotfiles/qutebrowser/config.py
     link=~/.config/qutebrowser/config.py
-    ln -sf $target $link  
+    ln -sf $target $link
 }
 
+# The bookmarks are private and shared across Dropbox.
 link_bookmarks() {
     if running_wsl; then
         target="/mnt/c/Users/$(whoami)/Dropbox/config/urls"

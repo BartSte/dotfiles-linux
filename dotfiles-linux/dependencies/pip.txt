@@ -1,0 +1,4 @@
+Pygments
+html2text
+ipdb
+ipython

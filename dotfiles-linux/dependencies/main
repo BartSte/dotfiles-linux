@@ -1,0 +1,23 @@
+#!/bin/bash
+
+. ~/dotfiles-linux/dependencies/helpers.sh
+. ~/dotfiles-linux/dependencies/deps.sh
+
+dir=~/dotfiles-linux/dependencies
+
+echo "# Dependencies"
+sudo pacman -Syu --noconfirm
+sudo pacman -S --needed base-devel --noconfirm
+install_yay
+sudo pacman -S --noconfirm - < $dir/pacman.txt
+yay -S --noconfirm - < $dir/aur.txt
+install_node_js
+link_scripts_to_bin
+initialize_tulizu
+dropbox-cli autostart y
+pip install -r $dir/pip.txt
+
+if ! running_wsl; then
+    sudo pacman -S --noconfirm - < $dir/pacman_X11.txt
+    sudo pacman -S --noconfirm - < $dir/pacman_wayland.txt
+fi
