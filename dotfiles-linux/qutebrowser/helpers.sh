@@ -7,7 +7,7 @@ link_config() {
 # The bookmarks are private and shared across Dropbox.
 link_bookmarks() {
     if running_wsl; then
-        target="/mnt/c/Users/BartSteensma/Dropbox/Config/urls"
+        target="$WH/Dropbox/Config/urls"
     else
         target=~/Dropbox/Config/urls
     fi
