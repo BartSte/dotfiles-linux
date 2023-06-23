@@ -1,3 +1,0 @@
-#!/bin/bash
-running_wsl && /mnt/c/Windows/explorer.exe $(wslpath -w $@)
-
