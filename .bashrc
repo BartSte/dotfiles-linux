@@ -9,8 +9,8 @@ save_source ~/dotfiles-secret/secret-config.sh
 source $dir_sh/git.sh
 source $dir_sh/env.sh
 source $dir_sh/aliases.sh
-source $dir_sh/bindings.sh
 
+source $dir_sh/bindings.bash
 source $dir_bash/aliases.bash
 source $dir_bash/functions.bash
 

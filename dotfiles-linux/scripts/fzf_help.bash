@@ -1,5 +1,5 @@
 export FZF_HELP_OPTS='--preview-window=right,75%,nowrap '
-export FZF_HELP_OPTS+='--bind ctrl-a:change-preview-window(down,75%,nowrap|right,75%,nowrap) '
+export FZF_HELP_OPTS=+'--bind ctrl-a:change-preview-window(down,75%,nowrap|right,75%,nowrap) '
 
 fzf_help() {
     option=$(echo $READLINE_LINE | _get_command | fzf_select_cli_option)
