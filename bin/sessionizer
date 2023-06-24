@@ -4,8 +4,10 @@
 # corresponds to the top folder. If this session exists, the session is
 # activatedds and no new one is created.
 #
-# If no directory is given, fzf is activated to select one. If no directory is
-# selected, the program exists. 
+# If no directory is given, fzf is activated to select one. The default
+# directory is the home directory. If a config file exists at 
+# ~/.config/sessionizer/config, where each line should be a directory where 
+# the sessionizer should will search.
 #
 # For command $2 a `tmux -t $session_name` command can be specified, where $3
 # are the arguments. $2 and $3 are optional.
@@ -13,10 +15,11 @@
 get_directory() {
     if [[ $# -ge 1 ]]; then
         echo $1
-    elif running_wsl; then
-        find ~/code ~/dotfiles/ ~/dotfiles-linux/ ~/clones/ $WH/code -mindepth 1 -maxdepth 1 -type d | fzf
+    elif [[ -f ~/.config/sessionizer/config ]]; then
+        dirs=$(cat ~/.config/sessionizer/config | tr '\n' ' ')
+        eval "find $dirs -maxdepth 1 -type d 2> /dev/null| fzf"        
     else
-        find ~/code ~/dotfiles/ ~/dotfiles-linux/ ~/clones/ -mindepth 1 -maxdepth 1 -type d | fzf
+        find $HOME -maxdepth 1 -type d | fzf
     fi
 }
 
