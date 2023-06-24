@@ -17,5 +17,3 @@ fzf_home() {
     zle reset-prompt
     return $ret
 }
-
-zle -N fzf_home
