@@ -36,14 +36,14 @@ dotc() {
     message="'$*'"
 
     echo 'Base:'
-    fd nvim.shada ~/dotfiles --type f
+    rm $(fd nvim.shada ~/dotfiles --type f)
     base add ~/dotfiles
     bases
     base commit --untracked-files=no -a -m "$message" | shorten_stdout
 
     echo $'\nLinux'
     lin add ~/bin
-    fd nvim.shada ~/dotfiles-linux --type f
+    rm $(fd nvim.shada ~/dotfiles-linux --type f)
     lin add ~/dotfiles-linux
     lins
     lin commit --untracked-files=no -a -m "$message" | shorten_stdout
