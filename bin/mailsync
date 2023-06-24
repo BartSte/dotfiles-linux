@@ -6,33 +6,36 @@ Sychronize all \`mbsyncer\` channels and index them with \`notmuch\` using an im
 
 where:
     options
+    -q --quiet  suppress /dev/stderr and /dev/stdout 
     -h --help   shows this help messages
 
     positional
     <davmail-config> your davmailconfig"
 
-options=$(getopt -o h --long help -- "$@")
+error=/dev/stderr
+output=/dev/stdout
+options=$(getopt -o qh --long quiet,help -- "$@")
 
 [ $? -eq 0 ] || { echo "Incorrect options provided"; exit 1; }
 
 eval set -- "$options"
 while true; do
     case "$1" in
-    -h | --help)
-        echo "$usage"
-        exit
-        ;;
-    --)
-        shift
-        break
-        ;;
+        -q|--quiet) output=/dev/null; error=/dev/null; shift ;;
+        -h|--help) echo "$usage"; exit ;;
+        --) shift; break ;;
+        *) echo "Internal error"; exit 1 ;;
     esac
-    shift
 done
 
 [ $# -eq 0 ] && { echo "$usage"; exit ;}
 davmailconfig="$1"
 
+##############################################################################
+# This function is the main function of the script. It checks if the user is
+# logged in, if there is an internet connection, starts davmail, runs the 
+# synchronization and kills davmail afterwards.
+##############################################################################
 main(){
     is_logged_in || { echo "$USER not logged in; sync will not run."; exit ;}
     has_internet || { echo "No internet connection detected."; exit ;}    
@@ -43,35 +46,65 @@ main(){
     echo 'Email sync done.'
 }
 
+##############################################################################
+# This function checks if the user is logged in. It does so by checking if the
+# user has a process with the same name as the user id.
+##############################################################################
 is_logged_in() {
-    pgrep -u "${USER:=$LOGNAME}" >/dev/null
+    pgrep -u "${USER:=$LOGNAME}" 1> $output 2> $error
 }
 
+##############################################################################
+# This function checks if the user has an internet connection. It does so by
+# pinging a known ip address.
+##############################################################################
 has_internet() {
-    ping -q -c 1 1.1.1.1 > /dev/null
+    ping -q -c 1 1.1.1.1 1> $output 2> $error
 }
 
+##############################################################################
+# This function starts davmail if it is not already running. It does so by
+# checking if there is a process with the name 'davmail.jar'.
+##############################################################################
 start_davmail() {
-    pgrep -f davmail\.jar >/dev/null && return
-    davmail $davmailconfig &
+    pgrep -f davmail\.jar 1> $output 2> $error && return
+    davmail $davmailconfig 1> $output 2> $error &
     pid_davmail=$!
     sleep 1
 }
 
+##############################################################################
+# This function starts mbsyncer if it is not already running. It does so by
+# checking if there is a process with the name 'mbsync'.
+##############################################################################
 start_mbsyncer() {
-    pgrep -x mbsync >/dev/null && { echo "mbsync is already running." ; kill_davmail; exit ;}
-    mbsync -a -q -q || { echo 'Email sync failed.'; kill_davmail; exit ;}
+    pgrep -x mbsync 1> $output 2> $error && { echo "mbsync is already running." ; kill_davmail; exit ;}
+    mbsync -a -q -q 1> $output 2> $error|| { echo 'Email sync failed.'; kill_davmail; exit ;}
 }
 
+##############################################################################
+# This function starts notmuch if it is not already running. It does so by
+# checking if there is a process with the name 'notmuch'.
+##############################################################################
 start_notmuch() {
-    pgrep -x notmuch >/dev/null && { echo "notmuch is already running." ; kill_davmail; exit ;}
-    notmuch new --quiet 2>/dev/null || { echo 'Email sync failed.'; kill_davmail; exit ;}
+    pgrep -x notmuch 1> $output 2> $error && { echo "notmuch is already running." ; kill_davmail; exit ;}
+    notmuch new --quiet 1> $output 2> $error || { echo 'Email sync failed.'; kill_davmail; exit ;}
 }
 
+##############################################################################
+# This function kills davmail if it is running. It does so by checking if there
+# is a process with the name 'davmail.jar'.
+##############################################################################
 kill_davmail() {
     [[ $pid_davmail ]] && kill $pid_davmail
 }
 
+##############################################################################
+# This function starts the main function of the script. It does so by checking
+# if the script is running in a tmux session. If so, it displays the start
+# message in the tmux status bar. If not, it prints the start message to the
+# terminal.
+##############################################################################
 start_message='Email sync started'
 if [[ $TMUX ]]; then
     tmux display -d 1000 "$start_message"
