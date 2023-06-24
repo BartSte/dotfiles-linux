@@ -15,7 +15,6 @@ running_wsl && . $dir_sh/wsl.sh
 . $dir_zsh/aliases.zsh
 . $dir_zsh/functions.zsh
 . $dir_zsh/completion.zsh
-. $dir_zsh/bw-completion.zsh
 . $dir_zsh/vi-mode.zsh
 . $dir_zsh/fzf.zsh  # after vi-mode
 . $dir_sh/fzf-git.sh # after fzf, before bindings
