@@ -18,9 +18,9 @@ running_wsl && . $dir_sh/wsl.sh
 . $dir_zsh/vi-mode.zsh
 . $dir_zsh/fzf.zsh  # after vi-mode
 . $dir_sh/fzf-git.sh # after fzf, before bindings
-. $dir_zsh/fzf_help.zsh # after fzf
 . $dir_zsh/bindings.zsh  # after fzf
 
+. $dir_plugins/fzf-help/fzf-help.zsh # after fzf
 . $dir_plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
 . $dir_plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 . /usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme
