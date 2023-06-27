@@ -19,6 +19,8 @@ alias ex="/mnt/c/Windows/explorer.exe ."
 alias mirror='echo $(pwd | sed "s|$HOME|$WH|")'
 alias winmirror='wslpath -w $(mirror)'
 
-alias pow="/mnt/c/Program\ Files/PowerShell/7-preview/pwsh.exe -NoLogo -NoExit -Command '$set_tmux'"
-alias powh="/mnt/c/Program\ Files/PowerShell/7-preview/pwsh.exe -NoLogo -NoExit -Command 'cd ~;$set_tmux'"
-alias powm="/mnt/c/Program\ Files/PowerShell/7-preview/pwsh.exe -NoLogo -NoExit -Command 'cd $(winmirror);$set_tmux'"
+pwsh="/mnt/c/Program\ Files/PowerShell/7-preview/pwsh.exe"
+alias pow="$pwsh -NoLogo -NoExit -Command '$set_tmux'"
+alias powc="$pwsh -NoLogo -Command $@"
+alias powh="$pwsh -NoLogo -NoExit -Command 'cd ~;$set_tmux'"
+alias powm="$pwsh -NoLogo -NoExit -Command 'cd $(winmirror);$set_tmux'"
