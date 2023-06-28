@@ -1,13 +1,35 @@
-# # The git prompt can be very slow for large repos or on the mounted disk that
-# # is used by WSL. This function is used to disable the git prompt for a repo.
-# disable_git_prompt() {
-#      git config --local oh-my-zsh.hide-info 1
-#      git config --local oh-my-zsh.hide-status 1
-# }
 
-# # The git prompt can be very slow for large repos or on the mounted disk that
-# # is used by WSL. This function is used enable the git prompt again.
-# enable_git_prompt() {
-#      git config --local oh-my-zsh.hide-info 0
-#      git config --local oh-my-zsh.hide-status 0
-# }
+save_source() {
+    [ -f "$1" ] && source "$1"
+}
+
+del(){
+    rmtrash $@
+}
+
+fps() {
+    ps aux | fzf
+}
+
+fkill() {
+  local pid
+
+  pid="$(
+    ps -ef \
+      | sed 1d \
+      | fzf -m \
+      | awk '{print $2}'
+  )" || return
+
+  kill -"${1:-9}" "$pid"
+}
+
+act() {
+    source .venv/bin/activate > /dev/null 2>&1
+}
+
+vims() {
+    [ -f Session.vim ] && {act;nvim -S Session.vim $@} || echo "No session found."
+}
+
+
