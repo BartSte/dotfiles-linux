@@ -4,9 +4,9 @@ alias ...='cd ./../../'
 alias ....='cd ./../../../'
 
 alias py='python3'
-alias tn='tmux new'
 alias ta='tmux attach'
 alias tm='tmux-session ~'
+alias ts="tmux-session $@"
 alias ls='exa -h --icons'
 alias ll='exa -hl --icons --git'
 alias la='exa -hal --icons --git' 
