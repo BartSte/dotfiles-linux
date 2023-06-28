@@ -14,6 +14,6 @@ echo "Installing BartSte/dotfiles-linux repository"
 ~/dotfiles-linux/kmonad/main.sh
 ~/dotfiles-linux/davmail/main.bash
 ~/dotfiles-linux/zsh/main.sh
-~/dotfiles-linux/sessionizer/main
+~/dotfiles-linux/tmux/main
 
 echo "Done"

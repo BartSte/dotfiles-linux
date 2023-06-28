@@ -1,3 +1,0 @@
-#!/bin/bash
-mkdir -p ~/.config/sessionizer
-ln -sf ~/dotfiles-linux/sessionizer/config ~/.config/sessionizer/config
