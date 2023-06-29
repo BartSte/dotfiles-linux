@@ -1,0 +1,6 @@
+#!/bin/bash
+
+path=~/dotfiles-linux/tmux/tmux-session/ 
+target=~/.config
+echo "Symbolic link from $path to $target"
+ln -sf $path $target
