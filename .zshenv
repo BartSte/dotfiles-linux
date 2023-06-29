@@ -1,4 +1,4 @@
-. ~/dotfiles/zsh/mypypi.sh
+. ~/dotfiles-linux/zsh/mypypi.zsh
 
 [ $OLD_PATH ] || export OLD_PATH=$PATH
 
