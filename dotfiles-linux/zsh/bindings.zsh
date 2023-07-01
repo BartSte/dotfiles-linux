@@ -1,11 +1,20 @@
 bindkey -v
+
 zle -N _fzf_git_branches
 zle -N fzf-cd-widget-home
 zle -N fzf-file-widget-home
 zle -N fzf-help-widget
+zle -N fzfrbw-widget
+zle -N man-widget
+
+bindkey -M vicmd "\eH" man-widget
+bindkey -M viins "\eH" man-widget
 
 bindkey -M vicmd "^A" fzf-help-widget
 bindkey -M viins "^A" fzf-help-widget
+
+bindkey -M vicmd "^B" fzfrbw-widget
+bindkey -M viins "^B" fzfrbw-widget
 
 bindkey -M vicmd "\eh" fzf-file-widget-home
 bindkey -M vicmd "\ed" fzf-cd-widget-home

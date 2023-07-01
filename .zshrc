@@ -12,13 +12,12 @@ running_wsl && . $dir_zsh/wsl.zsh
 . $dir_zsh/functions.zsh
 . $dir_zsh/completion.zsh
 . $dir_zsh/vi-mode.zsh
-. $dir_zsh/fzf.zsh  # after vi-mode
 . $dir_zsh/fzf-git.sh # after fzf, before bindings
-. $dir_zsh/bindings.zsh  # after fzf
 
 . $dir_plugins/fzf-help/fzf-help.zsh # after fzf
 . $dir_plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
 . $dir_plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-. /usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme
+. $dir_zsh/bindings.zsh
 
+. /usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme
 . ~/.p10k.zsh  # must stay at the bottom
