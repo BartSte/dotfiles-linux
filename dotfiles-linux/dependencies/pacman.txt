@@ -61,3 +61,5 @@ wget
 zsh
 zsh-autosuggestions
 zsh-syntax-highlighting
+zathura
+zathura-pdf-mupdf

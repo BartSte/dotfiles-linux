@@ -4,14 +4,14 @@
 
 export PATH=$OLD_PATH:$HOME/bin:$HOME/.local/bin:$HOME/.cargo/bin:$HOME/go/bin
 export EDITOR='nvim'
+export MYPYPI=$(make_index_url ~/.pypirc)
 export GPG_TTY=$(tty)
+export EARBUDS='30:53:C1:B8:CE:F6'
 export ESCDELAY=0
 export MANPAGER="sh -c 'col -bx | bat -l man -p'"
 export TIME_ZONE="Europe/Amsterdam"
 export HEADPHONES='28:11:A5:A4:3A:CF'
-export EARBUDS='30:53:C1:B8:CE:F6'
 export PYTHONBREAKPOINT='ipdb.set_trace'
-export MYPYPI=$(make_index_url ~/.pypirc)
 
 export FZF_DEFAULT_COMMAND="fd --hidden --no-ignore-vcs --ignore-file $HOME/.ignore --type f"
 export FZF_ALT_C_COMMAND="fd --hidden --no-ignore-vcs --ignore-file $HOME/.ignore -t d"

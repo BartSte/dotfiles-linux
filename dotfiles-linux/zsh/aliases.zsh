@@ -3,6 +3,7 @@ alias ..='cd ..'
 alias ...='cd ./../../'
 alias ....='cd ./../../../'
 
+alias pdf="zathura $@"
 alias py='python3'
 alias ta='tmux attach'
 alias tm='tmux-session ~'
