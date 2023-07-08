@@ -4,7 +4,7 @@ save_source() {
     [ -f "$1" ] && source "$1"
 }
 
-del(){
+del() {
     rmtrash $@
 }
 
@@ -13,24 +13,25 @@ fps() {
 }
 
 fkill() {
-  local pid
+    local pid
 
-  pid="$(
-    ps -ef \
-      | sed 1d \
-      | fzf -m \
-      | awk '{print $2}'
-  )" || return
+    pid="$(
+        ps -ef |
+            sed 1d |
+            fzf -m |
+            awk '{print $2}'
+    )" || return
 
-  kill -"${1:-9}" "$pid"
+    kill -"${1:-9}" "$pid"
 }
 
 act() {
-    source .venv/bin/activate > /dev/null 2>&1
+    source .venv/bin/activate >/dev/null 2>&1
 }
 
 vims() {
-    [ -f Session.vim ] && {act;nvim -S Session.vim $@} || echo "No session found."
+    [ -f Session.vim ] && {act
+    nvim -S Session.vim $@} || echo "No session found."
 }
 
 fzf-file-widget-home() {
@@ -69,3 +70,20 @@ man-widget() {
     zle reset-prompt
 }
 
+fzf-file-widget-no-ignore() {
+    _OLD_FZF_CTRL_T_COMMAND=$FZF_CTRL_T_COMMAND
+    FZF_CTRL_T_COMMAND="fd --hidden --no-ignore --type f"
+
+    fzf-file-widget
+
+    FZF_CTRL_T_COMMAND=$_OLD_FZF_CTRL_T_COMMAND
+}
+
+fzf-cd-widget-no-ignore() {
+    _OLD_FZF_ALT_C_COMMAND=$FZF_ALT_C_COMMAND
+    FZF_ALT_C_COMMAND="fd --hidden --no-ignore --type d"
+
+    fzf-cd-widget
+
+    FZF_ALT_C_COMMAND=$_OLD_FZF_ALT_C_COMMAND
+}
