@@ -3,8 +3,8 @@
 # on wsl. Otherwise, qutebrowser is launched normally.
 
 if running_wsl; then
-    /mnt/c/Program\ Files/qutebrowser/qutebrowser.exe "$@"
+    /mnt/c/Program\ Files/qutebrowser/qutebrowser.exe $(wslpath -w "$@") &
 else
-    qutebrowser "$@"
+    qutebrowser "$@" &
 fi
 
