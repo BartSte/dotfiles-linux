@@ -1,6 +1,16 @@
 #!/bin/bash
 
-path=~/dotfiles-linux/tmux/tmux-session/ 
-target=~/.config
-echo "Symbolic link from $path to $target"
-ln -sf $path $target
+install_tpm() {
+    echo "Installing tmux plugin manager"
+    git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+}
+
+link_tmux_session() {
+    path=~/dotfiles-linux/tmux/tmux-session/
+    target=~/.config
+    echo "Symbolic link from $path to $target"
+    ln -sf $path $target
+}
+
+install_tpm
+link_tmux_session
