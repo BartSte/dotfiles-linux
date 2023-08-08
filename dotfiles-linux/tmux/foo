@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-#
-tmuxpid() {
-    [[ "${TMUX}" =~ .*,(.*),.* ]] && echo "${BASH_REMATCH[1]}"
-}
-
-server_pid=$(tmuxpid)
-bash -c "~/.tmux/plugins/tmux-easy-motion/scripts/easy_motion.sh '${server_pid}' '${1}' '${2}' '${3}' ${4}"
