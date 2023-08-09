@@ -15,7 +15,7 @@ install_node_js
 link_scripts_to_bin
 initialize_tulizu
 dropbox-cli autostart y
-cat $dir/pip.txt | xargs -n 1 pipx install
+install_python_packages $dir/pip.txt
 
 if ! running_wsl; then
     sudo pacman -S --noconfirm - < $dir/pacman_X11.txt
