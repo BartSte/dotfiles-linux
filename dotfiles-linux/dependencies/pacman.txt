@@ -1,5 +1,4 @@
 alacritty
-lldb
 antiword
 aspell
 aspell-en
@@ -14,13 +13,13 @@ fuse-common
 fuse2
 fuse3
 fzf
-gdb
 glow
 gnuplot
 htop
 inetutils
 java-openjfx
 khard
+lldb
 make
 man-db
 neofetch
@@ -48,6 +47,7 @@ qutebrowser
 rbw
 redshift
 ripgrep
+ruby
 tar
 texlive-bin
 texlive-core
@@ -59,9 +59,8 @@ unzip
 urlscan
 vdirsyncer
 wget
+zathura
+zathura-pdf-mupdf
 zsh
 zsh-autosuggestions
 zsh-syntax-highlighting
-zathura
-zathura-pdf-mupdf
-ruby
