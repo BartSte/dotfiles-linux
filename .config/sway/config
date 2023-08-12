@@ -1,6 +1,7 @@
 include ~/dotfiles-linux/i3/i3_sway_shared_config
 
-xwayland disable
+# NOTE: disable xwayland to become X11 compatible
+# xwayland disable
 
 bindsym XF86MonBrightnessUp exec brightnessctl s 5%+
 bindsym XF86MonBrightnessDown exec brightnessctl s 5%-
