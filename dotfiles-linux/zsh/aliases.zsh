@@ -18,11 +18,7 @@ alias path='echo -e ${PATH//:/\\n}'
 alias pdf="zathura $@"
 alias py='python3'
 alias reload='source ~/.zshrc'
-alias summary-month='gtm report -all=true -full-message=false -this-month=true -format=summary'
-alias summary='gtm report -all=true -full-message=false -this-week=true -format=summary'
 alias ta='tmux attach'
-alias timeline-month='gtm report -all=true -full-message=false -this-month=true -format=timeline-hours'
-alias timeline='gtm report -all=true -full-message=false -this-week=true -format=timeline-hours'
 alias tm='tmux-session ~'
 alias ts="tmux-session $@"
 alias vim='nvim $@'
