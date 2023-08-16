@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+link_config() {
+    if running_wsl; then
+        target="$WH/Dropbox/Config/.wakatime.cfg"
+    else
+        target="$HOME/Dropbox/Config/.wakatime.cfg"    
+    fi
+
+    echo "Create link from $target to $HOME/.wakatime.cfg"
+    ln -sf $target $HOME/.wakatime.cfg || echo "Failed to link wakatime config"
+    echo "Done"
+}
+
+#TODO: use rbw instead of Dropbox for password management
+link_config
