@@ -1,0 +1,39 @@
+#!/bin/env bash
+
+function clone() {
+    git clone --bare $1 $2
+}
+
+function checkout() {
+    git --work-tree=$HOME --git-dir=$1 checkout -f
+}
+
+github="https://github.com/BartSte"
+
+base="$github/dotfiles.git"
+base_dir="$HOME/dotfiles.git"
+
+lin="$github/dotfiles-linux.git"
+lin_dir="$HOME/dotfiles-linux.git"
+
+echo "# Installing git"
+sudo pacman -S git exa inetutils
+
+echo "# Clone BartSte/dotfiles.git as a bare repository"
+clone $base $base_dir
+checkout $base_dir
+
+echo "# Clone BartSte/dotfiles-linux.git as a bare repository"
+clone $lin $lin_dir
+checkout $lin_dir
+
+echo "Setup the environment variables"
+source ~/.zshenv
+
+cat <<EOF
+Please complete the file '$HOME/.dotfiles_config.sh' by setting the one of the 
+following two microsft accounts: 'MicrosoftPersonal' or 'MicrosoftWork'. One
+of these accounts is used to configure the mail accounts for neomutt and
+isync, using bitwarden to retrieve the passwords.
+EOF
+touch $HOME/.dotfiles_config.sh

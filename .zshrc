@@ -5,6 +5,8 @@ dir_plugins=/usr/share/zsh/plugins
 
 . $HOME/.dotfiles_config.sh
 
+rbw unlock
+
 . $dir_zsh/git.zsh
 running_wsl && . $dir_zsh/wsl.zsh
 . $dir_zsh/settings.zsh

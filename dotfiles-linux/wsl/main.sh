@@ -2,5 +2,5 @@
 
 . ~/dotfiles-linux/wsl/helpers.sh
 
-echo "# WSL"
+echo "Configure WSL if running on WSL"
 running_wsl && enable_systemd 
