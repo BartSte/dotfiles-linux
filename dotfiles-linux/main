@@ -15,7 +15,6 @@ touch $HOME/.dotfiles_config.sh
 ~/dotfiles-linux/davmail/main.bash
 ~/dotfiles-linux/zsh/main
 ~/dotfiles-linux/tmux/main
-~/dotfiles-linux/systemd/main
 ~/dotfiles-linux/dropbox/main.sh
 ~/dotfiles-linux/qutebrowser/main.sh
 ~/dotfiles-linux/wsl/main.sh
