@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+
+get_usage() {
+    cat <<EOF
+Usage: enable-autologin <ttyN>
+Where <ttyN> is the number of the tty you want to enable autologin on.
+For example, if you want to enable autologin on tty1, you would run:
+    enable-autologin 1
+EOF
+}
+
+no_int_error() {
+    cat <<EOF
+Error: $1 is not an integer. 
+
+If you want to enable autologin on tty1, you would run:
+    enable-autologin 1
+EOF
+}
+
+write_file() {
+    cat <<EOF >$1
+[Service]
+ExecStart=
+ExecStart=-/sbin/agetty -o '-p -f -- \\u' --noclear --autologin $USER %I \$TERM
+EOF
+}
+
+check_args() {
+    if [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ -z $1 ]; then
+        get_usage
+        exit 0
+    fi
+    
+    # Ensure $1 is an integer and does not contain any other characters
+    if ! [[ $1 =~ ^[0-9]+$ ]]; then
+        echo no_int_error $1
+        get_usage
+        exit 1
+    fi
+}
+
+check_args $@
+
+ttyN=$1
+unit="/etc/systemd/system/getty@tty$ttyN.service.d"
+tmp="/tmp/autologin.conf"
+file="$unit/autologin.conf"
+
+echo "Enabling autologin for user $USER on tty$ttyN by creating the following file: $file"
+sudo mkdir -p $unit
+write_file $tmp
+sudo mv -f $tmp $file
+echo "Successfully created $file"
+
+echo "Enabling unit and reloading daemons"
+sudo systemctl enable getty@tty$ttyN.service
+sudo systemctl start getty@tty$ttyN.service
+sudo systemctl daemon-reload
