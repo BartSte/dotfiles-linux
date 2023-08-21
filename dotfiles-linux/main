@@ -7,7 +7,7 @@ touch $HOME/.dotfiles_config.sh
 ~/dotfiles-linux/git/main.sh
 ~/dotfiles-linux/dependencies/main.sh
 ~/dotfiles-linux/wsl/main.sh
-~/dotfiles-linux/nvim/main.sh
+~/dotfiles-linux/nvim/main
 ~/dotfiles-linux/gpg/main.sh
 ~/dotfiles-linux/isync/main.sh
 ~/dotfiles-linux/mutt/main.sh
