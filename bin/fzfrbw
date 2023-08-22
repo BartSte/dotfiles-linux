@@ -16,4 +16,5 @@ else
   cmd=password
 fi
 
-rbw unlock && rbw_to_clipboard
+rbw unlocked && rbw_to_clipboard || echo
+
