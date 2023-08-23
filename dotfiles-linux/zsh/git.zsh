@@ -35,6 +35,7 @@ shorten_stdout(){
 dotc() {
     message="'$*'"
 
+    echo "Git commit\n"
     echo 'Base:'
     rm $(fd nvim.shada ~/dotfiles --type f) &> /dev/null
     base add ~/dotfiles
@@ -50,6 +51,7 @@ dotc() {
 }
 
 dots() {
+    echo "Git status\n"
     echo Base: 
     bases
 
@@ -58,6 +60,7 @@ dots() {
 }
 
 dotp() {
+    echo "Git push\n"
     dot push
 }
 
