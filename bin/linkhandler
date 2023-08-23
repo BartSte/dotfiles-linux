@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+# This script is used to open links in a preferred program.
+show_usage() {
+    cat <<EOF
+Usage: $0 <link>
+Opens a link in a preferred program.
+EOF
+}
+
+[ -z "$1" ] && echo "No link provided." && show_usage && exit 1
+
+link=$1
+
+# Check if the link contains '.py' 
+if [[ $link == *.py:* ]]; then
+    file=$(echo $link | cut -d ':' -f 1)
+    line=$(echo $link | cut -d ':' -f 2)
+    # TODO: open in running nvim instance in a tmux window in the current
+    # session
+    $EDITOR -- $file
+else
+    $BROWSER $1 &>/dev/null &
+fi
