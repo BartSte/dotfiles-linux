@@ -1,16 +1,35 @@
 #!/bin/bash
 
-install_tpm() {
-    echo "Installing tmux plugin manager"
-    git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+install_tmux_easy_motion() {
+    echo "Installing tmux easy motion"
+    local plugin_dir=$1
+    if [ -z "$plugin_dir" ]; then
+        echo "No plugin directory specified"
+        return 1
+    fi
+    rm -rf $plugin_dir/easy-motion
+    git clone https://github.com/IngoMeyer441/tmux-easy-motion $plugin_dir/easy-motion
+}
+
+install_tmux_session() {
+    echo "Installing tmux-session"
+    local tmp_dir=$(mktemp -d)
+    git clone https://github.com/BartSte/tmux-session.git $tmp_dir
+    sudo $tmp_dir/install
+    rm -rf $tmp_dir
 }
 
 link_tmux_session() {
+    echo "Linking tmux-session config"
     path=~/dotfiles-linux/tmux/tmux-session/
     target=~/.config
     echo "Symbolic link from $path to $target"
     ln -sf $path $target
 }
 
-install_tpm
+plugin_dir=~/.tmux/plugins
+mkdir -p $plugin_dir
+
+install_tmux_easy_motion $plugin_dir
+install_tmux_session
 link_tmux_session

@@ -17,9 +17,7 @@ symlink_config () {
     ln $dotfiles/after $directory_config/after -sf
     ln $dotfiles/plugin $directory_config/plugin -sf
     ln $dotfiles/init.lua $directory_config/init.lua -sf
-
-    # Must be a hard link
-    ln $dotfiles/lazy-lock.json $directory_config/lazy-lock.json -f
+    ln $dotfiles/lazy-lock.json $directory_config/lazy-lock.json -sf
 }
 
 make_dict(){
