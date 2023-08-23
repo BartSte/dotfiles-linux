@@ -65,5 +65,5 @@ dotp() {
 }
 
 dotcp() {
-    dotc && echo "\n" && dotp
+    dotc && echo "" && dotp
 }
