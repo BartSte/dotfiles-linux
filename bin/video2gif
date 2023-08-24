@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+
+get_usage() {
+    cat <<EOF
+Usage: video2gif [OPTIONS] [INPUT] [OUTPUT]
+
+Convert a video to gif.
+
+Options:
+    -s, --start     Start time in seconds.
+    -e, --end       End time in seconds.
+    -p, --pts       The pts of the frames.
+    -l, --loop      Loop the gif. Default is 0 (no loop).
+    -d, --debug     Debug mode.
+    -h, --help      Show this message
+
+Arguments:
+    INPUT           Input video file.
+    OUTPUT          Output gif file.
+EOF
+}
+
+args_in=""
+args_out=""
+debug=/dev/null
+loop=0
+while [[ $# -gt 0 ]]; do
+    key="$1"
+
+    case $key in
+        -s | --start)
+            start="$2"
+            args_in="$args_in -ss $start"
+            shift
+            shift
+            ;;
+        -e | --end)
+            end="$2"
+            args_in="$args_in -to $end"
+            shift
+            shift
+            ;;
+        -l | --loop)
+            loop="$2"
+            args_out="$args_out -loop $loop"
+            shift
+            shift
+            ;;
+        -p | --pts)
+            pts="$2"
+            args_out="$args_out -filter:v \"setpts=$pts*PTS\""
+            shift
+            shift
+            ;;
+        -d | --debug)
+            debug=/dev/stdout
+            shift
+            ;;
+        -h | --help)
+            get_usage
+            exit 0
+            ;;
+        *)
+            if [[ -z $input ]]; then
+                input=$1
+            elif [[ -z $output ]]; then
+                output=$1
+            else
+                echo "Input: $input" > $debug
+                echo "Output: $output" > $debug
+                echo "Unknown argument: $1"
+                exit 1
+            fi
+            shift
+            ;;
+    esac
+done
+
+if [[ -z $input ]]; then
+    echo "Input file is not specified"
+    exit 1
+fi
+
+if [[ -z $output ]]; then
+    echo "Output file is not specified"
+    exit 1
+fi
+
+cmd="ffmpeg$args_in -i \"$input\"$args_out \"$output\""
+echo "Args in: $args_in" > $debug
+echo "Args out: $args_out" > $debug
+echo "cmd: $cmd" > $debug
+eval $cmd

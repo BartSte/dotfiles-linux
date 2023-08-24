@@ -3,7 +3,7 @@
 [ $OLD_PATH ] || export OLD_PATH=$PATH
 
 export PATH=$OLD_PATH:$HOME/bin:$HOME/.local/bin:$HOME/.cargo/bin:$HOME/go/bin
-export BROWSER='qute'
+export BROWSER='linkhandler'
 export EDITOR='nvim'
 export MYPYPI=$(make_index_url ~/.pypirc)
 export GPG_TTY=$(tty)
@@ -14,6 +14,7 @@ export TIME_ZONE="Europe/Amsterdam"
 export HEADPHONES='28:11:A5:A4:3A:CF'
 export PYTHONBREAKPOINT='ipdb.set_trace'
 export IPDB_CONTEXT_SIZE=10
+export TMUX_PLUGIN_DIR="$HOME/.tmux/plugins"
 
 export FZF_DEFAULT_COMMAND="fd --hidden --no-ignore-vcs --ignore-file $HOME/.ignore --type f"
 export FZF_ALT_C_COMMAND="fd --hidden --no-ignore-vcs --ignore-file $HOME/.ignore -t d"
