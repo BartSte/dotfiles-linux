@@ -17,8 +17,11 @@ EOF
 }
 
 is_url() {
-    local link=$1
-    [[ $(echo $link | grep "://") ]]
+    [[ $(echo $1 | grep "://") ]]
+}
+
+is_python() {
+    [[ $1 =~ .*\.py[:]* ]]
 }
 
 has_neovim() {
@@ -43,11 +46,11 @@ open_python() {
     if has_neovim $window $session; then
         echo "Neovim is running in $session:$window" >$debug
         tmux send-keys -t $session:$window.$pane C-c
-        tmux send-keys -t $session:$window.$pane ":e $file"
+        tmux send-keys -t $session:$window.$pane ":e $file|$line"
         tmux send-keys -t $session:$window.$pane Enter
     else
         echo "Neovim is not running in $session:$window" >$debug
-        nvim $file
+        nvim -c ":e $file|$line"
     fi
 }
 
@@ -97,7 +100,7 @@ if $win; then
     }
 fi
 
-if [[ $link == *.py ]]; then
+if is_python $link; then
     echo "Opening python file: $link" >$debug
     open_python $link
 else
