@@ -4,32 +4,102 @@ show_usage() {
     cat <<EOF
 Usage: $0 <link>
 Opens a link in a preferred program.
+
+The option -w, --win can be used to convert all windows paths to wsl paths. 
+This is useful when you want to open a windows file in wsl.
+
+Options:
+    -h, --help      Show this message and exit.
+    -w, --win       Convert windows paths to wsl paths, by default this is not
+                    done.
+    -d, --debug     Show debug messages in stdout.
 EOF
 }
 
-[ -z "$1" ] && echo "No link provided." && show_usage && exit 1
+is_url() {
+    local link=$1
+    [[ $(echo $link | grep "://") ]]
+}
 
-link=$1
+has_neovim() {
+    local window=$1
+    local session=$2
+    [[ $(tmux list-windows -t $session | grep "$window: nvim") ]]
+}
 
-# Check if the link contains '.py'
-if [[ $link == *.py:* ]]; then
+open_python() {
+    local link=$1
+    local pane=0
+    local window=0
+    local session=$(tmux display-message -p '#S')
 
-    file=$(echo $link | cut -d ':' -f 1)
-    line=$(echo $link | cut -d ':' -f 2)
+    local file=$(echo $link | cut -d ':' -f 1)
+    local line=$(echo $link | cut -d ':' -f 2 -s) # -s ensures nothing is returned if ':' is not found
 
-    session=$(tmux display-message -p '#S')
-    window=0
-    pane=0
+    echo "Opening python file: $file" >$debug
+    echo "Python file line: $line" >$debug
 
-    if [[ $(tmux list-windows -t $session | grep -c "$window: nvim") -eq 0 ]]; then
-        tmux display-message -d 2000 "No neovim session found in window $window of session $session."
-        exit 1
+    # Open file in $window in the current session if it has neovim running.
+    if has_neovim $window $session; then
+        echo "Neovim is running in $session:$window" >$debug
+        tmux send-keys -t $session:$window.$pane C-c
+        tmux send-keys -t $session:$window.$pane ":e $file"
+        tmux send-keys -t $session:$window.$pane Enter
+    else
+        echo "Neovim is not running in $session:$window" >$debug
+        nvim $file
     fi
+}
 
-    tmux send-keys -t $session:$window.$pane C-c
-    tmux send-keys -t $session:$window.$pane ":e $file|$line"
-    tmux send-keys -t $session:$window.$pane Enter
+# Check if tmux is running
+[[ -z "$TMUX" ]] && {
+    echo "tmux is not running."
+    exit 1
+}
 
-else
+# Check for options
+win=false
+debug=/dev/null
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -h | --help)
+            show_usage
+            exit 0
+            ;;
+        -w | --win)
+            win=true
+            ;;
+        -d | --debug)
+            debug=/dev/stdout
+            ;;
+        *)
+            link=$1
+            ;;
+    esac
+    shift
+done
+
+echo "Opening link: $link" >$debug
+
+# If the link is a url, open it in the browser and exit.
+if is_url $link; then
+    echo 'Url detected, opening in browser.' >$debug
     $BROWSER $1 &>/dev/null &
+    exit 0
+fi
+
+# Convert windows paths to wsl paths
+if $win; then
+    echo 'Converting windows paths to wsl paths.' >$debug
+    link=$(wslpath -u $link) || {
+        echo "Failed to convert windows path to wsl path. Are you running wsl?"
+        exit 1
+    }
+fi
+
+if [[ $link == *.py ]]; then
+    echo "Opening python file: $link" >$debug
+    open_python $link
+else
+    tmux display-message -d 2000 "No handler for $link."
 fi

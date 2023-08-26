@@ -4,13 +4,11 @@ get_usage() {
     cat <<EOF
 Usage: $0 [options]
 
-This script is used to grep pytest error file:line:error from stdin. Please
-note that it is compatible with Windows paths and Unix paths, so is can be
-used WSL as well.
+This script is used to grep pytest error file:line:error from stdin. Note that
+this script is compatible with Windows paths (\) and Unix paths (/).
 
 options:
     -h, --help: show this help message and exit
-
 EOF
 }
 
@@ -19,5 +17,5 @@ if [[ $1 == '-h' || $1 == '--help' ]]; then
     exit 0
 fi
 
-RE_PYTEST_ERROR="^[a-zA-Z0-9\/\_]*\.py:[0-9]+:"
-sed 's;\\;/;g' | grep -Eoi $RE_PYTEST_ERROR 
+RE_PYTEST_ERROR="^[a-zA-Z0-9\\\/\_]*\.py:[0-9]+:"
+grep -Eoi $RE_PYTEST_ERROR 
