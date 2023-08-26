@@ -11,7 +11,7 @@ This is useful when you want to open a windows file in wsl.
 Options:
     -h, --help      Show this message and exit.
     -w, --win       Convert windows paths to wsl paths, by default this is not
-                    done.
+                    done. If wsl is not running, this fails and is ignored.
     -d, --debug     Show debug messages in stdout.
 EOF
 }
@@ -92,12 +92,13 @@ if is_url $link; then
 fi
 
 # Convert windows paths to wsl paths
-if $win; then
+if $win && $(which wslpath &> '/dev/null'); then
     echo 'Converting windows paths to wsl paths.' >$debug
-    link=$(wslpath -u $link) || {
-        echo "Failed to convert windows path to wsl path. Are you running wsl?"
+    linkwin=$(wslpath -u $link) || {
+        echo "Failed to convert windows path to wsl path: $link" >$debug
         exit 1
     }
+    link=$linkwin
 fi
 
 if is_python $link; then
