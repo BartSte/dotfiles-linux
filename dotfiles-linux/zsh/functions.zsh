@@ -61,7 +61,7 @@ fzf-cd-widget-home() {
 }
 
 fzfrbw-widget() {
-    fzfrbw
+    $HOME/dotfiles-linux/scripts/fzfrbw
     zle reset-prompt
 }
 

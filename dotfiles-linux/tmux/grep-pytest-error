@@ -18,4 +18,4 @@ if [[ $1 == '-h' || $1 == '--help' ]]; then
 fi
 
 RE_PYTEST_ERROR="^[a-zA-Z0-9\\\/\_]*\.py:[0-9]+:"
-grep -Eoi $RE_PYTEST_ERROR 
+grep -Eoi $RE_PYTEST_ERROR

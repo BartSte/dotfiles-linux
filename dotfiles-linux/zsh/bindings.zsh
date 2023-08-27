@@ -32,4 +32,5 @@ bindkey -M viins "^A" fzf-help-widget
 bindkey -M viins "^B" fzfrbw-widget
 bindkey -M viins "^R" fzf-history-widget
 bindkey -M viins "^T" vi-cmd-mode
+
 bindkey -M viins -s '^H' '^W'

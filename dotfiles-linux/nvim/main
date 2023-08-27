@@ -36,8 +36,9 @@ make_dict(){
 
 echo "# Vim"
 symlink_config 
-make_dict nl "$HOME/.config/nvim/dict"
-make_dict en "$HOME/.config/nvim/dict"
+# make_dict nl "$HOME/.config/nvim/dict"
+# make_dict en "$HOME/.config/nvim/dict"
 get_spell nl
 get_spell en
-pip install pynvim
+ln -sf ~/dotfiles/scripts/sorters/sort_variable_length ~/bin/
+sudo pacman -S pynvim
