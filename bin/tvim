@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+
+usage() {
+    cat <<EOF
+Usage: tvim [options] [file] 
+
+Open file in Neovim in the tmux window of session at line. The line
+number is optional. If the session is not specified, the current session will
+be used.
+
+Arguments:
+  file            The file to open
+
+Options:
+  -h, --help      Print this help message and exit
+  -s, --session   Specify the tmux session, default to current session
+  -w, --window    Specify the tmux window, default to current window
+  -p, --pane      Specify the tmux pane, default to current pane
+  -l, --line      Specify the line number, default to 1
+  -d, --debug     Print debug messages
+EOF
+}
+
+[[ -z $TMUX ]] && echo "Not in a tmux session" && exit 1
+
+line=1
+pane=$(tmux display-message -p '#P')
+debug=/dev/null
+window=$(tmux display-message -p '#I')
+session=$(tmux display-message -p '#S')
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -h | --help)
+            usage
+            exit 0
+            ;;
+        -s | --session)
+            session=$2
+            shift
+            ;;
+        -w | --window)
+            window=$2
+            shift
+            ;;
+        -p | --pane)
+            pane=$2
+            shift
+            ;;
+        -l | --line)
+            line=$2
+            shift
+            ;;
+        -d | --debug)
+            debug=/dev/stdout
+            ;;
+        *)
+            file=$1
+            ;;
+    esac
+    shift
+done
+
+tmux_commands() {
+    local pane=$1
+    local window=$2
+    local session=$3
+    tmux list-panes -t $session:$window -F '#{pane_index} #{pane_current_command}'
+}
+
+has_vim() {
+    local pane=$1
+    local window=$2
+    local session=$3
+
+    local cmds=$(tmux_commands $pane $window $session)
+    echo "Tmux commands: $cmds" >$debug
+
+    local cmd=$(echo "$cmds" | awk -v pane=$pane '{if ($1 == pane) print $2}')
+    echo "Current command: $cmd" >$debug
+
+    [[ $cmd == 'nvim' ]]
+}
+
+if has_vim $pane $window $session; then
+    echo "Neovim is running in $session:$window.$pane" >$debug
+    tmux send-keys -t $session:$window.$pane C-c
+    tmux send-keys -t $session:$window.$pane ":e $file|$line"
+    tmux send-keys -t $session:$window.$pane Enter
+else
+    echo "Neovim is not running in $session:$window.$pane" >$debug
+fi

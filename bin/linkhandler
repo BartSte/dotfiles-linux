@@ -24,17 +24,10 @@ is_python() {
     [[ $1 =~ .*\.py[:]* ]]
 }
 
-has_neovim() {
-    local window=$1
-    local session=$2
-    [[ $(tmux list-windows -t $session | grep "$window: nvim") ]]
-}
-
 open_python() {
     local link=$1
     local pane=0
     local window=0
-    local session=$(tmux display-message -p '#S')
 
     local file=$(echo $link | cut -d ':' -f 1)
     local line=$(echo $link | cut -d ':' -f 2 -s) # -s ensures nothing is returned if ':' is not found
@@ -42,16 +35,7 @@ open_python() {
     echo "Opening python file: $file" >$debug
     echo "Python file line: $line" >$debug
 
-    # Open file in $window in the current session if it has neovim running.
-    if has_neovim $window $session; then
-        echo "Neovim is running in $session:$window" >$debug
-        tmux send-keys -t $session:$window.$pane C-c
-        tmux send-keys -t $session:$window.$pane ":e $file|$line"
-        tmux send-keys -t $session:$window.$pane Enter
-    else
-        echo "Neovim is not running in $session:$window" >$debug
-        nvim -c ":e $file|$line"
-    fi
+    tvim -w $window -p $pane -l $line $file
 }
 
 # Check if tmux is running
