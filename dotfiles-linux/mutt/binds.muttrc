@@ -46,7 +46,7 @@ bind editor <up> history-up
 bind editor <down> history-down
 
 # vim: filetype=neomuttrc
-macro attach B "<pipe-entry>iconv -c --to-code=UTF8 > $tmpdir/mail.html<enter><shell-escape>qute $tmpdir/mail.html &<enter>"
+macro attach B "<pipe-entry>iconv -c --to-code=UTF8 > $tmpdir/mail.html<enter><shell-escape>browser $tmpdir/mail.html &<enter>"
 macro index \ea "<shell-escape>read -p 'Enter a search: ' x; echo \$x >~/.cache/mutt_terms<enter><limit>~i \"\`notmuch search --output=messages \$(/bin/cat ~/.cache/mutt_terms) | head -n 1000 | perl -le '@a=<>;chomp@a;s/\^id:// for@a;$,=\"|\";print@a' | sed 's/id://g' \`\"<enter>" "Global search"
 macro index,pager A "<save-message>=Archive<enter>" "Archive Message"
 macro index,pager R "<shell-escape>mymailsync -q &<enter>" "Sync mailbox"
