@@ -17,4 +17,3 @@ else
 fi
 
 rbw unlocked && rbw_to_clipboard || echo
-
