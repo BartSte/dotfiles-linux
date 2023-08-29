@@ -12,7 +12,8 @@ Options:
     -h, --help      Show this message and exit.
     -w, --win       Convert windows paths to wsl paths, by default this is not
                     done. If wsl is not running, this fails and is ignored.
-    -d, --debug     Show debug messages in stdout.
+    -d, --debug     Send debug messages to stdout or a file. For example:
+                    -d /dev/stdout or -d /tmp/debug.log
 EOF
 }
 
@@ -32,8 +33,8 @@ open_python() {
     local file=$(echo $link | cut -d ':' -f 1)
     local line=$(echo $link | cut -d ':' -f 2 -s) # -s ensures nothing is returned if ':' is not found
 
-    echo "Opening python file: $file" >$debug
-    echo "Python file line: $line" >$debug
+    echo "Opening python file: $file" >> $debug
+    echo "Python file line: $line" >> $debug
 
     tvim -w $window -p $pane -l $line $file
 }
@@ -57,7 +58,9 @@ while [[ $# -gt 0 ]]; do
             win=true
             ;;
         -d | --debug)
-            debug=/dev/stdout
+            debug=$2
+            date > $debug
+            shift
             ;;
         *)
             link=$1
@@ -66,27 +69,27 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 
-echo "Opening link: $link" >$debug
+echo "Opening link: $link" >> $debug
 
 # If the link is a url, open it in the browser and exit.
 if is_url $link; then
-    echo 'Url detected, opening in browser.' >$debug
+    echo 'Url detected, opening in browser.' >> $debug
     $BROWSER $1 &>/dev/null &
     exit 0
 fi
 
 # Convert windows paths to wsl paths
 if $win && $(which wslpath &> '/dev/null'); then
-    echo 'Converting windows paths to wsl paths.' >$debug
     linkwin=$(wslpath -u $link) || {
-        echo "Failed to convert windows path to wsl path: $link" >$debug
+        echo "Failed to convert windows path to wsl path: $link" >> $debug
         exit 1
     }
     link=$linkwin
+    echo "Converting windows path to wsl paths: $link" >> $debug
 fi
 
 if is_python $link; then
-    echo "Opening python file: $link" >$debug
+    echo "Opening python file: $link" >> $debug
     open_python $link
 else
     tmux display-message -d 2000 "No handler for $link."
