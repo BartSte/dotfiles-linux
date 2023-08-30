@@ -49,7 +49,7 @@ assert_tmux() {
 #   $@: The options passed to the script.
 #
 #######################################
-get_opts() {
+parse_args() {
     while [[ $# -gt 0 ]]; do
         case $1 in
             -h | --help)
@@ -81,7 +81,6 @@ get_opts() {
         esac
         shift
     done
-
 }
 
 #######################################
@@ -148,7 +147,12 @@ debug=/dev/null
 window=$(tmux display-message -p '#I')
 session=$(tmux display-message -p '#S')
 
-get_opts $@
+parse_args $@
+
+[[ -z $file ]] && {
+    usage
+    exit 1
+}
 
 if has_cmd $pane $window $session 'vim|nvim'; then
     echo "Neovim is running in $session:$window.$pane" >$debug
