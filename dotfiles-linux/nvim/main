@@ -17,7 +17,7 @@ symlink_config () {
     ln $dotfiles/after $directory_config/after -sf
     ln $dotfiles/plugin $directory_config/plugin -sf
     ln $dotfiles/init.lua $directory_config/init.lua -sf
-    ln $dotfiles/lazy-lock.json $directory_config/lazy-lock.json -sf
+    ln $dotfiles/lazy-lock.json $directory_config/lazy-lock.json -f # needs to be hardlink
 }
 
 make_dict(){
@@ -36,9 +36,7 @@ make_dict(){
 
 echo "# Vim"
 symlink_config 
-# make_dict nl "$HOME/.config/nvim/dict"
-# make_dict en "$HOME/.config/nvim/dict"
 get_spell nl
 get_spell en
 ln -sf ~/dotfiles/scripts/sorters/sort_variable_length ~/bin/
-sudo pacman -S pynvim
+sudo pacman -S python-pynvim --noconfirm
