@@ -3,9 +3,7 @@
 [ $OLD_PATH ] || export OLD_PATH=$PATH
 
 export PATH=$OLD_PATH:$HOME/bin:$HOME/.local/bin:$HOME/.cargo/bin:$HOME/go/bin
-export BROWSER='browser'
-export LINUXBROWSER='qutebrowser'
-export WINBROWSER='/mnt/c/Program Files/qutebrowser/qutebrowser.exe'
+export BROWSER='qutebrowser'
 export EDITOR='nvim'
 export MYPYPI=$(make_index_url ~/.pypirc)
 export GPG_TTY=$(tty)

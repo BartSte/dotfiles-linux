@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-# This script is used to launch WINBROWSER on Windows when linux is running
-# on wsl. Otherwise, LINUXBROWSER is launched.
-running_wsl && eval "'$WINBROWSER' $@" || eval "$LINUXBROWSER $@"
