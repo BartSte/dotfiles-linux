@@ -66,6 +66,10 @@ is_url() {
     [[ $1 =~ ^[a-zA-Z]+://.* ]] || [[ $1 =~ ^www\..* ]]
 }
 
+is_html() {
+    [[ $1 =~ .*\.html ]]
+}
+
 is_python() {
     [[ $1 =~ .*\.py[:]* ]]
 }
@@ -108,7 +112,9 @@ if $win && $(which wslpath &>'/dev/null'); then
     path=$(convert_win_path $path)
 fi
 
-if is_python $path; then
+if is_html $path; then
+    open_url $path
+elif is_python $path; then
     open_python $path
 elif running_tmux; then
     tmux display-message -d 2000 "No handler for $path."
