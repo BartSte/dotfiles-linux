@@ -70,8 +70,16 @@ is_html() {
     [[ $1 =~ .*\.html ]]
 }
 
+is_image() {
+    [[ $1 =~ .*\.png ]] || [[ $1 =~ .*\.jpg ]] || [[ $1 =~ .*\.jpeg ]]
+}
+
 is_python() {
     [[ $1 =~ .*\.py[:]* ]]
+}
+
+is_pdf() {
+    [[ $1 =~ .*\.pdf ]]
 }
 
 open_python() {
@@ -114,6 +122,10 @@ fi
 
 if is_html $path; then
     open_url $path
+elif is_image $path; then
+    feh $path
+elif is_pdf $path; then
+    zathura $path
 elif is_python $path; then
     open_python $path
 elif running_tmux; then
