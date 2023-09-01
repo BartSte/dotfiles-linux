@@ -12,29 +12,17 @@ symlink_config () {
     directory_config=~/.config/nvim
 
     mkdir $directory_config -p
+
     ln $dotfiles/lua $directory_config -sf
     ln $dotfiles/vim $directory_config -sf
     ln $dotfiles/after $directory_config -sf
     ln $dotfiles/plugin $directory_config -sf
     ln $dotfiles/init.lua $directory_config/init.lua -sf
     ln $dotfiles/lazy-lock.json $directory_config/lazy-lock.json -f # needs to be hardlink
+
 }
 
-make_dict(){
-    lang=$1
-    storage=$2
-    file="$lang.dict"
-
-    echo "Creating aspell dictionary $file at $storage"
-    mkdir $storage --parents
-
-    pushd .
-    cd $storage
-    aspell -d $lang dump master | aspell -l $lang expand > $file
-    popd
-}
-
-echo "# Vim"
+echo "# nvim"
 symlink_config 
 get_spell nl
 get_spell en
