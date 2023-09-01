@@ -15,7 +15,6 @@ export WH=$(wslpath "$(winenv USERPROFILE)")
 
 set_tmux="\$Env:TMUX=\"$TMUX\""
 alias wh="cd $WH"
-alias ex="/mnt/c/Windows/explorer.exe ."
 alias mirror='echo $(pwd | sed "s|$HOME|$WH|")'
 alias winmirror='wslpath -w $(mirror)'
 

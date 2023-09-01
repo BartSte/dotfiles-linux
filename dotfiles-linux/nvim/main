@@ -12,8 +12,14 @@ symlink_config () {
     directory_config=~/.config/nvim
 
     mkdir $directory_config -p
+    mkdir $directory_config/lua
 
-    ln $dotfiles/lua $directory_config -sf
+    # Avoinds including .luarc.json
+    ln $dotfiles/lua/config $directory_config/lua -sf
+    ln $dotfiles/lua/helpers $directory_config/lua -sf
+    ln $dotfiles/lua/plugins $directory_config/lua -sf
+    ln $dotfiles/lua/init.lua $directory_config/lua/init.lua -sf
+
     ln $dotfiles/vim $directory_config -sf
     ln $dotfiles/after $directory_config -sf
     ln $dotfiles/plugin $directory_config -sf
