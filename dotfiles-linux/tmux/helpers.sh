@@ -1,7 +1,7 @@
 install_tmux_plugin() {
-    echo "Installing tmux fzf url"
+    echo "Installing tmux plugin"
 
-    [[ -z $TMUX_PLUGIN_DIR ]] || {echo "TMUX_PLUGIN_DIR is not set" && exit 1}
+    [[ -z $TMUX_PLUGIN_DIR ]] && { echo "TMUX_PLUGIN_DIR is not set" && exit 1; }
 
     local url=$1
     local name=$(echo $url | awk -F/ '{print $NF}' | sed -e 's/\.git$//')
@@ -23,8 +23,8 @@ install_tmux_plugins_from_file() {
         plugins+=("$line")
     done <$file
 
-    for plugin in plugins; do
-        install_tmux_plugin plugin
+    for plugin in ${plugins[@]}; do
+        install_tmux_plugin $plugin
     done
 }
 
