@@ -4,8 +4,7 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
 . $script_dir/helpers.sh
 
-install_tmux_plugin https://github.com/IngoMeyer441/tmux-easy-motion
-install_tmux_plugin https://github.com/BartSte/tmux-fzf-url
+install_tmux_plugins_from_file $script_dir/plugins.txt
 install_tmux_session
 
 link_tmux_session

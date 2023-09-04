@@ -4,4 +4,5 @@
 running_wsl || exit 1;
 [[ -z $1 ]] && path="." || path="$1"
 winpath=$(wslpath -w "$path")
-/mnt/c/Windows/explorer.exe $winpath && exit 0
+/mnt/c/Windows/explorer.exe $winpath 
+exit 0

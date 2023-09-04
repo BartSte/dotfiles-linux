@@ -13,6 +13,21 @@ install_tmux_plugin() {
     git clone $url $path
 }
 
+install_tmux_plugins_from_file() {
+    echo "Installing tmux plugins from file"
+    file=$1
+    [[ -z $file ]] && { echo "No file provided" && exit 1; }
+
+    plugins=()
+    while IFS= read -r line; do
+        plugins+=("$line")
+    done <$file
+
+    for plugin in plugins; do
+        install_tmux_plugin plugin
+    done
+}
+
 install_tmux_session() {
     echo "Installing tmux-session"
 
