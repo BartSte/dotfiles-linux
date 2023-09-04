@@ -42,7 +42,13 @@ parse_args() {
 
 open_url() {
     echo 'Url detected, opening in browser.' >>$debug
-    $BROWSER $1 &>/dev/null &
+    if running_tmux; then
+        echo "Opening url with WSLBROWSER: $WSLBROWSER" >>$debug
+        "$WSLBROWSER" $1 >>$debug 2>&1 &
+    else
+        echo "Opening url with BROWSER: $BROWSER" >>$debug
+        $BROWSER $1 &>/dev/null &
+    fi
 }
 
 convert_win_path() {
