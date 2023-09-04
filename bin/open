@@ -42,13 +42,18 @@ parse_args() {
 
 open_url() {
     echo 'Url detected, opening in browser.' >>$debug
-    if running_tmux; then
+    if running_wsl; then
         echo "Opening url with WSLBROWSER: $WSLBROWSER" >>$debug
         "$WSLBROWSER" $1 >>$debug 2>&1 &
     else
         echo "Opening url with BROWSER: $BROWSER" >>$debug
         $BROWSER $1 &>/dev/null &
     fi
+}
+
+open_img() {
+    echo "Opening image $1 with feh" >>$debug
+    feh $1 &>/dev/null &
 }
 
 convert_win_path() {
@@ -129,7 +134,7 @@ fi
 if is_html $path; then
     open_url $path
 elif is_image $path; then
-    feh $path
+    open_img $path
 elif is_pdf $path; then
     zathura $path
 elif is_python $path; then
