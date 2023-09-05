@@ -63,15 +63,6 @@ convert_win_path() {
     }
 }
 
-#######################################
-# Check if the path is a url.
-#
-# It detects urls by checking if the path contains a protocol, or if it starts
-# with www.
-#
-# Arguments:
-#  $1: The path to check.
-#######################################
 is_url() {
     echo "Checking if path is a url: $1" >>$debug
     [[ $1 =~ ^[a-zA-Z]+://.* ]] || [[ $1 =~ ^www\..* ]]
@@ -93,6 +84,10 @@ is_pdf() {
     [[ $1 =~ .*\.pdf ]]
 }
 
+is_cpp() {
+    [[ $1 =~ .*\.c ]] || [[ $1 =~ .*\.h ]] || [[ $1 =~ .*\.cpp ]] || [[ $1 =~ .*\.hpp ]]
+}
+
 open_python() {
     local path=$1
     local pane=0
@@ -104,6 +99,25 @@ open_python() {
 
     echo "Opening python file: $file" >>$debug
     echo "Python file line: $line" >>$debug
+
+    if running_tmux; then
+        tvim -w $window -p $pane -l $line $file
+    else
+        nvim -c ":e $file|$line"
+    fi
+}
+
+open_cpp() {
+    local path=$1
+    local pane=0
+    local window=0
+
+    local file=$(echo $path | cut -d ':' -f 1)
+    local line=$(echo $path | cut -d ':' -f 2 -s) # -s ensures nothing is returned if ':' is not found
+    line=${line:-1}                               # default to 1 if line is empty
+
+    echo "Opening cpp file: $file" >>$debug
+    echo "Cpp file line: $line" >>$debug
 
     if running_tmux; then
         tvim -w $window -p $pane -l $line $file
@@ -139,6 +153,8 @@ elif is_pdf $path; then
     zathura $path
 elif is_python $path; then
     open_python $path
+elif is_cpp $path; then
+    open_cpp $path
 elif running_tmux; then
     tmux display-message -d 2000 "No handler for $path."
 else
