@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+#
+# DOCS:
+
+# TODO: add more filters here, e.g.: grep '*.cpp:123:'
+$HOME/dotfiles-linux/tmux/grep-pytest-error
