@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+get_usage() {
+    cat <<EOF
+Usage: $0 [options]
+
+This script is used to grep the follow text from stdin:
+
+|--------------+-------------------+----------------------+----------------------|
+| type         | pattern           | example              | windows path support |
+| ----         | -------           | -------              | -------------------- |
+| pytest error | file:line:        | test/test.py:123:    | yes                  |
+| clang error  | file:line:column: | test/test.cpp:123:4: | no                   |
+|--------------+-------------------+----------------------|----------------------|
+
+options:
+    -h, --help: show this help message and exit
+EOF
+}
+
+if [[ $1 == '-h' || $1 == '--help' ]]; then
+    get_usage
+    exit 0
+fi
+
+RE_PYTEST_ERROR="^[a-zA-Z0-9\\\/\_]*\.py:[0-9]+:"
+RE_CLANG_ERROR="foobarbaz"
+
+RE="$RE_PYTEST_ERROR|$RE_CLANG_ERROR"
+grep -Eoi $RE
