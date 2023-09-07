@@ -10,6 +10,8 @@ function init_git() {
     git config --global user.email $(rbw_get username $MICROSOFT_ACCOUNT)
     git config --global push.autoSetupRemote yes
     git config --global pull.rebase false
+    git config --global diff.tool nvimdiff
+    git config --global difftool.prompt false
 
     cat ~/.gitconfig
 }
