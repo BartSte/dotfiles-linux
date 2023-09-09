@@ -12,6 +12,7 @@ path_wsl+=/mnt/c/Python310/
 typeset -U PATH path  # remove duplicat entries from $PATH
 export PATH=$PATH:$path_wsl
 export WH=$(wslpath "$(winenv USERPROFILE)")
+export WSLVENVS="$WH/venvs"
 
 set_tmux="\$Env:TMUX=\"$TMUX\""
 alias wh="cd $WH"

@@ -1,21 +1,92 @@
-#!/bin/bash
-#
-# winpy: A script to check for a python virtual environment in the $WH/venvs directory
-# Usage: winpy [--help]
+#!/bin/env bash
 
-if [[ $1 == "--help" ]]; then
-  echo "winpy: A script to check for a python virtual environment in the \$WH/venvs directory"
-  echo "Usage: winpy [--help]"
-  exit 0
-fi
+usage() {
+    cat <<EOF
+Usage: winpy [options] <command>
 
-running_wsl || { echo "Not running WSL"; exit 0; }
+winpy checks for a python virtual environment in the WSLVENVS directory, where
+WSLVENVS is an environment variable. If it exists, it will be executed. By 
+default, the venv is selected that has the same name as the current working
+directory. It can also be set using the --venv option. Everything after the
+options is passed to the python executable.
 
-current_dir=$(basename "$PWD")
-venv_dir="$WH/venvs/$current_dir"
+If you need the path to the python executable, you can pass the --path option.
+Now no command is executed, but the path to the python executable is printed.
 
-if [[ -d "$venv_dir" ]]; then
-  "$WH/venvs/$current_dir/Scripts/python.exe" $@
+Options:
+  --venv <name>   Name of the venv to use
+  -p,--path       Print the path to the python executable, do not execute
+                  any command.
+  --debug         Enable debug output
+  --help          Show this message
+
+Commands:
+    <command>       Command to execute
+EOF
+}
+
+running_wsl() {
+    [[ $(grep -i microsoft /proc/version) ]]
+}
+
+running_wsl || {
+    echo "Not running WSL" >&2
+    exit 1
+}
+
+parse_args() {
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --venv)
+                venv_name=$2
+                shift
+                shift
+                ;;
+            -p|--path)
+                path=true
+                shift
+                ;;
+            --debug)
+                debug=/dev/stderr
+                shift
+                ;;
+            --help)
+                usage
+                exit 0
+                ;;
+            *)
+                break
+                ;;
+        esac
+    done
+    command=$@
+}
+
+get_exe() {
+    venv_dir=$1
+    if [ -d "$venv_dir" ]]; then
+        echo "Using venv $venv_dir" >$debug
+        echo "$venv_dir/Scripts/python.exe"
+    else
+        echo "Using default python.exe" >$debug
+        echo "python.exe"
+    fi
+}
+
+venv_name=''
+path=false
+debug=/dev/null
+parse_args $@
+
+venv=${venv_name:-$(basename $(pwd))}
+venv_dir="$WSLVENVS/$venv"
+
+exe=$(get_exe $venv_dir)
+
+if [[ $path == true ]]; then
+    echo "Printing path to executable" >$debug
+    echo $exe
 else
-  python.exe $@
+    echo "Executing $exe $command" >$debug
+    $exe $command
 fi
