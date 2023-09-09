@@ -29,11 +29,6 @@ running_wsl() {
     [[ $(grep -i microsoft /proc/version) ]]
 }
 
-running_wsl || {
-    echo "Not running WSL" >&2
-    exit 1
-}
-
 parse_args() {
     while [[ $# -gt 0 ]]; do
         case $1 in
@@ -64,7 +59,8 @@ parse_args() {
 
 get_exe() {
     venv_dir=$1
-    if [ -d "$venv_dir" ]]; then
+    echo "Checking for venv directory $venv_dir" >$debug
+    if [[ -d "$venv_dir" ]]; then
         echo "Using venv $venv_dir" >$debug
         echo "$venv_dir/Scripts/python.exe"
     else
@@ -73,10 +69,19 @@ get_exe() {
     fi
 }
 
+running_wsl || {
+    echo "Not running WSL" >&2
+    exit 1
+}
+
 venv_name=''
 path=false
 debug=/dev/null
 parse_args $@
+
+echo "venv_name=$venv_name" >$debug
+echo "path=$path" >$debug
+echo "command=$command" >$debug
 
 venv=${venv_name:-$(basename $(pwd))}
 venv_dir="$WSLVENVS/$venv"
