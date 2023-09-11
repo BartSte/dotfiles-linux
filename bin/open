@@ -93,9 +93,15 @@ open_python() {
     local pane=0
     local window=0
 
-    local file=$(echo $path | cut -d ':' -f 1)
-    local line=$(echo $path | cut -d ':' -f 2 -s) # -s ensures nothing is returned if ':' is not found
-    line=${line:-1}                               # default to 1 if line is empty
+    # From the $path, extract the path to the python file from $path, using
+    # grep
+    local file=$(echo $path | grep -o "[a-zA-Z0-9\\\/\_]*\.py")
+    local line=$(echo $path | grep -o "line\s[0-9]*" | grep -o "[0-9]*")
+    if [[ -z $line ]]; then
+        # try file:line: notation
+        line=$(echo $path | cut -d ':' -f 2 -s) 
+    fi
+    line=${line:-1}  # default to 1 if line is empty
 
     echo "Opening python file: $file" >>$debug
     echo "Python file line: $line" >>$debug
