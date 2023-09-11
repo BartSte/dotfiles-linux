@@ -88,20 +88,41 @@ is_cpp() {
     [[ $1 =~ .*\.c ]] || [[ $1 =~ .*\.h ]] || [[ $1 =~ .*\.cpp ]] || [[ $1 =~ .*\.hpp ]]
 }
 
-open_python() {
+is_pytest_error() {
+    [[ $1 =~ [a-zA-Z0-9\\\/\_]*\.py:[0-9]+: ]]
+}
+
+is_python_error() {
+    [[ $1 =~ \"[a-zA-Z0-9\\\/\_]*\.py\",\sline\s[0-9]+ ]]
+}
+
+open_pytest_error() {
     local path=$1
     local pane=0
     local window=0
 
-    # From the $path, extract the path to the python file from $path, using
-    # grep
+    local file=$(echo $path | cut -d ':' -f 1)
+    local line=$(echo $path | cut -d ':' -f 2 -s)
+    line=${line:-1} # default to 1 if line is empty
+
+    echo "Opening python file: $file" >>$debug
+    echo "Python file line: $line" >>$debug
+
+    if running_tmux; then
+        tvim -w $window -p $pane -l $line $file
+    else
+        nvim -c ":e $file|$line"
+    fi
+}
+
+open_python_error() {
+    local path=$1
+    local pane=0
+    local window=0
+
     local file=$(echo $path | grep -o "[a-zA-Z0-9\\\/\_]*\.py")
     local line=$(echo $path | grep -o "line\s[0-9]*" | grep -o "[0-9]*")
-    if [[ -z $line ]]; then
-        # try file:line: notation
-        line=$(echo $path | cut -d ':' -f 2 -s) 
-    fi
-    line=${line:-1}  # default to 1 if line is empty
+    line=${line:-1} # default to 1 if line is empty
 
     echo "Opening python file: $file" >>$debug
     echo "Python file line: $line" >>$debug
@@ -138,6 +159,7 @@ running_tmux() {
 
 win=false
 debug=/dev/null
+
 parse_args $@
 echo "Opening path/url: $path" >>$debug
 echo "option: win is: $win" >>$debug
@@ -151,18 +173,27 @@ if $win && $(which wslpath &>'/dev/null'); then
     path=$(convert_win_path $path)
 fi
 
-if is_html $path; then
-    open_url $path
-elif is_image $path; then
-    open_img $path
-elif is_pdf $path; then
-    zathura $path
-elif is_python $path; then
-    open_python $path
-elif is_cpp $path; then
-    open_cpp $path
+if is_html "$path"; then
+    open_url "$path"
+
+elif is_image "$path"; then
+    open_img "$path"
+
+elif is_pdf "$path"; then
+    zathura "$path"
+
+elif is_pytest_error "$path"; then
+    open_pytest_error "$path"
+
+elif is_python_error "$path"; then
+    open_pytest_error "$path"
+
+elif is_cpp "$path"; then
+    open_cpp "$path"
+
 elif running_tmux; then
     tmux display-message -d 2000 "No handler for $path."
+
 else
     echo "No handler for $path."
 fi
