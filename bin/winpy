@@ -17,11 +17,11 @@ Options:
   --venv <name>   Name of the venv to use
   -p,--path       Print the path to the python executable, do not execute
                   any command.
+  -h, --help      Show this message
   --debug         Enable debug output
-  --help          Show this message
 
 Commands:
-    <command>       Command to execute
+    <command>     Command to execute
 EOF
 }
 
@@ -45,7 +45,7 @@ parse_args() {
                 debug=/dev/stderr
                 shift
                 ;;
-            --help)
+            -h|--help)
                 usage
                 exit 0
                 ;;
