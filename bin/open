@@ -6,7 +6,9 @@ Usage: $0 <path>
 Opens a path in a preferred program.
 
 The option -w, --win can be used to convert all windows paths to wsl paths. 
-This is useful when you want to open a windows file in wsl.
+This is useful when you want to open a windows file in wsl. All arguments
+after the options will be interpreted as a path that should be opened, though 
+-- can also be used to indicate the end of the options.
 
 Options:
     -h, --help      Show this message and exit.
@@ -32,8 +34,13 @@ parse_args() {
                 date >$debug
                 shift
                 ;;
+            --)
+                path="$@"
+                break
+                ;;
             *)
-                path=$1
+                path="$@"
+                break
                 ;;
         esac
         shift
@@ -57,10 +64,15 @@ open_img() {
 }
 
 convert_win_path() {
-    wslpath -u $path || {
-        echo "Failed to convert windows path to wsl path: $path" >>$debug
-        exit 1
-    }
+    local winpath=${1:-$(cat)}
+    if $win && running_wsl; then
+        wslpath -u $winpath || {
+            echo "Failed to convert windows path to wsl path: $winpath" >>$debug
+            exit 1
+        }
+    else
+        echo $winpath
+    fi
 }
 
 is_url() {
@@ -98,39 +110,40 @@ is_python_error() {
 
 open_pytest_error() {
     local path=$1
-    local pane=0
-    local window=0
 
-    local file=$(echo $path | cut -d ':' -f 1)
+    local file=$(echo $path | cut -d ':' -f 1 | convert_win_path)
     local line=$(echo $path | cut -d ':' -f 2 -s)
-    line=${line:-1} # default to 1 if line is empty
 
-    echo "Opening python file: $file" >>$debug
-    echo "Python file line: $line" >>$debug
+    echo "Opening pytest error as file $file at line $line" >>$debug
 
-    if running_tmux; then
-        tvim -w $window -p $pane -l $line $file
-    else
-        nvim -c ":e $file|$line"
-    fi
+    open_python $file $line $TVIM_PANE $TVIM_WINDOW
 }
 
 open_python_error() {
     local path=$1
-    local pane=0
-    local window=0
 
-    local file=$(echo $path | grep -o "[a-zA-Z0-9\\\/\_]*\.py")
+    local file=$(echo $path | grep -o "[a-zA-Z0-9\\\/\_]*\.py" | convert_win_path)
     local line=$(echo $path | grep -o "line\s[0-9]*" | grep -o "[0-9]*")
-    line=${line:-1} # default to 1 if line is empty
 
-    echo "Opening python file: $file" >>$debug
-    echo "Python file line: $line" >>$debug
+    echo "Opening python error as file $file at line $line" >>$debug
 
-    if running_tmux; then
+    open_python $file $line $TVIM_PANE $TVIM_WINDOW
+}
+
+open_python() {
+    local file=$1
+    local line=$2
+    local pane=$3
+    local window=$4
+
+    echo "Opening python file: $file at line $line at window:pane $window:$pane" >>$debug
+
+    if running_tmux && [[ $pane ]] && [[ $window ]]; then
         tvim -w $window -p $pane -l $line $file
-    else
+    elif [[ $line ]]; then
         nvim -c ":e $file|$line"
+    else
+        nvim $file
     fi
 }
 
@@ -169,10 +182,6 @@ if is_url $path; then
     exit 0
 fi
 
-if $win && $(which wslpath &>'/dev/null'); then
-    path=$(convert_win_path $path)
-fi
-
 if is_html "$path"; then
     open_url "$path"
 
@@ -186,7 +195,10 @@ elif is_pytest_error "$path"; then
     open_pytest_error "$path"
 
 elif is_python_error "$path"; then
-    open_pytest_error "$path"
+    open_python_error "$path"
+
+elif is_python "$path"; then
+    open_python "$path"
 
 elif is_cpp "$path"; then
     open_cpp "$path"
