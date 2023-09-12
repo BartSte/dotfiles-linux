@@ -2,10 +2,7 @@ chromium-widevine
 fzf-tab-git
 gcalcli
 kmonad-bin
-oh-my-posh-bin
 rmtrash
 sway-launcher-desktop
-tmux-mem-cpu-load
-tulizu
 urlview
 zsh-theme-powerlevel10k-git
