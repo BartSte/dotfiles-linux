@@ -2,13 +2,14 @@
 
 usage() {
     cat <<EOF
-Usage: winpy [options] <command>
+Usage: wpy [options] <command>
 
-winpy checks for a python virtual environment in the WSLVENVS directory, where
+wpy checks for a python virtual environment in the WSLVENVS directory, where
 WSLVENVS is an environment variable. If it exists, it will be executed. By 
 default, the venv is selected that has the same name as the current working
 directory. It can also be set using the --venv option. Everything after the
-options is passed to the python executable.
+options is passed to the python executable. Alternatively, everything after --
+is also passed to the python executable.
 
 If you need the path to the python executable, you can pass the --path option.
 Now no command is executed, but the path to the python executable is printed.
@@ -49,6 +50,10 @@ parse_args() {
                 usage
                 exit 0
                 ;;
+            --)
+                 shift
+                 break
+                 ;;    
             *)
                 break
                 ;;
@@ -60,13 +65,10 @@ parse_args() {
 get_exe() {
     venv_dir=$1
     echo "Checking for venv directory $venv_dir" >$debug
-    if [[ -d "$venv_dir" ]]; then
-        echo "Using venv $venv_dir" >$debug
+    [[ -d "$venv_dir" ]] && {
+        echo "Using venv $venv_dir" >$debug;
         echo "$venv_dir/Scripts/python.exe"
-    else
-        echo "Using default python.exe" >$debug
-        echo "python.exe"
-    fi
+    }
 }
 
 venv_name=''
@@ -79,7 +81,7 @@ echo "path=$path" >$debug
 echo "command=$command" >$debug
 
 running_wsl || {
-    echo "Not running WSL" >&2
+    echo "Not running WSL" >$debug
     exit 1
 }
 
@@ -88,7 +90,9 @@ venv_dir="$WSLVENVS/$venv"
 
 exe=$(get_exe $venv_dir)
 
-if [[ $path == true ]]; then
+if [[ -z $exe ]]; then
+    echo "No venv found" >$debug
+elif [[ $path == true ]]; then
     echo "Printing path to executable" >$debug
     echo $exe
 else

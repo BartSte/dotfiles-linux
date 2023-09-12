@@ -16,6 +16,8 @@ export HEADPHONES='28:11:A5:A4:3A:CF'
 export PYTHONBREAKPOINT='ipdb.set_trace'
 export IPDB_CONTEXT_SIZE=10
 export TMUX_PLUGIN_DIR="$HOME/.tmux/plugins"
+export TVIM_WINDOW="0"
+export TVIM_PANE="0"
 
 export FZF_DEFAULT_COMMAND="fd --hidden --no-ignore-vcs --ignore-file $HOME/.ignore --type f"
 export FZF_ALT_C_COMMAND="fd --hidden --no-ignore-vcs --ignore-file $HOME/.ignore -t d"
