@@ -6,3 +6,4 @@ sway
 swaybg
 waybar
 wayland
+imv
