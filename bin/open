@@ -123,10 +123,10 @@ open_python() {
     local file=$1
     local line=$2
 
-    echo "Opening python file: $file at line $line at window:pane $window:$pane" >>$debug
+    echo "Opening python file: $file at line $line at window:pane $TVIM_WINDOW:$TVIM_PANE" >>$debug
 
     if running_tmux; then
-        tvim -l $line $file
+        tvim -d /tmp/tvim.log -l $line $file 
     else
         nvim -c ":e $file|$line"
     fi
