@@ -6,8 +6,10 @@ Usage: tvim [options] [file]
 
 Open file in Neovim in the tmux window of session at line. If the:
 - session is not specified, the current session will be used. 
-- window is not specified, the current window will be used.
-- pane is not specified, the current pane will be used.
+- window is not specified, TVIM_WINDOW will be used, if not set, the current
+  window will be used.
+- pane is not specified, TVIM_PANE will be used, if not set, the current pane
+  will be used.
 - line is not specified, the first line will be used.
 
 When no vim/neovim is running in the pane, a new neovim instance will be
@@ -144,8 +146,8 @@ assert_tmux
 line=1
 pane=$(tmux display-message -p '#P')
 debug=/dev/null
-window=$(tmux display-message -p '#I')
-session=$(tmux display-message -p '#S')
+window=$([[ -z $TVIM_WINDOW ]] && echo $TVIM_WINDOW || tmux display-message -p '#I')
+session=$([[ -z $TVIM_SESSION ]] && echo $TVIM_SESSION || tmux display-message -p '#S')
 
 parse_args $@
 
