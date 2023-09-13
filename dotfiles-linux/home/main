@@ -1,6 +1,26 @@
 #!/usr/bin/env bash
-#
-# TODO: put all config files that need to be symlinked to $HOME in this
-# directory
+# 
+# This script symlinks all the files in the directory where this script is
+# located to the home directory to the $HOME directory. Only the script itself
+# is not symlinked.
 
 echo "Linking config files to $HOME"
+
+# Get the directory where this script is located
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Get the name of this script
+THIS_FILE=$(basename $0)
+
+# Get the list of files in the directory where this script is located
+FILES=$(ls -A $DIR)
+
+# Loop through the files and symlink them to the home directory
+for FILE in $FILES; do
+    if [ "$FILE" != "$THIS_FILE" ]; then
+        echo "Linking $FILE"
+        ln -sf $DIR/$FILE $HOME/$FILE
+    fi
+done
+
+echo "Done"
