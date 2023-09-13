@@ -17,6 +17,5 @@ dropbox-cli autostart y
 install_python_packages $dir/pip.txt
 
 if ! running_wsl; then
-    sudo pacman -S --noconfirm - < $dir/pacman_X11.txt
     sudo pacman -S --noconfirm - < $dir/pacman_wayland.txt
 fi
