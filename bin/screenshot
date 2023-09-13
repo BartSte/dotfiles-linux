@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+
+usage() {
+    cat <<EOF
+Usage: screenshot [options] <directory>
+
+Take a screenshot and store it in the specified directory with a timestamped
+filename. If no directory is specified, the current directory is used. If the 
+directory does not exist, no screenshot is taken.
+
+If the option --path is specified, the screenshot is stored at the specified
+path. If the path does not exist, no screenshot is taken.
+    
+This program uses `grim` to take the screenshot.
+
+Options:
+    -h, --help      Show this message.
+    -p, --path      Specify the path to store the screenshot.
+
+EOF
+}
+
+parse_args() {
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -h|--help)
+                usage
+                exit 0
+                ;;
+            -p|--path)
+                shift
+                path=$1
+                ;;
+            *)
+                if [[ -z $dir ]]; then
+                    dir=$1
+                else
+                    echo "Unknown argument: $1"
+                    usage
+                    exit 1
+                fi
+                ;;
+        esac
+        shift
+    done
+}
+
+take_screenshot() {
+    if [[ -z $path ]]; then
+        grim "$dir/$(date +%Y-%m-%d_%H-%M-%S).png"
+    else
+        grim "$path"
+    fi
+}
+
+parse_args "$@"
+if [[ -z $dir ]]; then
+    dir="."
+fi
+if [[ ! -d $dir ]]; then
+    echo "Directory does not exist: $dir"
+    exit 1
+fi
+take_screenshot

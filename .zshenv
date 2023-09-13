@@ -18,6 +18,7 @@ export IPDB_CONTEXT_SIZE=10
 export TMUX_PLUGIN_DIR="$HOME/.tmux/plugins"
 export TVIM_WINDOW="0"
 export TVIM_PANE="0"
+export CLI_OPTIONS_REGEX='--[^ \t\=\[\]]*'
 
 export FZF_DEFAULT_COMMAND="fd --hidden --no-ignore-vcs --ignore-file $HOME/.ignore --type f"
 export FZF_ALT_C_COMMAND="fd --hidden --no-ignore-vcs --ignore-file $HOME/.ignore -t d"
