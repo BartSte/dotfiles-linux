@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+echo "Linking waybar configs"
+mkdir -p ~/.config/waybar/
+ln -sf ~/dotfiles-linux/waybar/style.css ~/.config/waybar/style.css
+ln -sf ~/dotfiles-linux/waybar/config.json ~/.config/waybar/config.json

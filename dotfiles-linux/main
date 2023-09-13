@@ -19,5 +19,9 @@ touch $HOME/.dotfiles_config.sh
 ~/dotfiles-linux/qutebrowser/main.sh
 ~/dotfiles-linux/wsl/main.sh
 ~/dotfiles-linux/khal/main
+~/dotfiles-linux/khard/main
+~/dotfiles-linux/systemd/main
+~/dotfiles-linux/vdirsyncer/main
+~/dotfiles-linux/sway/main
 
 echo "Done"
