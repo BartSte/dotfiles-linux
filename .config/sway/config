@@ -50,7 +50,8 @@ bindsym $mod+shift+e exit
 
 bindsym $mod+space exec $menu
 bindsym Mod1+F4 kill
-bindsym Print exec scrot -q 100 "$HOME/Screenshots/%Y-%m-%d-%s-screenshot.png"
+# FIX: replace scrot
+# bindsym Print exec scrot -q 100 "$HOME/Screenshots/%Y-%m-%d-%s-screenshot.png"
 
 mode "resize" {
         bindsym Left resize grow width 10 px or 10 ppt
