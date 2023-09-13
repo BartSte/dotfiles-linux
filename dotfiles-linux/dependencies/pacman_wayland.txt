@@ -1,9 +1,15 @@
+alsa-utils
+bluez-utils
 brightnessctl
 gammastep
+imv
+pavucontrol
+pulseaudio
+pulseaudio-alsa
+pulseaudio-bluetooth
 qt5-wayland
 qt6-wayland
 sway
-swaybg
 waybar
 wayland
-imv
+wl-clipboard

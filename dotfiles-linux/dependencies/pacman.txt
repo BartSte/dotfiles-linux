@@ -5,7 +5,6 @@ aspell-en
 aspell-nl
 base-devel
 bat
-ccls
 cmake
 exa
 fd
