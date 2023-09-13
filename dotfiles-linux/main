@@ -1,27 +1,10 @@
 #!/bin/env bash
 
 echo "Installing BartSte/dotfiles-linux repository"
-touch $HOME/.dotfiles_config.sh
 
-~/dotfiles-linux/bitwarden/main.sh
-~/dotfiles-linux/git/main.sh
-~/dotfiles-linux/dependencies/main.sh
-~/dotfiles-linux/wsl/main.sh
-~/dotfiles-linux/nvim/main
-~/dotfiles-linux/gpg/main.sh
-~/dotfiles-linux/isync/main.sh
-~/dotfiles-linux/mutt/main.sh
-~/dotfiles-linux/kmonad/main.sh
-~/dotfiles-linux/davmail/main.bash
-~/dotfiles-linux/zsh/main
-~/dotfiles-linux/tmux/main
-~/dotfiles-linux/dropbox/main.sh
-~/dotfiles-linux/qutebrowser/main.sh
-~/dotfiles-linux/wsl/main.sh
-~/dotfiles-linux/khal/main
-~/dotfiles-linux/khard/main
-~/dotfiles-linux/systemd/main
-~/dotfiles-linux/vdirsyncer/main
-~/dotfiles-linux/sway/main
+for script in ~/dotfiles-linux/*/main; do
+    echo "Running $script"
+    $script
+done
 
 echo "Done"
