@@ -50,7 +50,7 @@ bindsym $mod+shift+e exit
 
 bindsym $mod+space exec $menu
 bindsym Mod1+F4 kill
-bindsym Print exec store_screenshot "$HOME/Screenshots"
+bindsym Print exec screenshot "$HOME/Screenshots"
 
 mode "resize" {
         bindsym Left resize grow width 10 px or 10 ppt

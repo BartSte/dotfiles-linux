@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-
-get_display_manager() {
-    loginctl show-session $(loginctl | grep $(whoami) | awk '{print $1}') -p Type | sed 's/Type=//'
-}
-
-[[ $(get_display_manager) == "wayland" ]]

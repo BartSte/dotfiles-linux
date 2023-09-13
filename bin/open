@@ -59,13 +59,8 @@ open_url() {
 }
 
 open_img() {
-    if running_wayland; then
-        echo "Opening image $1 with imv" >>$debug
-        imv $1 &>>$debug &
-    else
-        echo "Opening image $1 with feh" >>$debug
-        feh $1 &>>$debug &
-    fi
+    echo "Opening image $1 with imv" >>$debug
+    imv $1 &>>$debug &
 }
 
 convert_win_path() {
