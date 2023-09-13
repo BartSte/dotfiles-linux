@@ -1,4 +1,4 @@
-# vim:filetype=i3config 
+# vim:filetype=swayconfig 
 font pango:Jetbrains Mono 10
 
 set $mod Mod4
@@ -70,6 +70,10 @@ client.focused_inactive #282828 #282828 #ebdbb2 #282828 #282828
 client.unfocused        #282828 #282828 #ebdbb2 #282828 #282828
 client.urgent           #282828 #282828 #fb4934 #282828 #282828
 client.placeholder      #282828 #282828 #ebdbb2 #282828 #282828
+
+
+# black background
+output * bg #000000 solid_color
 
 bindsym XF86AudioRaiseVolume exec "amixer -qD pulse sset Master 5%+"
 bindsym XF86AudioLowerVolume exec "amixer -qD pulse sset Master 5%-"

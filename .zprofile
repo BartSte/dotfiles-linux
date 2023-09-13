@@ -1,11 +1,10 @@
 [ -f ~/.zshenv ] && source ~/.zshenv
 [ -f ~/.zshrc ] && source ~/.zshrc
 
-if ! running_wsl && [[ -z $DISPLAY ]]; then 
+if ! running_wsl; then 
     if [[ $(tty) = /dev/tty1 ]]; then
-        exec sway
+        exec sway -c ~/dotfiles-linux/sway/wayland
     elif [[ $(tty) = /dev/tty2 ]]; then
-        #TODO: remove X11 and activate xwayland for sway instead on tty2
-        exec startx
+        exec sway -c ~/dotfiles-linux/sway/xwayland
     fi
 fi
