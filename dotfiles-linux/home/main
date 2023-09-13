@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+#
+# TODO: put all config files that need to be symlinked to $HOME in this
+# directory
+
+echo "Linking config files to $HOME"

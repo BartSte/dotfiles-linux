@@ -2,6 +2,12 @@
 
 echo "Installing BartSte/dotfiles-linux repository"
 
+# ~/dotfiles-linux/khal/main
+# ~/dotfiles-linux/khard/main
+# ~/dotfiles-linux/systemd/main
+# ~/dotfiles-linux/vdirsyncer/main
+# ~/dotfiles-linux/gpg/main -> only run last line
+
 for script in ~/dotfiles-linux/*/main; do
     echo "Running $script"
     $script

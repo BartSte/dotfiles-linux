@@ -7,3 +7,6 @@ gpg --batch --gen-key ~/dotfiles-linux/gpg/gen-key-script
 
 unset MS_EMAIL
 unset MS_REALNAME
+
+mkdir -p ~/.gnupg/
+ln -sf ~/dotfiles-linux/gpg/gpg-agent.conf ~/.gnupg/gpg-agent.conf
