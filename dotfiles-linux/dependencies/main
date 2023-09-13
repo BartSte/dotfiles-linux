@@ -12,7 +12,6 @@ install_yay
 sudo pacman -S --noconfirm - < $dir/pacman.txt
 yay -S --noconfirm - < $dir/aur.txt
 install_node_js
-link_scripts_to_bin
 dropbox-cli autostart y
 install_python_packages $dir/pip.txt
 
