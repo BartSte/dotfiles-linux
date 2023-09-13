@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+echo "Linking user systemd services"
+mkdir -p ~/.config/systemd/user
+ln -sf ~/dotfiles-linux/systemd/user/dropbox.service ~/.config/systemd/user/dropbox.service
+systemctl --user enable dropbox.service
