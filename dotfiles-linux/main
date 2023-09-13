@@ -18,5 +18,6 @@ touch $HOME/.dotfiles_config.sh
 ~/dotfiles-linux/dropbox/main.sh
 ~/dotfiles-linux/qutebrowser/main.sh
 ~/dotfiles-linux/wsl/main.sh
+~/dotfiles-linux/khal/main
 
 echo "Done"

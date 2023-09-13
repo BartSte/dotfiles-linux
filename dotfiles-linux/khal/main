@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+echo "Linking khal config"
+mkdir -p ~/.config/khal
+ln -sf ~/dotfiles-linux/khal/config ~/.config/khal/config
