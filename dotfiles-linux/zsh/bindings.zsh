@@ -1,6 +1,5 @@
 bindkey -v
 
-zle -N _fzf_git_branches
 zle -N fzf-cd-widget-home
 zle -N fzf-cd-widget-no-ignore
 zle -N fzf-file-widget-home
@@ -9,7 +8,6 @@ zle -N fzf-help-widget
 zle -N fzfrbw-widget
 zle -N man-widget
 
-bindkey -M vicmd "\eB" _fzf_git_branches
 bindkey -M vicmd "\eC" fzf-cd-widget-no-ignore
 bindkey -M vicmd "\eH" man-widget
 bindkey -M vicmd "\eO" fzf-file-widget-no-ignore
@@ -21,7 +19,6 @@ bindkey -M vicmd "^B" fzfrbw-widget
 bindkey -M vicmd "^R" fzf-history-widget
 bindkey -M vicmd "^T" vi-cmd-mode
 
-bindkey -M viins "\eB" _fzf_git_branches
 bindkey -M viins "\eC" fzf-cd-widget-no-ignore
 bindkey -M viins "\eH" man-widget
 bindkey -M viins "\eO" fzf-file-widget-no-ignore
