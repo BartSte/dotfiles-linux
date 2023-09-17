@@ -43,7 +43,6 @@ dotc() {
     base commit --untracked-files=no -a -m "$message" | shorten_stdout
 
     echo $'\nLinux'
-    lin add ~/bin
     rm $(fd nvim.shada ~/dotfiles-linux --type f) &> /dev/null
     lin add ~/dotfiles-linux
     lins
