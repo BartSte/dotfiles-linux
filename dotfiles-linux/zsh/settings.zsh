@@ -1,7 +1,5 @@
-HISTSIZE=1000
-SAVEHIST=1000
-HISTFILE=~/.histfile
-VI_MODE_SET_CURSOR=true
-
-setopt autocd extendedglob nomatch notify
+setopt autocd extendedglob nomatch notify 
 unsetopt beep
+
+# History
+setopt INC_APPEND_HISTORY HIST_IGNORE_ALL_DUPS

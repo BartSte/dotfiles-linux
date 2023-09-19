@@ -18,6 +18,11 @@ export IPDB_CONTEXT_SIZE=10
 export TMUX_PLUGIN_DIR="$HOME/.tmux/plugins"
 export TVIM_WINDOW="0"
 export TVIM_PANE="0"
+export VI_MODE_SET_CURSOR=true
+
+export HISTFILE=~/.histfile
+export HISTFILESIZE=1000000000
+export HISTSIZE=1000000000
 
 export FZF_DEFAULT_COMMAND="fd --hidden --no-ignore-vcs --ignore-file $HOME/.ignore --type f"
 export FZF_ALT_C_COMMAND="fd --hidden --no-ignore-vcs --ignore-file $HOME/.ignore -t d"
