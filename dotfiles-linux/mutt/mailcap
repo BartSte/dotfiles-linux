@@ -1,7 +1,7 @@
 application/gpg; gpg -d %s; copiousoutput
 application/ics; ~/dotfiles-linux/mutt/mutt-viewical; copiousoutput;
 application/msword; antiword -w 96 %s; copiousoutput
-application/pdf; pdftotext -layout %s -; copiousoutput
+application/pdf; open %s; copiousoutput
 application/vnd.oasis.opendocument.presentation-template; odt2txt --width=96 %s; copiousoutput
 application/vnd.oasis.opendocument.presentation; odt2txt --width=96 %s; copiousoutput
 application/vnd.oasis.opendocument.text-master; odt2txt --width=96 %s; copiousoutput
@@ -22,11 +22,11 @@ application/x-bzip-compressed-tar; tar --list %s; copiousoutput
 application/x-bzip1-compressed-tar; tar --list %s; copiousoutput
 application/x-bzip1; tar --list %s; copiousoutput
 application/x-bzip; tar --list %s; copiousoutput
-application/x-bzpdf; pdftotext -layout %s -; copiousoutput
-application/x-gzpdf; pdftotext -layout %s -; copiousoutput
+application/x-bzpdf; open %s; copiousoutput
+application/x-gzpdf; open %s; copiousoutput
 application/x-lzma-compressed-tar; xz -l %s; copiousoutput
 application/x-lzma; xz -l %s; copiousoutput
-application/x-pdf; pdftotext -layout %s -; copiousoutput
+application/x-pdf; open %s; copiousoutput
 application/x-tar; tar --list %s; copiousoutput
 application/x-tarz; tar --list %s; copiousoutput
 application/x-xz-compressed-tar; xz -l %s; copiousoutput
@@ -34,9 +34,9 @@ application/x-xz; xz -l %s; copiousoutput
 application/x-zip-compressed; unzip -l %s; copiousoutput
 application/x-zip; unzip -l %s; copiousoutput
 application/zip; unzip -l %s; copiousoutput
-image/*; qutebrowser %s
+image/*; open %s
 text/csv; less %s; copiousoutput
 text/html; lynx -assume_charset=%{charset} -display_charset=utf-8 -collapse_br_tags -dump %s; nametemplate=%s.html; copiousoutput
 text/calendar; ~/dotfiles-linux/mutt/render-calendar-attachment.py %s; copiousoutput;
-text/pdf; pdftotext -layout %s -; copiousoutput
+text/pdf; open %s; copiousoutput
 text/tab-separated-values; less %s; copiousoutput
