@@ -1,8 +1,0 @@
-# vim: ft=conf
-
-# regular expression to use to match URLs
-# ((default regex)|(pytest error location))
-REGEXP (((((http|https|ftp|gopher)|mailto):(//)?[^ <>"\t]*|(www|ftp)[0-9]?\.[-a-z0-9.]+)[^ .,;\t\n\r<">\):]?[^, <>"\t]*[^ .,;\t\n\r<">\):])|(^[a-zA-Z0-9\/\_\/]*\.py:[0-9]+:(.*error)))
-
-# command to invoke for selected URL
-COMMAND linkhandler %s
