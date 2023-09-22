@@ -13,7 +13,6 @@ running_wsl && . $dir_zsh/wsl.zsh
 . $dir_zsh/completion.zsh
 . $dir_zsh/vi-mode.zsh
 
-. $dir_plugins/fzf-help/fzf-help.zsh # after fzf
 . $dir_plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
 . $dir_plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 . $dir_zsh/bindings.zsh

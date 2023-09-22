@@ -1,4 +1,5 @@
 source /usr/share/fzf/key-bindings.zsh
+source /usr/share/fzf-help/fzf-help.zsh
 
 save_source() {
     [ -f "$1" ] && source "$1"

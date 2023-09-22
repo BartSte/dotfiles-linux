@@ -19,6 +19,7 @@ export TMUX_PLUGIN_DIR="$HOME/.tmux/plugins"
 export TVIM_WINDOW="0"
 export TVIM_PANE="0"
 export VI_MODE_SET_CURSOR=true
+export FZF_HELP_SYNTAX='help'
 
 export HISTFILE=~/.histfile
 export HISTFILESIZE=1000000000
