@@ -1,4 +1,4 @@
-function winenv() {
+winenv() {
     cwd=$pwd
     cd /mnt/c
     /mnt/c/Windows/System32/cmd.exe /C "echo %$*%" | tr -d '\r'

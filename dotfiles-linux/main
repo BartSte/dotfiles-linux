@@ -2,7 +2,6 @@
 
 echo "Installing BartSte/dotfiles-linux repository"
 
-source ~/.zshenv
 source ~/.dotfiles_config.sh
 
 # Install dependencies first
