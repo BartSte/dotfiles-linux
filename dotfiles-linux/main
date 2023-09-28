@@ -2,15 +2,19 @@
 
 echo "Installing BartSte/dotfiles-linux repository"
 
-# ~/dotfiles-linux/khal/main
-# ~/dotfiles-linux/khard/main
-# ~/dotfiles-linux/systemd/main
-# ~/dotfiles-linux/vdirsyncer/main
-# ~/dotfiles-linux/gpg/main -> only run last line
+source ~/.zshenv
+source ~/.dotfiles_config.sh
+
+# Install dependencies first
+~/dotfiles-linux/dependencies/main
 
 for script in ~/dotfiles-linux/*/main; do
-    echo "Running $script"
-    $script
+    if [[ $script == *"dependencies"* ]]; then
+        continue
+    else 
+        echo "Running $script"
+        $script
+    fi
 done
 
 echo "Done"

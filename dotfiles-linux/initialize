@@ -17,7 +17,7 @@ lin="$github/dotfiles-linux.git"
 lin_dir="$HOME/dotfiles-linux.git"
 
 echo "# Installing git"
-sudo pacman -S git exa inetutils
+sudo pacman -S git exa inetutils --noconfirm
 
 echo "# Clone BartSte/dotfiles.git as a bare repository"
 clone $base $base_dir
@@ -30,10 +30,14 @@ checkout $lin_dir
 echo "Setup the environment variables"
 source ~/.zshenv
 
+touch $HOME/.dotfiles_config.sh
+echo "export MICROSOFT_ACCOUNT=" >> $HOME/.dotfiles_config.sh
+
 cat <<EOF
 Please complete the file '$HOME/.dotfiles_config.sh' by setting the one of the 
-following two microsft accounts: 'MicrosoftPersonal' or 'MicrosoftWork'. One
-of these accounts is used to configure the mail accounts for neomutt and
+following two microsft accounts: 
+ - export MICROSOFT_ACCOUNT=MicrosoftPersonal 
+ - export MICROSOFT_ACCOUNT=MicrosoftWork
+One of these accounts is used to configure the mail accounts for neomutt and
 isync, using bitwarden to retrieve the passwords.
 EOF
-touch $HOME/.dotfiles_config.sh
