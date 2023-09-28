@@ -10,7 +10,6 @@ exa
 fd
 fzf
 inetutils
-java-openjfx
 khard
 lldb
 make
