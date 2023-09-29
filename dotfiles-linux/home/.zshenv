@@ -4,7 +4,6 @@ export PATH=$OLD_PATH:$HOME/dotfiles-linux/bin:$HOME/.local/bin:$HOME/.cargo/bin
 export BROWSER='qutebrowser'
 export WSLBROWSER='/mnt/c/Program Files/qutebrowser/qutebrowser.exe'
 export EDITOR='nvim'
-export MYPYPI=$([[ -f dotfiles-linux/zsh/make_mypypi ]] && dotfiles-linux/zsh/make_mypypi)
 export GPG_TTY=$(tty)
 export EARBUDS='30:53:C1:B8:CE:F6'
 export ESCDELAY=0
