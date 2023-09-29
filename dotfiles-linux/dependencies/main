@@ -13,6 +13,8 @@ yay -S --noconfirm - < $dir/aur.txt
 install_node_js
 dropbox-cli autostart y
 install_python_packages $dir/pip.txt
+install-tmux-session
+install_fzf_help
 
 if ! running_wsl; then
     sudo pacman -S --noconfirm - < $dir/pacman_wayland.txt

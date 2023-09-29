@@ -1,14 +1,3 @@
 #!/bin/bash
 
-# Clone the repository at https://github.com/BartSte/fzf-help in a temporary 
-# directory and run the install script. After installation, remove the temporary
-# directory.
-install_fzf_help(){
-    local tmp_dir=$(mktemp -d)
-    git clone https://github.com/BartSte/fzf-help.git $tmp_dir
-    sudo $tmp_dir/install
-    rm -rf $tmp_dir
-}
-
 chsh -s /usr/bin/zsh
-install_fzf_help
