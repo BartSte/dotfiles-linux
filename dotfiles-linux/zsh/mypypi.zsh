@@ -9,6 +9,7 @@
 # This is done to avoid errors when installing packages from PyPI.
 make_index_url() {
     local pypirc=$1
+    [[ -z $pypirc ]] && echo ""
     pypi_username=$(grep "^username = " $pypirc | sed "s/^username = //")
     pypi_token=$(grep "^password = " $pypirc | sed "s/^password = //")
     MYPYPI="https://$pypi_username:$pypi_token@gitlab.com/api/v4/groups/2265086/-/packages/pypi/simple/"
