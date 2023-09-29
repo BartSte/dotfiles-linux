@@ -8,8 +8,9 @@
 # I pypi_username or pypi_token is empty, then the variable MYPYPI is not set.
 # This is done to avoid errors when installing packages from PyPI.
 make_index_url() {
-    pypi_username=$(grep "^username = " $1 | sed "s/^username = //")
-    pypi_token=$(grep "^password = " $1 | sed "s/^password = //")
+    local pypirc=$1
+    pypi_username=$(grep "^username = " $pypirc | sed "s/^username = //")
+    pypi_token=$(grep "^password = " $pypirc | sed "s/^password = //")
     MYPYPI="https://$pypi_username:$pypi_token@gitlab.com/api/v4/groups/2265086/-/packages/pypi/simple/"
     [[ -z $pypi_username || -z $pypi_token ]] || echo $MYPYPI
 }
