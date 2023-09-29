@@ -105,7 +105,8 @@ is_pytest_error() {
 }
 
 is_python_error() {
-    [[ $1 =~ \"[a-zA-Z0-9\\\/\_]*\.py\",\sline\s[0-9]+ ]]
+    # TODO: this one does not recognize the pyton_errors ...
+    [[ $1 =~ "\"[a-zA-Z0-9\\\/\_\.]*\.py\",\sline\s[0-9]+" ]]
 }
 
 open_pytest_error() {
@@ -135,7 +136,7 @@ open_python() {
 open_python_error() {
     local path=$1
 
-    local file=$(echo $path | grep -o "[a-zA-Z0-9\\\/\_]*\.py" | convert_win_path)
+    local file=$(echo $path | grep -o "[a-zA-Z0-9\\\/\_\.]*\.py" | convert_win_path)
     local line=$(echo $path | grep -o "line\s[0-9]*" | grep -o "[0-9]*")
 
     echo "Opening python error as file $file at line $line" >>$debug
