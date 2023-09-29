@@ -1,6 +1,3 @@
-Pygments
-html2text
-ipdb
 ipython
 khalorg
 gpg
@@ -8,6 +5,4 @@ khal
 khalorg
 khard
 oauth2client
-pynvim
-pytest
 vdirsyncer

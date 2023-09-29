@@ -1,8 +1,9 @@
 chromium-widevine
+davmail
+dropbox
 fzf-tab-git
 gcalcli
 kmonad-bin
 rmtrash
 sway-launcher-desktop
-urlview
 zsh-theme-powerlevel10k-git

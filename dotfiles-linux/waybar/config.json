@@ -1,7 +1,7 @@
 {
     "layer": "top",
     "position": "bottom",
-    "height": 30, 
+    "height": 30,
     "spacing": 0,
     "modules-left": [
         "cpu",
@@ -71,7 +71,16 @@
         "interval": 3,
         "format": "{usage}% {icon}",
         "tooltip": false,
-        "format-icons": ["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"]
+        "format-icons": [
+            "▁",
+            "▂",
+            "▃",
+            "▄",
+            "▅",
+            "▆",
+            "▇",
+            "█"
+        ]
     },
     "memory": {
         "interval": 3,

@@ -10,8 +10,10 @@ exa
 fd
 fzf
 inetutils
+isync
 khard
 lldb
+lynx
 make
 man-db
 neomutt
@@ -27,10 +29,16 @@ poppler
 powerline-fonts
 python
 python-adblock
+python-ipdb
+python-pygments
+python-html2text
+python-pynvim
+python-pytest
 python-gpgme
 python-icalendar
 python-markdown
 python-pip
+python-pipx
 python-pytz
 python-tzlocal
 python-vobject
@@ -50,6 +58,7 @@ unzip
 urlscan
 vdirsyncer
 wget
+xorg-xwayland
 zathura
 zathura-pdf-mupdf
 zsh
