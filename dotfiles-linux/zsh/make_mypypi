@@ -10,7 +10,7 @@
 # I pypi_username or pypi_token is empty, then the variable MYPYPI is not set.
 # This is done to avoid errors when installing packages from PyPI.
 pypirc="$HOME/.pypirc"
-[[ -z $pypirc ]] && echo ""
+[[ -f $pypirc ]] || exit 1
 
 pypi_username=$(grep "^username = " $pypirc | sed "s/^username = //")
 pypi_token=$(grep "^password = " $pypirc | sed "s/^password = //")
