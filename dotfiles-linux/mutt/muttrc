@@ -4,8 +4,8 @@ source ~/dotfiles-linux/mutt/binds.muttrc
 
 # Style
 source ~/.config/neomutt/gruvbox/colors-gruvbox-shuber.muttrc 
-source ~/.config/neomutt/gruvbox/powerline/colors/gruvbox-powerline.neomuttrc
-source ~/.config/neomutt/gruvbox/powerline/powerline.neomuttrc
+source ~/.config/neomutt/powerline/colors/gruvbox-powerline.neomuttrc
+source ~/.config/neomutt/powerline/powerline.neomuttrc
 
 # Variables
 set my_email=`rbw_get username $MICROSOFT_ACCOUNT`
