@@ -41,16 +41,19 @@ execute_first=(
     "home"
 )
 
+# Execute the modules in the `execute_first` array.
 for module in "${execute_first[@]}"; do
     echo "Executing module: $module"
-    # $dir/$module/main
+    $dir/$module/main
 done
 
 # Execute all other modules. Do not execute the modules in the `execute_first`.
 for module in $(ls $dir); do
-    if [[ ! " ${execute_first[@]} " =~ " ${module} " ]]; then
+    if [[ " ${execute_first[@]} " =~ " ${module} " ]]; then
+        echo "Skipping module: $module. It was already executed."
+    elif [[ -f "$dir/$module/main" ]]; then
         echo "Executing module: $module"
-        # $dir/$module/main
+        $dir/$module/main
     fi
 done
     
