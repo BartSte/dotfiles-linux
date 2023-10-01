@@ -1,19 +1,4 @@
 #!/bin/bash
 
-usage() {
-    cat <<EOF
-After installing dropbox, you need to authenticate it with your account. At the
-moment of writing, the only way was to do this through a tray icon. Waybar did 
-not work from me so I did the following:
-- Run xwayland
-- Intall the program `trayer`
-- Run trayer.
-- Run dropbox.
-- Dropbox will apear in the tray icon.
-- Press `sign in` and follow the instructions.
-
-EOF
-}  
-
 # On wsl dropbox on windows is used instead
 running_wsl || systemctl --user enable dropbox && systemctl --user start dropbox
