@@ -19,9 +19,8 @@ export VI_MODE_SET_CURSOR=true
 export FZF_HELP_SYNTAX='help'
 export CLI_OPTIONS_CMD='ag -o --numbers -- $RE'
 
-export HISTFILE=~/.histfile
-export HISTFILESIZE=1000000000
-export HISTSIZE=1000000000
+export HISTFILE=$HOME/.histfile
+export SAVEHIST=100000
 
 export FZF_DEFAULT_COMMAND="fd --hidden --no-ignore-vcs --ignore-file $HOME/.ignore --type f"
 export FZF_ALT_C_COMMAND="fd --hidden --no-ignore-vcs --ignore-file $HOME/.ignore -t d"
