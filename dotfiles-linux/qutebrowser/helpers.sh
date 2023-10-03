@@ -8,13 +8,8 @@ link_config() {
 
 # The bookmarks are private and shared across Dropbox.
 link_bookmarks() {
-    if running_wsl; then
-        target_urls="$WH/Dropbox/Config/urls"
-        target_quickmarks="$WH/Dropbox/Config/quickmarks"
-    else
-        target_urls="$HOME/Dropbox/Config/urls"
-        target_quickmarks="$HOME/Dropbox/Config/quickmarks"
-    fi
+    target_urls="$HOME/dotfiles/qutebrowser/urls"
+    target_quickmarks="$HOME/dotfiles/qutebrowser/quickmarks"
 
     link_urls="$HOME/.config/qutebrowser/bookmarks/urls"
     link_quickmarks="$HOME/.config/qutebrowser/quickmarks"
