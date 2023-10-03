@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+. ~/dotfiles-linux/zsh/git.zsh
+
+usage() {
+    cat <<EOF
+Usage: $0 [options]
+
+This function will convert the output of \`base crypt export-key\` to a base64
+string. This sting can be stored in the password manager. In the \`main\` script
+this key is decoced and piped to \`base crypt unlock\`.
+
+Options:
+    -h, --help      Show this help message and exit
+EOF
+}
+
+key_as_base64() {
+    base crypt export-key -- - | base64 -w 999
+}
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -h | --help)
+            usage
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1"
+            usage
+            exit 1
+            ;;
+    esac
+done
+
+key_as_base64
