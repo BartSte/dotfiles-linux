@@ -3,7 +3,17 @@
 export MS_EMAIL=$(rbw_get username $MICROSOFT_ACCOUNT)
 export MS_REALNAME=$(rbw_get name $MICROSOFT_ACCOUNT)
 
-gpg --batch --gen-key ~/dotfiles-linux/gpg/gen-key-script
+script="Key-Type: 1
+Key-Length: 2048
+Subkey-Type: 1
+Subkey-Length: 2048
+Name-Real: $MS_REALNAME
+Name-Email: $MS_EMAIL
+Expire-Date: 0"
+
+echo "$script" > /tmp/gen-key-script
+gpg --batch --gen-key /tmp/gen-key-script
+rm /tmp/gen-key-script
 
 unset MS_EMAIL
 unset MS_REALNAME
