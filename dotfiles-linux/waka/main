@@ -4,13 +4,7 @@
 # Link wakatime config
 #######################################
 link_config() {
-
-    if running_wsl; then
-        source="$WH/Dropbox/Config/.wakatime.cfg"
-    else
-        source="$HOME/Dropbox/Config/.wakatime.cfg"
-    fi
-
+    source="$HOME/dotfiles/waka/.wakatime.cfg"
     echo "Wakatime: link '$source' to '$HOME/.wakatime.cfg'"
     ln -sf "$source" "$HOME/.wakatime.cfg" || echo "Wakatime: linking failed"
     echo "Done"
