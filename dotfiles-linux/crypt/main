@@ -2,8 +2,10 @@
 
 . ~/dotfiles-linux/zsh/git.zsh
 
-unlock_base() {
+echo "Unlocking git crypt on repo dotfiles"
+
+unlock() {
     rbw get base | base64 -d | base crypt unlock -
 }
 
-unlock_base
+unlock && echo "git crypt unlocked" || echo "git crypt unlock failed"

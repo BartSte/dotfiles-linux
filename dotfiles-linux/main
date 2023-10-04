@@ -38,6 +38,7 @@ execute_first=(
     "dependencies"
     "systemd"
     "bitwarden"
+    "crypt"
     "home"
 )
 
