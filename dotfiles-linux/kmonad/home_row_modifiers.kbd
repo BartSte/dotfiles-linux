@@ -43,9 +43,6 @@
     fk_g (tap-hold-next-release 200 g (layer-toggle fkeys))
     nav_tab (tap-hold-next-release 200 tab (layer-toggle navigation_right))
     nav_ret (tap-hold-next-release 200 return (layer-toggle navigation_left))
-
-    ;; TODO: Add macro layers. End goal is to make kmonad the same as my
-    ;; Atreus.
 )
 
 (deflayer homerowmods
