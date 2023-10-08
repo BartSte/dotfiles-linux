@@ -18,6 +18,8 @@ enable_service() {
     popd
     sudo systemctl start kmonad.service
     sudo systemctl enable kmonad.service
+
+    sudo systemctl daemon-reload
 }
 
 if ! running_wsl; then
