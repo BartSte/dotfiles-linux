@@ -11,6 +11,8 @@ Options:
     -e, --end       End time in seconds.
     -p, --pts       The pts of the frames.
     -l, --loop      Loop the gif. Default is 0 (no loop).
+    --size          The size of the gif, in the format 320x480. Default is the
+                    size of the source.
     -d, --debug     Debug mode.
     -h, --help      Show this message
 
@@ -49,6 +51,12 @@ while [[ $# -gt 0 ]]; do
         -p | --pts)
             pts="$2"
             args_out="$args_out -filter:v \"setpts=$pts*PTS\""
+            shift
+            shift
+            ;;
+        --size)
+            size="$2"
+            args_out="$args_out -s $size"
             shift
             shift
             ;;
