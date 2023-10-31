@@ -1,6 +1,6 @@
 [ $OLD_PATH ] || export OLD_PATH=$PATH
 
-export PATH=$OLD_PATH:$HOME/dotfiles-linux/bin:$HOME/.local/bin:$HOME/.cargo/bin:$HOME/go/bin
+export PATH=$OLD_PATH:$HOME/dotfiles-linux/bin:$HOME/.local/bin:$HOME/.cargo/bin:$HOME/go/bin:/usr/bin/vendor_perl
 export BROWSER='qutebrowser'
 export WSLBROWSER='/mnt/c/Program Files/qutebrowser/qutebrowser.exe'
 export EDITOR='nvim'
