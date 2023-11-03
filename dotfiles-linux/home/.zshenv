@@ -20,6 +20,7 @@ export FZF_HELP_SYNTAX='help'
 export CLI_OPTIONS_CMD='ag -o --numbers -- $RE'
 
 export HISTFILE=$HOME/.histfile
+export HISTSIZE=1000000000
 export SAVEHIST=100000
 
 export FZF_DEFAULT_COMMAND="fd --hidden --no-ignore-vcs --ignore-file $HOME/.ignore --type f"
