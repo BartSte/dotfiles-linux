@@ -18,6 +18,7 @@ export TVIM_PANE="0"
 export VI_MODE_SET_CURSOR=true
 export FZF_HELP_SYNTAX='help'
 export CLI_OPTIONS_CMD='ag -o --numbers -- $RE'
+export BATS_LIB_PATH=/usr/lib:/usr/lib/bats
 
 export HISTFILE=$HOME/.histfile
 export HISTSIZE=1000000000
