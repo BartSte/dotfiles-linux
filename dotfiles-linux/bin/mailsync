@@ -39,10 +39,10 @@ davmailconfig="$1"
 main(){
     is_logged_in || { echo "$USER not logged in; sync will not run."; exit ;}
     has_internet || { echo "No internet connection detected."; exit ;}    
-    # start_davmail
+    start_davmail
     start_mbsyncer
     start_notmuch
-    # kill_davmail
+    kill_davmail
     echo 'Email sync done.'
 }
 
