@@ -1,33 +1,9 @@
 # mutt_oauth.py README by Alexander Perlis, 2020-07-15
 
-Comments by BartSte, 2023-11-24
+## Comments by BartSte
 
-- I have a personal and a work email account with the following setup:
-
-  - Personal: Microsoft account
-    - Recieve: IMAP -> sync email with `mailsync` command.
-    - Send: SMTP -> Using an app password of Microsoft.
-  - Work: Microsoft account
-    - Recieve: IMAP -> sync email with `mailsync` command.
-    - Send: SMTP -> Using the `mutt_oauth2.py` script.
-
-  Here the `mailsync` command is a combination of `mbsync`, `notmuch` and
-  `davmail`. As you can see, I only use the `mutt_oauth2.py` script for
-  sending emails, as work does not support app passwords anymore.
-
-- I got the script working by registering an application at Azure as described
-  below. I used the client_id from the `overview` page.
-- I added the client_id and my email address to my `rbw` (bitwarden) password
-  manager. Next, I called the password manager from the `mutt_oauth2.py` file.
-- Finally, I created 1 bash script that does the initialization for you:
-  `init_mutt_oauth2.bash`. This script can be called once to initialize the
-  `mutt_oauth2.py` script.
-- The `mutt_oauth2.py` was added to the `imap_oauth_refresh_command` and the
-  `smtp_oauth_refresh_command` in my `.muttrc` file.
-
-TODO: I gues I do not need the `mutt_oauth2.py` for
-`impap_oauth_refresh_command` anymore. I can use the `mailsync` command for
-that?
+Use this piece of text as a reference on how to `mutt_oauth.py` script can be
+used in mutt.
 
 ## Background on plain passwords, app passwords, OAuth2 bearer tokens
 

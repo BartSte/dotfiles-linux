@@ -14,15 +14,15 @@ set my_password=`rbw_get MuttPassword $MICROSOFT_ACCOUNT`
 # General
 set allow_ansi  # allow ansi escape codes (e.g. colors)
 set beep=no  # don't beep for errors
-set confirmappend=no
+set confirmappend=no # don't ask to append to mbox
 set count_alternatives=yes  # recurse into text/multipart when looking for attachement types
 set editor="nvim"
-set fast_reply
+set fast_reply # When set, the initial prompt for recipients and subject are skipped when replying to messages, and the initial prompt for subject is skipped when forwarding messages.
 set forward_format = "FW: %s" # format of subject when forwarding
 set forward_quote  # quote forwarded message
 set date_format = "%H:%M %d-%b-%y"
 set index_format=" %?M?   ↳&%4C?   %Z      %D     %-15.15n    %s"
-set mail_check=120
+set mail_check=120  # check for new mail every 5 minutes
 set mailcap_path = "~/dotfiles-linux/mutt/mailcap"
 set markers=no  # don't put '+' at the beginning of wrapped lines
 set menu_scroll  # scroll in menus
@@ -35,28 +35,27 @@ set reverse_alias=yes
 set reverse_name  # reply as whomever it was to
 set reverse_realname=yes  # use any real name provided when replying
 set signature="`rbw_get notes $MICROSOFT_ACCOUNT > /tmp/mutt_signature | echo '/tmp/mutt_signature'`"
-set sleep_time = 0
+set sleep_time = 0 # Specifies time, in seconds, to pause while displaying certain informational messages, while moving from folder to folder and after expunging messages from the current folder. The default is to pause one second, so a value of zero for this option suppresses the pause.
 set smart_wrap="no"
 set sort=threads
 set sort_aux=reverse-last-date-received
 set sort_browser=date
 set timeout=15
 set tmpdir="/tmp"
-set wait_key = no
+set wait_key = no # Controls whether Mutt will ask you to press a key after shell- escape, pipe-message, pipe-entry, print-message, and print-entry commands.
 set wrap=0  # email view width
 unset collapse_unread
 unset mark_old
 
 # IMAP config
-set folder="~/.local/share/mail"
+set folder="~/.local/share/mail" # Since we download all our mail using mbsync, the folder points to a Maildir directory.
 set header_cache="~/.cache/neomutt/header_cache"
 set imap_authenticators=`rbw_get MuttImapAuth $MICROSOFT_ACCOUNT`
-set imap_keepalive=300
 set imap_oauth_refresh_command="python3 ~/dotfiles-linux/mutt/mutt_oauth2.py ~/.config/neomutt/$my_email.tokens"
 set imap_pass=$my_password
 set imap_user=$my_email
-set mbox_type = Maildir
-unset imap_idle
+set mbox_type = Maildir # Maildir is a generic and standardized format of storing emails.
+unset imap_idle # When set, NeoMutt will attempt to use the IMAP IDLE extension to check for new mail in the current mailbox. 
 unset imap_passive
 
 # SMTP config
@@ -71,7 +70,7 @@ set ssl_force_tls = yes
 set ssl_use_sslv3=yes
 
 # Mailboxes
-mailboxes =INBOX =Drafts =Sent =Deleted =Archive
+mailboxes =INBOX =Drafts =Sent =Deleted =Archive =Junk
 
 set postponed= +Drafts
 set record= +Sent
