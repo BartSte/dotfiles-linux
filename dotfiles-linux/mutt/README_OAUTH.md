@@ -1,16 +1,11 @@
-mutt_oauth.py README by Alexander Perlis, 2020-07-15
-====================================================
+# mutt_oauth.py README by Alexander Perlis, 2020-07-15
 
-Comments by BartSte, 2022-05-18
-I got the script working by registering an application at azure as described
-below. I used the client_id from the `overview` page. The client_secret was
-generated using the `certificates and secrets` page. I ignored the `secret_id`
-on this page. Regarding the mutt_oauth2.py script, the `devicecode` worked for
-me. Lastly, I copied the original mutt_oauth2.py script and called it
-`mutt_oauth2_example.py` and added it to this repo as a starting point.   
+## Comments by BartSte
 
-Background on plain passwords, app passwords, OAuth2 bearer tokens
-------------------------------------------------------------------
+Use this piece of text as a reference on how to `mutt_oauth.py` script can be
+used in mutt.
+
+## Background on plain passwords, app passwords, OAuth2 bearer tokens
 
 An auth stage occurs near the start of the IMAP/POP/SMTP protocol
 conversation. Various SASL methods can be used (depends on what the
@@ -20,7 +15,7 @@ password (this occurs over an encrypted connection), and used to be
 common; but, for large cloud mail providers, basic auth is a security
 hole. User passwords often have low entropy (humans generally choose
 passwords that can be produced from human memory), thus are targets
-for various types of exhaustive attacks.  Older attacks try different
+for various types of exhaustive attacks. Older attacks try different
 passwords against one user, whereas newer spray attacks try one
 password against different users. General mitigation efforts such as
 rate-limiting, or detection and outright blocking efforts, lead to
@@ -41,7 +36,7 @@ other words a long computer-generated random string, you use one for
 your mail system, a different one for your payroll system, and so
 on. With app passwords in use, brute-force attacks become useless. App
 passwords require no modifications to client software, and only minor
-changes on the server side.  One way to think about app passwords is
+changes on the server side. One way to think about app passwords is
 that they essentially impose on you the use of a password manager. Any
 user can go to the trouble of using a password manager but most users
 don't bother. App passwords put the password manager inside the server
@@ -69,7 +64,7 @@ will have a long-term "refresh token" as well as an "access token"
 good for about an hour. The access token can now be used with
 IMAP/POP/SMTP to access the account. When it expires, the refresh
 token is used to get a new access token and perhaps a new refresh
-token.  After several months of such usage, even the refresh token may
+token. After several months of such usage, even the refresh token may
 expire and the human user will have to go back and re-authenticate
 (password, SMS, crypto device, etc) for things to start anew.
 
@@ -88,9 +83,7 @@ superior and easier to use.
 Many cloud providers are eliminating support for human passwords. Some are
 allowing app passwords in addition to tokens. Some allow only tokens.
 
-
-OAuth2 token support in mutt
-----------------------------
+## OAuth2 token support in mutt
 
 Mutt supports the two SASL methods OAUTHBEARER and XOAUTH2 for presenting an
 OAuth2 access token near the start of the IMAP/POP/SMTP connection.
@@ -116,12 +109,10 @@ been tested against:
 - Google work/school account (G Suite tenant)
 - Microsoft consumer account (e.g., @live.com, @outlook.com, ...)
 - Microsoft work/school account (Azure tenant)
-(Note that Microsoft uses the marketing term "Modern Auth" in lieu of
-"OAuth2". In that terminology, mutt indeed supports "Modern Auth".)
+  (Note that Microsoft uses the marketing term "Modern Auth" in lieu of
+  "OAuth2". In that terminology, mutt indeed supports "Modern Auth".)
 
-
-Configure script's token file encryption
-----------------------------------------
+## Configure script's token file encryption
 
 The script remembers tokens between invocations by keeping them in a
 token file. This file is encrypted. Inside the script are two lines
@@ -132,19 +123,17 @@ popular choice is gpg. To use this:
 
 - Install gpg. For example, "sudo apt install gpg".
 - "gpg --gen-key". Answer the questions. Instead of your email
-address you could choose say "My mutt_oauth2 token store", then
-choose a passphrase. You will need to produce that same passphrase
-whenever mutt_oauth2 needs to unlock the token store.
+  address you could choose say "My mutt_oauth2 token store", then
+  choose a passphrase. You will need to produce that same passphrase
+  whenever mutt_oauth2 needs to unlock the token store.
 - Edit mutt_oauth2.py and put your GPG identity (your email address or
-whatever you picked above) in the ENCRYPTION_PIPE line.
+  whatever you picked above) in the ENCRYPTION_PIPE line.
 - For the gpg-agent to be able to ask you the unlock passphrase,
-the environment variable GPG_TTY must be set to the current tty.
-Typically you would put the following inside your .bashrc or equivalent:
-export GPG_TTY=$(tty)
+  the environment variable GPG_TTY must be set to the current tty.
+  Typically you would put the following inside your .bashrc or equivalent:
+  export GPG_TTY=$(tty)
 
-
-Create an app registration
---------------------------
+## Create an app registration
 
 Before you can connect the script to an account, you need an
 "app registration" for that service. Cloud entities (like Google and
@@ -161,11 +150,10 @@ review), or might perhaps be willing to roll their own "in-house" registration.
 
 What you ultimately need is the "client_id" (and "client_secret" if
 one was set) for this registration. Those values must be edited into
-the mutt_oauth2.py script.  If your work or school environment has a
+the mutt_oauth2.py script. If your work or school environment has a
 knowledge base that provides the client_id, then someone already took
 care of the app registration, and you can skip the step of creating
 your own registration.
-
 
 -- How to create a Google registration --
 
@@ -187,7 +175,6 @@ matter and could be "mutt registration project".
 Edit the client_id (and client_secret if there is one) into the
 mutt_oauth2.py script.
 
-
 -- How to create a Microsoft registration --
 
 Go to portal.azure.com, log in with a Microsoft account (get a free
@@ -198,20 +185,21 @@ the redirect URI, then more carefully go through each
 screen:
 
 Branding
+
 - Leave fields blank or put in reasonable values
 - For official registration, verify your choice of publisher domain
-Authentication:
+  Authentication:
 - Platform "Mobile and desktop"
 - Redirect URI "http://localhost/"
 - Any kind of account
 - Enable public client (allow device code flow)
-API permissions:
+  API permissions:
 - Microsoft Graph, Delegated, "offline_access"
 - Microsoft Graph, Delegated, "IMAP.AccessAsUser.All"
 - Microsoft Graph, Delegated, "POP.AccessAsUser.All"
 - Microsoft Graph, Delegated, "SMTP.Send"
 - Microsoft Graph, Delegated, "User.Read"
-Overview:
+  Overview:
 - Take note of the Application ID (a.k.a. Client ID), you'll need it shortly
 
 End users who aren't able to get to the app registration screen within
@@ -222,9 +210,7 @@ to create the app registration.
 Edit the client_id (and client_secret if there is one) into the
 mutt_oauth2.py script.
 
-
-Running the script manually to authorize tokens
------------------------------------------------
+## Running the script manually to authorize tokens
 
 Run "mutt_oauth2.py --help" to learn script usage. To obtain the
 initial set of tokens, run the script specifying a name for a
@@ -237,16 +223,16 @@ The script will ask questions and provide some instructions. For the
 flow question:
 
 - "authcode": you paste a complicated URL into a browser, then
-manually extract a "code" parameter from a subsequent URL in the
-browser address bar and paste that back to the script.
+  manually extract a "code" parameter from a subsequent URL in the
+  browser address bar and paste that back to the script.
 
 - "localhostauthcode": you again paste the complicated URL into a browser
-but that's it --- the code is automatically extracted from the response
-relying on a localhost redirect and temporarily listening on a localhost
-port. This flow can only be used if the web browser opening the redirect
-URL sits on the same machine as where mutt is running, in other words can not
-be used if you ssh to a remote machine and run mutt on that remote machine
-while your web browser remains on your local machine.
+  but that's it --- the code is automatically extracted from the response
+  relying on a localhost redirect and temporarily listening on a localhost
+  port. This flow can only be used if the web browser opening the redirect
+  URL sits on the same machine as where mutt is running, in other words can not
+  be used if you ssh to a remote machine and run mutt on that remote machine
+  while your web browser remains on your local machine.
 
 - "devicecode": you go to a simple URL and just enter a short code.
 
@@ -260,10 +246,9 @@ configured, some flows might not work, so simply trying them is the
 best way to figure out what works and which one you prefer. Personally
 I prefer the "localhostauthcode" flow when I can use it.
 
-
 Once you attempt an actual authorization, you might get stuck because
 the web browser step might indicate your institution admins must grant
-approval.  Indeed engage them in a conversation about approving the
+approval. Indeed engage them in a conversation about approving the
 use of mutt to access mail. If that fails, an alternative is to
 identify some other well-known IMAP/POP/SMTP client that they might
 have already approved, or might be willing to approve, and first go
