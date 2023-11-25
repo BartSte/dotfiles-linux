@@ -1,9 +1,9 @@
 #!/bin/bash
+this_dir=$(dirname "$(realpath "${BASH_SOURCE:-$0}")")
 
-. ~/dotfiles-linux/davmail/helpers.bash
+source "$this_dir/helpers.bash"
 
-source=~/dotfiles-linux/davmail/davmail.properties
+source="$this_dir/davmail.properties"
 directory_config=~/.config/davmail
 
-copy_config $source $directory_config
-# activate_as_service 
+copy_config "$source" "$directory_config"
