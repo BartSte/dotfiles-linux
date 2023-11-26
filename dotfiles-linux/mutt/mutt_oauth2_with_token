@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set pipefail -euo
+
+account="${MICROSOFT_ACCOUNT:-}"
+[[ -z $account ]] && {
+    echo "MICROSOFT_ACCOUNT not set"
+    exit 1
+}
+email=$(rbw_get Username $account)
+
+mutt_oauth2 "$HOME/.config/neomutt/$email.tokens"

@@ -61,37 +61,32 @@ set from = $my_email
 set hostname = `rbw_get Domain $MICROSOFT_ACCOUNT`
 set realname = "`rbw_get Name $MICROSOFT_ACCOUNT`"
 set smtp_authenticators=`rbw_get MuttSmtpAuth $MICROSOFT_ACCOUNT`
-set smtp_oauth_refresh_command="python3 ~/dotfiles-linux/mutt/mutt_oauth2.py ~/.config/neomutt/$my_email.tokens"
+set smtp_oauth_refresh_command="~/dotfiles-linux/mutt/mutt_oauth2_with_token"
 set smtp_pass = $my_password
 set smtp_url = "smtp://$my_email@smtp.office365.com:587/"
 set ssl_force_tls = yes
 set ssl_use_sslv3=yes
 
-# Mailboxes
-mailboxes =INBOX =Drafts =Sent =Deleted =Archive =Junk
-
-set postponed= +Drafts
-set record= +Sent
-set spoolfile= +INBOX
-set trash= +Deleted
-
-#### Header Options
+# Header Options
 ignore *                                # ignore all headers
 unignore to: cc:                        # ..then selectively show only these headers
 unhdr_order *                           # some distros order things by default
 hdr_order from: to: cc: date: subject:  # header item ordering
 
-#### Notmuch Config
+# Mailbox
+# The names of the mailboxes are different for accounts
+source "~/dotfiles-linux/mutt/mailboxes$MICROSOFT_ACCOUNT.muttrc"
+
+# Notmuch Config
 set nm_query_type=threads  # bring in the whole thread instead of just the matched message, really useful
 set nm_default_url = "notmuch:///$HOME/.local/share/mail"  # default notmuch URL
 set nm_record_tags = "sent"  # default 'sent' tag
 set virtual_spoolfile=yes  # allow using virtual mailboxes as spoolfile 
 
-#### Content/Autoview
+# Content/Autoview
 auto_view application/ics
 auto_view text/calendar
 auto_view text/plain
 auto_view text/html
 auto_view application/pgp-encrypted
 alternative_order text/calendar application/ics text/plain text/enriched text/html
-
