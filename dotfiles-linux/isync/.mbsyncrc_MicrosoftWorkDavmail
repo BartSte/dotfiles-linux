@@ -1,10 +1,11 @@
 IMAPAccount work
-Host outlook.office365.com
-Port 993
+Host 127.0.0.1
+Port 1143
 UserCmd "rbw_get Username $MICROSOFT_ACCOUNT"
-PassCmd "~/dotfiles-linux/mutt/mutt_oauth2_with_token"
-AuthMechs XOAUTH2
-TLSType IMAPS
+PassCmd "rbw get $MICROSOFT_ACCOUNT"
+SSLType None
+AuthMechs LOGIN
+Timeout 0
 
 IMAPStore work-remote
 Account work
