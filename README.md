@@ -94,7 +94,7 @@ fields are handled differently for each account:
 - username: this is the username of the email account
 - domain: this is the domain of the email account
 - name: this is my real name
-- calendar: this is the calendar that is used by khalorg
+- calendar: this is the calendar that is used by khal
 - contacts: this is the contacts that are used by khard
 - MuttImapAuth: this is the imap auth method
 - MuttClientId: this is the client id of the oauth2 script
@@ -131,6 +131,9 @@ password manager, at the field `MuttPassword`, which is supplied to the
 `MuttImapAuth` and `MuttSmtpAuth` fields are set to `login`.
 
 ##### Davmail
+
+David is a gateway that can be used to connect to exchange servers. It can be
+used to connect to the exchange server using, among others, IMAP.
 
 For my work email account, I use davmail to connect to the exchange server. I
 use davmail instead of XOAUTH2 because XOAUTH2 is not supported by default by
@@ -200,7 +203,10 @@ used. The config files are located in `~/dotfiles-linux/isync`.
 For my personal email account, I use an app password for authentication. For
 my work email account, I use davmail for authentication. I chose davmail
 because `mbsync` does not support XOAUTH2 authentication by default, so using
-davmail was easier.
+davmail was easier. However, it would be interesting to enable XOAUTH2 for
+`mbsync` as the davmail solution is pretty slow. Maybe using XOAUTH2 is
+faster? Checkout this part of the Arch wiki for more information:
+https://wiki.archlinux.org/title/isync#Using_XOAUTH2
 
 #### Sending
 
@@ -221,16 +227,44 @@ command.
 
 `davmail`, `mbsync` and `notmuch` are combined into 1 command: `mailsync`.
 This makes updating the emails easier. By running `mymailsync`, the correct
-davmail config is selected for you aswell.
+davmail config is selected for you aswell. Note that no davmail is needed when
+using an app password, so it is only activated when a davmail config is
+presented as an argument.
 
-### Khalorg & Khard
+### khal & khalorg
 
-_TODO: describe my calendar/contact setup using khalorg and khard. Setting up
-davmail is also explained in the Mutt section_
+I use my work office calendar for all devices such that I have 1 calendar for
+all meetings. The calendar is synchronized with a local directory using
+`vdirsyncer`. This directory is then used by `khal` to interact with the
+calendar. Since I like to use `org-mode`, I build an interface between `khal`
+and `org-mode` called `khalorg`.
 
-#### Calsync
+`vdirsyncer` can communicate with the exchange server using davmail. To initialize
+davmail, see the [Davmail](#davmail) section. Once davmail is initialized, run
+the following command to synchronize the calendar:
 
-_TODO: describe how the calsync script works_
+```bash
+~/dotfiles-linux/khal/main
+~/dotfiles-linux/khalorg/main
+vdirsyncer discover
+mycalsync
+```
+
+here, `mycalsync` is a script that combines `davmail`, `vdirsyncer`, `khalorg`.
+As a results, it synchronizes my office calendar with a local org file that
+holds all my meetings as text.
+
+### khard
+
+`khard` is a contact manager that can be used to interact with the exchange
+server when it is used in combination with `davmail` and `vdirsyncer`. Once you
+have setup `davmail` and `vdirsyncer` as described in the sections above, `khard`
+will also be synced when het `mycalsync` script is called. You can check if
+`khard` is working by running the following command:
+
+```bash
+khard list
+```
 
 ### Dotfiles-windows (Windows 10 & 11)
 
