@@ -1,7 +1,10 @@
 #!/bin/bash
 
-export MS_EMAIL=$(rbw_get username $MICROSOFT_ACCOUNT)
-export MS_REALNAME=$(rbw_get name $MICROSOFT_ACCOUNT)
+MS_EMAIL=$(rbw_get username "$MICROSOFT_ACCOUNT")
+MS_REALNAME=$(rbw_get name "$MICROSOFT_ACCOUNT")
+
+export MS_EMAIL
+export MS_REALNAME
 
 script="Key-Type: 1
 Key-Length: 2048
