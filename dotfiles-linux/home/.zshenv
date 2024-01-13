@@ -18,12 +18,6 @@ export TVIM_PANE="0"
 export VI_MODE_SET_CURSOR=true
 export FZF_HELP_SYNTAX='help'
 export CLI_OPTIONS_CMD='ag -o --numbers -- $RE'
-export CC="$(which clang)"
-export CXX="$(which clang++)"
-export CXXFLAGS="-Wall -fdiagnostics-color=always"
-export CMAKE_EXPORT_COMPILE_COMMANDS="ON"
-export CMAKE_COLOR_DIAGNOSTICS="ON"
-export CMAKE_GENERATOR="Ninja"
 
 export HISTFILE=$HOME/.histfile
 export HISTSIZE=1000000000

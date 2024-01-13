@@ -30,3 +30,5 @@ save_source $dir_zsh/bindings.zsh
 
 save_source /usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme
 save_source ~/.p10k.zsh  # must stay at the bottom
+
+save_source $HOME/dotfiles-linux/tmux/sessionrc.zsh
