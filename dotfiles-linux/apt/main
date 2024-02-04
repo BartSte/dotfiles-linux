@@ -9,4 +9,3 @@ sudo apt-get update -y
 sudo apt-get upgrade -y
 cat $dir/apt.txt | xargs sudo apt-get install -y
 install-tmux-session
-install_fzf_help
