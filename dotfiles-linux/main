@@ -44,9 +44,9 @@ execute_exclude() {
     # Execute all other modules. Do not execute the modules in the `exclude`.
     for module in $dirs; do
         if [[ " ${exclude[@]} " =~ " ${module} " ]]; then
-            echo "Skipping module: $module."
+            echo "Skip: $module"
         elif [[ -f "$DIR/$module/main" ]]; then
-            echo "Executing module: $module"
+            echo "Execute: $module"
             $DIR/$module/main
         fi
     done
@@ -90,6 +90,9 @@ if running_arch && running_wsl; then
 elif running_arch; then
     echo "Running on Arch Linux"
     main_arch
+elif running_wsl; then
+    echo "Running on Windows WSL"
+    echo "Unknown WSL system"
 elif running_raspberry; then
     echo "Running on Raspberry Pi"
     main_raspberry
