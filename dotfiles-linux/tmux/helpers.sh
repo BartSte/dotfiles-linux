@@ -1,6 +1,7 @@
 install_tmux_plugin() {
     echo "Installing tmux plugin"
 
+    source ~/.zshenv
     [[ -z $TMUX_PLUGIN_DIR ]] && { echo "TMUX_PLUGIN_DIR is not set" && exit 1; }
 
     local url=$1
