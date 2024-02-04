@@ -1,0 +1,8 @@
+python
+python3-pip
+python-is-python3
+git
+python3-pynvim 
+snapd
+fd-find
+silversearcher-ag

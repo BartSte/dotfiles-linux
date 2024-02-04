@@ -1,5 +1,5 @@
-export CC="$(which clang)"
-export CXX="$(which clang++)"
+# export CC="$(which clang)"
+# export CXX="$(which clang++)"
 export CXXFLAGS="-Wall -Wextra -Wno-unused-parameter -fdiagnostics-color=always"
 export CMAKE_EXPORT_COMPILE_COMMANDS="ON"
 export CMAKE_COLOR_DIAGNOSTICS="ON"

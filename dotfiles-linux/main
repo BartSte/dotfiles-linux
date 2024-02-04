@@ -1,24 +1,62 @@
 #!/bin/env bash
 
+set -euo pipefail
+
 usage() {
     cat <<EOF
 Usage: main [OPTION]...
 
 This script resides in a directory where each subdirectory is a module. The 
-modules that contain a file called `main` will be executed by running the `main`
+modules that contain a file called $(main) will be executed by running the $(main)
 script.
 
 In general, the order does not matter. However, the directories listed in the 
-`execute_first` array need to be executed first, in the order they are listed.
+$(execute_first) array need to be executed first, in the order they are listed.
 
 options:
     -h, --help      Show this help message.
 EOF
 }
 
+main() {
+    dir=~/dotfiles-linux
+    execute_first=(
+        "dependencies"
+        "systemd"
+        "bitwarden"
+        "crypt"
+        "home"
+    )
+
+    # Execute the modules in the `execute_first` array.
+    for module in "${execute_first[@]}"; do
+        echo "Executing module: $module"
+        $dir/$module/main
+    done
+
+    # Execute all other modules. Do not execute the modules in the `execute_first`.
+    for module in $(ls $dir); do
+        if [[ " ${execute_first[@]} " =~ " ${module} " ]]; then
+            echo "Skipping module: $module. It was already executed."
+        elif [[ -f "$dir/$module/main" ]]; then
+            echo "Executing module: $module"
+            $dir/$module/main
+        fi
+    done
+}
+
+main_raspberry() {
+    ~/dotfiles-linux/dependencies/main_raspberry
+    ~/dotfiles-linux/git/main
+    ~/dotfiles-linux/home/main
+    ~/dotfiles-linux/node/main
+    ~/dotfiles-linux/tmux/main
+    ~/dotfiles-linux/zsh/main
+}
+
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        -h|--help)
+        -h | --help)
             usage
             exit 0
             ;;
@@ -30,32 +68,10 @@ while [[ $# -gt 0 ]]; do
 done
 
 echo "Installing BartSte/dotfiles-linux repository"
-
 source ~/.dotfiles_config.sh
 
-dir=~/dotfiles-linux
-execute_first=(
-    "dependencies"
-    "systemd"
-    "bitwarden"
-    "crypt"
-    "home"
-)
-
-# Execute the modules in the `execute_first` array.
-for module in "${execute_first[@]}"; do
-    echo "Executing module: $module"
-    $dir/$module/main
-done
-
-# Execute all other modules. Do not execute the modules in the `execute_first`.
-for module in $(ls $dir); do
-    if [[ " ${execute_first[@]} " =~ " ${module} " ]]; then
-        echo "Skipping module: $module. It was already executed."
-    elif [[ -f "$dir/$module/main" ]]; then
-        echo "Executing module: $module"
-        $dir/$module/main
-    fi
-done
-    
-echo "Done"
+if running_rasperry; then
+    main_raspberry
+else
+    main
+fi
