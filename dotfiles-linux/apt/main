@@ -1,10 +1,8 @@
 #!/bin/bash
 
-. ~/dotfiles-linux/dependencies/helpers.sh
+dir=~/dotfiles-linux/apt
 
-dir=~/dotfiles-linux/dependencies
-
-echo "# Dependencies"
+echo "Installing apt dependencies"
 sudo apt-get update -y
 sudo apt-get upgrade -y
 sudo apt-get install -y "$(cat "$dir/apt.txt")"

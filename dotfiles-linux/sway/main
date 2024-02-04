@@ -1,2 +1,6 @@
 #!/usr/bin/env bash
+
+dir=~/dotfiles-linux/sway
+
 mkdir -p ~/Screenshots
+sudo pacman -S --noconfirm - < $dir/pacman.txt

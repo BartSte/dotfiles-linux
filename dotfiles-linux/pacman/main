@@ -1,10 +1,10 @@
 #!/bin/bash
 
-. ~/dotfiles-linux/dependencies/helpers.sh
+. ~/dotfiles-linux/pacman/helpers.sh
 
-dir=~/dotfiles-linux/dependencies
+dir=~/dotfiles-linux/pacman
 
-echo "# Dependencies"
+echo "# Installing dependencies pacman"
 sudo pacman -Syu --noconfirm
 sudo pacman -S --needed base-devel --noconfirm
 install_yay
@@ -16,7 +16,3 @@ install_python_packages $dir/pip.txt
 install-tmux-session
 install_fzf_help
 cat $dir/pip.txt | xargs -n 1 pipx install
-
-if ! running_wsl; then
-    sudo pacman -S --noconfirm - < $dir/pacman_wayland.txt
-fi

@@ -11,47 +11,61 @@ modules that contain a file called $(main) will be executed by running the $(mai
 script.
 
 In general, the order does not matter. However, the directories listed in the 
-$(execute_first) array need to be executed first, in the order they are listed.
+$(exclude) array need to be executed first, in the order they are listed.
 
 options:
     -h, --help      Show this help message.
 EOF
 }
 
-main() {
-    dir=~/dotfiles-linux
-    execute_first=(
-        "dependencies"
-        "systemd"
-        "bitwarden"
-        "crypt"
-        "home"
-    )
+DIR=~/dotfiles-linux
 
-    # Execute the modules in the `execute_first` array.
-    for module in "${execute_first[@]}"; do
-        echo "Executing module: $module"
-        $dir/$module/main
+main_arch() {
+    execute_exclude apt wsl
+}
+
+# Execute all modules except the ones that are listed as arguments.
+execute_exclude() {
+    local exclude dirs module front
+    exclude=("$@")
+    front=("pacman" "systemd" "bitwarden" "crypt" "home")
+
+    # Get all the directories in the $DIR directory.
+    dirs=$(find $DIR -maxdepth 1 -mindepth 1 -type d -exec basename {} \; | sort)
+
+    # Remove the directories in the `front` array from the `dirs` array. Next,
+    # prepend the `front` array to the `dirs` array. As a result, the `front`
+    # array will be executed first, in the order they are listed.
+    for item in "${front[@]}"; do
+        dirs=$(echo "$dirs" | sed "s/$item//")
     done
+    dirs=$(echo "${front[@]}" $dirs)
 
-    # Execute all other modules. Do not execute the modules in the `execute_first`.
-    for module in $(ls $dir); do
-        if [[ " ${execute_first[@]} " =~ " ${module} " ]]; then
-            echo "Skipping module: $module. It was already executed."
-        elif [[ -f "$dir/$module/main" ]]; then
+    # Execute all other modules. Do not execute the modules in the `exclude`.
+    for module in $dirs; do
+        if [[ " ${exclude[@]} " =~ " ${module} " ]]; then
+            echo "Skipping module: $module."
+        elif [[ -f "$DIR/$module/main" ]]; then
             echo "Executing module: $module"
-            $dir/$module/main
+            $DIR/$module/main
         fi
     done
 }
 
 main_raspberry() {
-    ~/dotfiles-linux/dependencies/main_raspberry
+    ~/dotfiles-linux/apt/main
     ~/dotfiles-linux/git/main
     ~/dotfiles-linux/home/main
-    ~/dotfiles-linux/node/main
     ~/dotfiles-linux/tmux/main
     ~/dotfiles-linux/zsh/main
+}
+
+# On wsl, do not install:
+# - sway: using the windows gui instead
+# - kmonad: using the windows kmonad instead
+# - dropbox: using the windows dropbox instead
+main_arch_wsl() {
+    execute_exclude apt sway kmonad dropbox
 }
 
 while [[ $# -gt 0 ]]; do
@@ -70,8 +84,16 @@ done
 echo "Installing BartSte/dotfiles-linux repository"
 source ~/.dotfiles_config.sh
 
-if running_rasperry; then
+if running_arch && running_wsl; then
+    echo "Running on Arch Linux WSL"
+    main_arch_wsl
+elif running_arch; then
+    echo "Running on Arch Linux"
+    main_arch
+elif running_raspberry; then
+    echo "Running on Raspberry Pi"
     main_raspberry
 else
-    main
+    echo "Unknown system"
+    exit 1
 fi

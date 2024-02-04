@@ -1,5 +1,3 @@
-dir=~/dotfiles-linux/dependencies
-
 install_python_packages () {
     echo "Install python packages"
     pip install pipx
@@ -21,10 +19,11 @@ install_yay () {
 # See BarsSte/tmux-session
 install-tmux-session () {
     echo "Install tmux-session"
-    local tmp_dir=$(mktemp -d);
-    git clone https://github.com/BartSte/tmux-session.git $tmp_dir;
-    sudo $tmp_dir/install;
-    rm -rf $tmp_dir;
+    local tmp_dir
+    tmp_dir=$(mktemp -d);
+    git clone https://github.com/BartSte/tmux-session.git "$tmp_dir";
+    sudo "$tmp_dir"/install;
+    rm -rf "$tmp_dir";
 }
 
 # See BarsSte/fzf-help
