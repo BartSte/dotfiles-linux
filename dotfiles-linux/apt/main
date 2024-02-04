@@ -1,10 +1,12 @@
 #!/bin/bash
 
+. "$HOME"/dotfiles-linux/pacman/helpers.sh
+
 dir=~/dotfiles-linux/apt
 
 echo "Installing apt dependencies"
 sudo apt-get update -y
 sudo apt-get upgrade -y
-sudo apt-get install -y "$(cat "$dir/apt.txt")"
+cat $dir/apt.txt | xargs sudo apt-get install -y
 install-tmux-session
 install-fzf-help
