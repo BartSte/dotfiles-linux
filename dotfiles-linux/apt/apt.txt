@@ -1,8 +1,8 @@
-python
-python3-pip
-python-is-python3
-git
-python3-pynvim 
-snapd
 fd-find
+git
+python-is-python3
+python3
+python3-pip
+python3-pynvim 
 silversearcher-ag
+snapd
