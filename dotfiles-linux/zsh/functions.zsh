@@ -1,9 +1,14 @@
-source /usr/share/fzf/key-bindings.zsh
-source /usr/share/fzf-help/fzf-help.zsh
-
 save_source() {
-    [ -f "$1" ] && source "$1"
+    local file=$1
+    if [ -f "$file" ]; then
+        source $file
+    else
+        echo "WARNING: $file does not exist" >&2
+    fi
 }
+
+save_source /usr/share/fzf/key-bindings.zsh
+save_source /usr/share/fzf-help/fzf-help.zsh
 
 rrm() {
     /usr/bin/rm $@
