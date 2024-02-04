@@ -17,7 +17,7 @@ lin="$github/dotfiles-linux.git"
 lin_dir="$HOME/dotfiles-linux.git"
 
 echo "# Installing git"
-sudo pacman -S git exa inetutils --noconfirm
+sudo pacman -S git --noconfirm || sudo apt install git -y
 
 echo "# Clone BartSte/dotfiles.git as a bare repository"
 clone $base $base_dir
