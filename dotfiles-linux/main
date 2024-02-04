@@ -57,8 +57,8 @@ main_raspberry() {
     ~/dotfiles-linux/apt/main
     ~/dotfiles-linux/git/main
     ~/dotfiles-linux/home/main
-    ~/dotfiles-linux/tmux/main
     ~/dotfiles-linux/zsh/main
+    ~/dotfiles-linux/tmux/main
 }
 
 # On wsl, do not install:
