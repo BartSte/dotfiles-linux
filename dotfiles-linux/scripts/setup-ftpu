@@ -1,100 +1,121 @@
 #!/usr/bin/env bash
 
-# # README
+usage="Usage: setup-ftpu.sh [options] <drive>
 
-# This repo contains the dotfiles for a raspberry pi that has 2 main purposes:
+Configure a raspberry pi to run an sftp server to download/upload files to a 
+hard drive. The hard drive is mounted under <mount_point> and is mapped to the
+user ftpu. The user ftpu has a home directory /home/ftpu/data which is mapped
+to the hard drive. The user ftpu can be used to access the hard drive from
+anywhere within the local network.
 
-# - Run an sftp server to download/upload files to a hard drive.
-# - Run the `snapshot` application to take snapshots using a camera.
+First, make sure that the hard drive is unmounted, you can check this by
+running:
 
-# Start by cloning this repo from the home directory. After that, run the `main`
+    sudo df --human-readable --print-type
 
-# file to:
+And then unmount the drive by running:
 
-# - Install the cross platform dotfiles repo.
-# - Install the dependencies.
-# - Link files to the home directory.
-# - Setup neovim
+    sudo umount --verbose /use_your_mount_point
 
-# ## Setup sftp server
+Run the following to locate the drive if you did not already know it (For me,
+it was \`/dev/sda1\`):
 
-# - [Source](https://medium.com/kunalrdeshmukh/ftp-erver-with-raspberry-pi-and-hdd-3c10ce95f2d4)
-# - First setup ssh and wifi as is described in the above link.
-# - Plugin the hdd. Run the following:
+    sudo fdisk -l
 
-#   ```bash
-#   sudo apt-get -y update
+Provide the drive to the script as an argument. For example:
 
-#   sudo apt-get -y dist-upgrade
-#   sudo df --human-readable --print-type
-#   sudo umount --verbose /use_your_mount_point
-#   ```
+    setup-ftpu /dev/sda1
 
-# - Run the following to locate the drive if you did not already know it (For me,
-#   it was `/dev/sda1`):
+The script was based on the following article: 
+- medium.com/kunalrdeshmukh/ftp-erver-with-raspberry-pi-and-hdd-3c10ce95f2d4
 
-#   ```bash
+Arguments:
+  <drive>         The drive to mount, e.g. /dev/sda1.
 
-#   sudo fdisk -l
-#   ```
+Options:
+  -h, --help  Show this message and exit."
 
-# - Mount it under `/` with the right permissions:
+final_message="Done. You can try any sftp client to connect to raspberry pi.
+Use ftp user as : ftpu
+- IP : IP address of raspberry pi.
+- Password : Password of ftpu user.
+This will allow you to access your Portable HDD from anywhere within your
+local network (most likely your home)."
 
-#   ```bash
-#   sudo mkdir my-fdd-drive
-#   sudo mount <drive> /my-fdd-drive
-#   sudo chmod 775 /my-fdd-drive
-#   sudo mount <drive> /my-fdd-drive
-#   ```
+running_raspberry() {
+    if [ -f /proc/device-tree/model ]; then
+        grep -q "Raspberry Pi" /proc/device-tree/model
+        if [ $? -eq 0 ]; then
+            return 0
+        else
+            return 1
+        fi
+    else
+        return 1
+    fi
+}
 
-# - Add the following mapping to the end of the fstab file so that it is
-#   preserved even after a reboot (use `sudo vim /etc/fstab`):
+assert_raspberry() {
+    if ! running_raspberry; then
+        echo "This script is meant to be run on a Raspberry Pi."
+        exit 1
+    fi
 
-#   ```bash
-#   <drive> /my-fdd-drive ntfs defaults 0 0
+}
 
-#   ```
+perpare() {
+    sudo apt-get -y update
+    sudo apt-get -y upgrade
+    sudo apt-get -y dist-upgrade
+}
 
+mount_drive() {
+    cd /
+    sudo mkdir my-fdd-drive
+    sudo mount "$1" "$2"
+    sudo chmod 775 "$2"
+}
 
-#   here `<drive>` is your device (for example `/dev/sda1`).
+# Add a line to the end of /etc/fstab if it does not exist
+extend_fstab() {
+    line="$1"
+    if ! grep -q "$line" /etc/fstab; then
+        echo "$line" | sudo tee -a /etc/fstab
+    fi
+}
 
-# - Create user for ftp and map the directory we had created above to the user
+add_ftpu_user() {
+    sudo adduser ftpu
+    sudo mkdir /home/ftpu/data
+    sudo chown ftpu:ftpu /home/ftpu/data
+}
 
-#   ```bash
-#   sudo adduser ftpu
-#   sudo mkdir /home/ftpu/data
-#   ```
+drive=""
+mount_point="/my-fdd-drive"
+while [ "$1" != "" ]; do
+    case $1 in
+        -h | --help)
+            echo "$usage"
+            exit
+            ;;
+        *)
+            if [ -z "$drive" ]; then
+                drive="$1"
+            else
+                echo "Error: unknown argument"
+                echo "$usage"
+                exit 1
+            fi
+            ;;
+    esac
+    shift
+done
 
-# - Map this directory to the directory we had created earlier by adding the
-#   following line to the end of the fstap file (use `sudo vim /etc/fstab`) :
-
-
-#   ```bash
-#   /my-fdd-drive /home/ftpu/data none bind 0 0
-#   ```
-
-# - Change the ownership of the directory to the user we had created earlier:
-
-#   ```bash
-#   sudo chown ftpu:ftpu /home/ftpu/data
-
-#   ```
-
-
-# - Lastly, configure the pi as follows:
-
-#   - Run: `sudo raspi-config`
-#   - Select "inteface options"
-#   - Select "ssh" and enable it.
-
-# - Done. You can try any sftp client to connect to raspberry pi.
-#   - Use ftp user as : ftpu
-
-#   - IP : IP address of raspberry pi.
-#   - Password : Password of ftpu user.
-#     This will allow you to access your Portable HDD from anywhere within your
-#     local network (most likely your home).
-
-# ## Setup snapshot
-
-# - TODO:
+assert_raspberry
+perpare
+mount_drive "$drive" "$mount_point"
+extend_fstab "$drive $mount_point ntfs defaults 0 0"
+add_ftpu_user
+extend_fstab "$mount_point /home/ftpu/data none bind 0 0"
+sudo raspi-config
+echo "$final_message"
