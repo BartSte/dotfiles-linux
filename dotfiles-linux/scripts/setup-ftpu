@@ -3,7 +3,7 @@
 usage="Usage: setup-ftpu.sh [options] <drive>
 
 Configure a raspberry pi to run an sftp server to download/upload files to a 
-hard drive. The hard drive is mounted under <mount_point> and is mapped to the
+hard drive. The hard drive is mounted under /my-fdd-drive and is mapped to the
 user ftpu. The user ftpu has a home directory /home/ftpu/data which is mapped
 to the hard drive. The user ftpu can be used to access the hard drive from
 anywhere within the local network.
@@ -15,7 +15,7 @@ running:
 
 And then unmount the drive by running:
 
-    sudo umount --verbose /use_your_mount_point
+    sudo umount --verbose /current_mount_point
 
 Run the following to locate the drive if you did not already know it (For me,
 it was \`/dev/sda1\`):
