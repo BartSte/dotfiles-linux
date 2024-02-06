@@ -3,6 +3,7 @@ link_config() {
     link=~/.config/qutebrowser/config.py
 
     echo "Create link from $target to $link"
+    mkdir -p $(dirname $link)
     ln -sf $target $link
 }
 
@@ -16,6 +17,8 @@ link_bookmarks() {
 
     echo "Create links from $target_urls to $link_urls"
     echo "Create links from $target_quickmarks to $link_quickmarks"
+    mkdir -p $(dirname $link_urls)
+    mkdir -p $(dirname $link_quickmarks)
     ln -sf $target_urls $link_urls
     ln -sf $target_quickmarks $link_quickmarks
 }

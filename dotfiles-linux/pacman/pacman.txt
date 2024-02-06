@@ -1,5 +1,8 @@
 alacritty
+bluez
+bluez-utils
 antiword
+git-crypt
 aspell
 aspell-en
 aspell-nl

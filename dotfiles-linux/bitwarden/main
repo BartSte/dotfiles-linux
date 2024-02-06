@@ -1,6 +1,11 @@
 #!/bin/bash
 #
 
+if rbw unlocked; then
+    echo "Rbw is already setup, lock rbw first to switch to another account"
+    exit 0
+fi 
+
 echo "Setting up bitwarden cli."
 echo "Which bitwarden email to use? Enter below:"
 read email
