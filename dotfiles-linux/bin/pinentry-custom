@@ -14,10 +14,8 @@ get_caller() {
 }
 
 make_pinentry_output() {
-    local password
-    password=$(rbw get gpg)
     echo "OK Pleased to meet you"
-    echo "D $password"
+    echo "D $(rbw get gpg)"
     echo "OK"
 }
 
@@ -30,8 +28,7 @@ mkdir -p $logdir
 get_caller >>$logdir/pinentry-caller
 
 if check; then
-    # make_pinentry_output 2>&1 
-    pinentry "$@"
+    make_pinentry_output 
 else
     pinentry "$@"
 fi
