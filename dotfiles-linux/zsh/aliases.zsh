@@ -27,3 +27,4 @@ alias vim='nvim $@'
 alias wpip='wpy -m pip $@'
 alias wpytest='wpy -m pytest $@'
 alias wipdb='wpy -m ipdb $@'
+alias dsize='du -h -d1' # use the du command for further inspection
