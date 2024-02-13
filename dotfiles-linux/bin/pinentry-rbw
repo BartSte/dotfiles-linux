@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 
-set -eou pipefail
-
-if [ -n "${PINENTRY_USE_RBW-}" ]; then
+if [ -n "${PINENTRY_RBW_FIELD-}" ]; then
     rbw unlock || exit 1
+    password=$(rbw get "${PINENTRY_RBW_FIELD}")
     echo "OK Pleased to meet you"
-    echo "D $(rbw get gpg)"
+    echo "D $password"
     echo "OK"
 else
     pinentry "$@"
