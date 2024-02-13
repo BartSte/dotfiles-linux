@@ -25,16 +25,13 @@ check() {
     command_exists rbw && rbw unlock
 }
 
-fallback() {
-    pinentry "$@"
-}
-
 logdir=/tmp/pinentry-custom
 mkdir -p $logdir
 get_caller >>$logdir/pinentry-caller
 
 if check; then
-    make_pinentry_output 2>&1 
+    # make_pinentry_output 2>&1 
+    pinentry "$@"
 else
-    fallback "$@"
+    pinentry "$@"
 fi
