@@ -2,19 +2,11 @@
 
 set -eou pipefail
 
-command_exists() {
-    command -v "$1" >/dev/null 2>&1
-}
-
-make_pinentry_output() {
+if [ -n "${PINENTRY_USE_RBW-}" ]; then
+    rbw unlock || exit 1
     echo "OK Pleased to meet you"
     echo "D $(rbw get gpg)"
     echo "OK"
-}
-
-if [ -n "${PINENTRY_USE_RBW-}" ]; then
-    rbw unlock
-    make_pinentry_output
 else
     pinentry "$@"
 fi
