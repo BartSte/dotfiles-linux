@@ -7,6 +7,9 @@ source ~/dotfiles-linux/mutt/colors-gruvbox-shuber.muttrc
 source ~/dotfiles-linux/mutt/gruvbox-powerline.neomuttrc
 source ~/dotfiles-linux/mutt/powerline.neomuttrc
 
+# Environment variables
+setenv PINENTRY_USER_RBW 1
+
 # Variables
 set my_email=`rbw_get username $MICROSOFT_ACCOUNT`
 set my_password=`rbw_get MuttPassword $MICROSOFT_ACCOUNT`
