@@ -22,14 +22,14 @@ dot() {
     git --git-dir=$HOME/dotfiles-linux.git/ --work-tree=$HOME "$@"
 }
 
-shorten_stdout(){
+shorten_stdout() {
     sed 's/(use -u .*)//'
 }
 
 # Mass commit to all dotfiles layers.
 # All command line args are concatinated into a commit message
 #######################################
-# Remove (use -u to show untracked-files) 
+# Remove (use -u to show untracked-files)
 # from the sdout
 #######################################
 dotc() {
@@ -37,13 +37,13 @@ dotc() {
 
     echo "Git commit\n"
     echo 'Base:'
-    rm $(fd nvim.shada ~/dotfiles --type f) &> /dev/null
+    rm $(fd nvim.shada ~/dotfiles --type f) &>/dev/null
     base add ~/dotfiles
     bases
     base commit --untracked-files=no -a -m "$message" | shorten_stdout
 
     echo $'\nLinux'
-    rm $(fd nvim.shada ~/dotfiles-linux --type f) &> /dev/null
+    rm $(fd nvim.shada ~/dotfiles-linux --type f) &>/dev/null
     lin add ~/dotfiles-linux
     lins
     lin commit --untracked-files=no -a -m "$message" | shorten_stdout
@@ -51,18 +51,18 @@ dotc() {
 
 dots() {
     echo "Git status\n"
-    echo Base: 
+    echo Base:
     bases
 
-    echo $'\nLinux': 
-    lins 
+    echo $'\nLinux':
+    lins
 }
 
-dotp() {
-    echo "Git push\n"
+# Dot update
+# Pulls, commits and pushes all dotfiles layers. Aborts if one of the commands
+# fails.
+dotu() {
+    dot pull
+    dotc
     dot push
-}
-
-dotcp() {
-    dotc && echo "" && dotp
 }
