@@ -59,7 +59,7 @@ dots() {
 }
 
 indent() {
-    pr -to 4
+    paste /dev/null - 
 }
 
 # Dot update
