@@ -67,9 +67,9 @@ indent() {
 # fails.
 dotu() {
     echo "Pull"
-    dot pull | indent
+    dot pull 2>&1 | indent
     echo "Commit"
-    dotc | indent
+    dotc 2>&1 | indent
     echo "Push"
-    dot push | indent
+    dot push 2>&1 | indent
 }
