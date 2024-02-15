@@ -68,8 +68,8 @@ indent() {
 dotu() {
     echo "Pull"
     dot pull 2>&1 | indent
-    echo "Commit"
+    echo "\nCommit"
     dotc 2>&1 | indent
-    echo "Push"
+    echo "\nPush"
     dot push 2>&1 | indent
 }
