@@ -35,7 +35,6 @@ shorten_stdout() {
 dotc() {
     message="'$*'"
 
-    echo "Git commit\n"
     echo 'Base:'
     rm $(fd nvim.shada ~/dotfiles --type f) &>/dev/null
     base add ~/dotfiles
@@ -69,7 +68,7 @@ dotu() {
     echo "Pull"
     dot pull 2>&1 | indent
     echo "\nCommit"
-    dotc 2>&1 | indent
+    dotc "Automatic Update" 2>&1 | indent
     echo "\nPush"
     dot push 2>&1 | indent
 }
