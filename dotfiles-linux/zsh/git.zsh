@@ -59,7 +59,7 @@ dots() {
 }
 
 indent() {
-    paste /dev/null - 
+    sed -e 's/^/    /'
 }
 
 # Dot update
