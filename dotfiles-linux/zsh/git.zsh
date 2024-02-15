@@ -58,11 +58,18 @@ dots() {
     lins
 }
 
+indent() {
+    sed 's/^/    /'
+}
+
 # Dot update
 # Pulls, commits and pushes all dotfiles layers. Aborts if one of the commands
 # fails.
 dotu() {
-    dot pull
-    dotc
-    dot push
+    echo "Pull"
+    dot pull | indent
+    echo "Commit"
+    dotc | indent
+    echo "Push"
+    dot push | indent
 }
