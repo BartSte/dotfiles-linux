@@ -64,9 +64,9 @@ indent() {
 # Dot update: commit, pull, push
 dotu() {
     echo "Commit"
-    dotc "Automatic Update" | indent
+    dotc "Automatic Update" 2>&1 | indent
     echo "\nPull"
-    dot pull | indent
+    dot pull 2>&1 | indent
     echo "\nPush"
-    dot push | indent
+    dot push 2>&1 | indent
 }
