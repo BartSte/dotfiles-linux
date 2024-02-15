@@ -66,7 +66,7 @@ dotu() {
     echo "Commit"
     dotc "Automatic Update" 2> indent
     echo "\nPull"
-    dot pull 2> indent
+    dot pull > indent
     echo "\nPush"
-    dot push 2> indent
+    dot push > indent
 }
