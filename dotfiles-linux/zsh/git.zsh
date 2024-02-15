@@ -59,7 +59,7 @@ dots() {
 }
 
 indent() {
-    sed 's/^/    /'
+    nl -bn
 }
 
 # Dot update
