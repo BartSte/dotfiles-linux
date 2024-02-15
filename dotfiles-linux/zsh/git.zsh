@@ -59,7 +59,7 @@ dots() {
 }
 
 indent() {
-    nl -bn
+    pr -to 4
 }
 
 # Dot update
