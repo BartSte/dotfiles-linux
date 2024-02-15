@@ -61,14 +61,12 @@ indent() {
     sed -e 's/^/    /'
 }
 
-# Dot update
-# Pulls, commits and pushes all dotfiles layers. Aborts if one of the commands
-# fails.
+# Dot update: commit, pull, push
 dotu() {
-    echo "Pull"
-    dot pull 2>&1 | indent
-    echo "\nCommit"
+    echo "Commit"
     dotc "Automatic Update" 2>&1 | indent
+    echo "\nPull"
+    dot pull 2>&1 | indent
     echo "\nPush"
     dot push 2>&1 | indent
 }
