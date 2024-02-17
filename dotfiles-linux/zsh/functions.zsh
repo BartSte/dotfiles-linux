@@ -95,4 +95,3 @@ fzf-cd-widget-no-ignore() {
 
     FZF_ALT_C_COMMAND=$_OLD_FZF_ALT_C_COMMAND
 }
-
