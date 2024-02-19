@@ -5,7 +5,7 @@ set -euo pipefail
 # the user to type the passphrase when the script is executed.
 decrypt() {
     local file="$1"
-    gpg --pinentry-mode loopback --batch --passphrase-fd 0 -d "$file"
+    gpg --quiet --pinentry-mode loopback --batch --passphrase-fd 0 -d "$file"
 }
 
 account="${MICROSOFT_ACCOUNT:-}"
@@ -16,14 +16,15 @@ fi
 
 email=$(rbw_get Username "$account")
 tokens="$HOME/.config/neomutt/$email.tokens"
-if [[ -f $tokens ]]; then
+if [[ ! -f $tokens ]]; then
     echo "Tokens file not found: $tokens"
     exit 1
 fi
 
 # Without the decrypt function, the passphrase must be typed when the script is
 # executed.
-"$(rbw get smtp)" | decrypt "$tokens" > /dev/null
+password="$(rbw get smtp)"
+echo "$password" | decrypt "$tokens" >/dev/null
 
 # TODO: do we need this script below? Can we not just send the token to stdout
 # using the decrypt function above?
