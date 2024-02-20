@@ -1,0 +1,12 @@
+[Unit]
+Description=Empty trash older than 7 days
+Documentation=[trash-cli - Command Line Interface to FreeDesktop.org Trash.](https://askubuntu.com/questions/676007/how-do-i-make-my-systemd-service-run-via-specific-user-and-start-on-boot)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/trash-empty 7
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=timers.target

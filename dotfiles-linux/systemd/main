@@ -1,4 +1,33 @@
 #!/usr/bin/env bash
 
-echo "Linking user systemd services"
-mkdir -p ~/.config/systemd/user
+# Glob the directory ~/dotfiles-linux/systemd/user/ and store all files in an
+# array. Then copy each file to ~/.config/systemd/user. Overwrite existing
+# files. Next, enable each user script with:
+#   systemctl --user enable --now <script>
+#   systemctl --user start <script>
+#   systemctl --user status <script>
+enable_user_scripts() {
+    local script_dir systemd_dir
+    systemd_dir=$1
+    script_dir=$2
+
+    files=("$script_dir"/*)
+    for file in "${files[@]}"; do
+        echo "Copying $file to $systemd_dir"
+        cp -f "$file" "$systemd_dir"
+
+        echo "Enabling $file"
+        systemctl --user enable --now "$(basename "$file")"
+        systemctl --user start "$(basename "$file")"
+        systemctl --user status "$(basename "$file")"
+    done
+}
+
+systemd_dir=~/.config/systemd/user
+script_dir=~/dotfiles-linux/systemd/user
+
+echo "Creating $systemd_dir"
+mkdir -p "$systemd_dir"
+
+echo "Enabling user scripts from $script_dir"
+enable_user_scripts "$systemd_dir" "$script_dir"
