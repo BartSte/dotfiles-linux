@@ -30,7 +30,31 @@ EOF
 }
 
 running_wsl() {
-    [[ $(grep -i microsoft /proc/version) ]]
+    grep -iq microsoft /proc/version
+}
+
+escape_backslashes() {
+    echo "$1" | sed 's/\\/\\\\/g'
+}
+
+parse_args() {
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --wpy-path)
+                path=true
+                ;;
+            --debug)
+                debug=/dev/stderr
+                ;;
+            -h | --help)
+                usage
+                ;;
+            *)
+                command+=("$(escape_backslashes "$1")")
+                ;;
+        esac
+        shift
+    done
 }
 
 get_exe() {
@@ -47,47 +71,33 @@ if ! running_wsl; then
     exit 1
 fi
 
+exe=""
 path=false
 debug=/dev/null
 wpy_ops_passed=false
-command=""
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        --wpy-path)
-            path=true
-            wpy_ops_passed=true
-            ;;
-        --debug)
-            debug=/dev/stderr
-            wpy_ops_passed=true
-            ;;
-        -h | --help)
-            usage
-            wpy_ops_passed=true
-            ;;
-        *)
-            command="$command$1 "
-            ;;
-    esac
-    shift
-done
-echo "path=$path" >$debug
-echo "command=$command" >$debug
+command=()
+parse_args "$@"
 
 if [[ -n $WINVENV ]]; then
     echo "Using WINVENV" >$debug
     exe="$(get_exe "$WINVENV")"
 elif [[ -n $WINPY ]]; then
     exe=$WINPY
-else
-    echo "No python interpreter found" >$debug
 fi
 
-echo "exe=$exe" >$debug
-if [[ $path == true ]]; then
+echo "path=$path
+debug=$debug
+wpy_ops_passed=$wpy_ops_passed
+command=${command[*]}
+exe=$exe" >$debug
+
+if [[ -z $exe ]]; then
+    echo "No python interpreter found" >$debug
+    exit 1
+elif [[ $path == true ]]; then
     echo "Printing path to executable" >$debug
     echo "$exe"
 elif [[ $wpy_ops_passed == false ]]; then
-    echo "Executing $exe $command" >$debug
-    eval "$exe $command"
+    echo "Executing $exe ${command[*]}" >$debug
+    eval "$exe ${command[*]}"
 fi
