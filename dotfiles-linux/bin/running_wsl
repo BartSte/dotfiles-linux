@@ -1,2 +1,2 @@
 #!/usr/bin/bash
-[[ $(grep -i microsoft /proc/version) ]]
+grep -iq microsoft /proc/version
