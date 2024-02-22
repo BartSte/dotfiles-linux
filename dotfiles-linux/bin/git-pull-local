@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+usage="Usage: git-pull-local [options]
+
+Performs \`git pull\` on all local branches that are tracking an existing
+remote branch.
+
+Options:
+  -h, --help  Show this help message and exit
+  -q, --quiet Do not show informative messages from this script.
+  -v, --verbose  Show the git commands being executed"
+
+verbose=false
+debug=/dev/null
+out=/dev/stderr
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -h | --help)
+            echo "$usage"
+            exit 0
+            ;;
+        -q | --quiet)
+            out=/dev/null
+            shift
+            ;;
+        -v | --verbose)
+            verbose=true
+            debug=/dev/stderr
+            shift
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+verbose() {
+    if [[ $1 == true ]]; then
+        set -x
+    fi
+}
+
+#######################################
+# In the output of git branch -vv, branches that contain the string ': gone]'
+# are no longer on the remote repository.
+# Arguments:
+#
+#
+#######################################
+get_branches() {
+    git fetch --prune 2>"$debug"
+    git branch -vv | grep -v ': gone]' | sed 's/*//' | sed 's/^ *//' | awk '{print $1}' 2>"$debug"
+}
+
+pull_branches() {
+    while read -r branch; do
+        echo "Pull branch: $branch" >"$out"
+        git switch "$branch" >"$debug" 2>&1 || echo "Failed to switch to branch: $branch" >"$out"
+        git pull >"$debug" 2>&1 || echo "Failed to pull branch: $branch" >"$out"
+    done
+}
+
+verbose "$verbose"
+current_branch=$(git branch --show-current 2>"$debug")
+echo "Current branch: $current_branch" >"$out"
+
+pull_branches <<<"$(get_branches "$@")"
+
+echo "Restore to branch: $current_branch" >"$out"
+git switch "$current_branch" >"$debug" 2>&1
