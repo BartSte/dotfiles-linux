@@ -2,12 +2,13 @@
 
 set -euo pipefail
 
-usage="Usage: git-pull-local [options]
+usage="Usage: git-pull-local [options] <remote>
 
 Performs \`git pull\` on all local branches that are tracking an existing
-remote branch. It is assumed that:
-- The local and remote branches have the same name.
-- The branches do not have whitespace in their names.
+remote branch on the remote called <remote>. If no remote is specified, the
+default remote is used by calling \`git remote\`.
+
+It is assumed that the branches do not have whitespace in their names.
 
 Options:
   -h, --help  Show this help message and exit
@@ -17,6 +18,7 @@ Options:
 verbose=false
 debug=/dev/null
 out=/dev/stderr
+remote_name=''
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -h | --help)
@@ -33,7 +35,8 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         *)
-            break
+            remote_name="$1"
+            shift
             ;;
     esac
 done
@@ -45,19 +48,34 @@ verbose() {
 }
 
 #######################################
-# Compare `git branch` with `git branch -r` to find branches that are tracking
-# remote branches.
+# git remote show <remote> will give the following output:
+# ....
+#  Remote branches:
+#    develop tracked
+#    main    tracked
+#  Local branches configured for 'git pull':
+#    develop merges with remote develop
+#    main    merges with remote main
+#  Local refs configured for 'git push':
+#    develop pushes to develop (up to date)
+#    main    pushes to main    (up to date)
+#
+# The branches listed under "Local branches configured for 'git pull'" are the
+# ones we want to pull. This function extracts those branches.
 #######################################
 get_branches() {
-    local local_ remote
+    local remote="$1"
+    if [[ -z $remote ]]; then
+        remote=$(git remote)
+    fi
+
     git fetch --all --prune 2>"$debug"
-    local_=$(git branch | sed 's/* //')
-    remote=$(git branch -r | grep -v 'HEAD' | sed 's/ *origin\///')
-    for branch in $local_; do
-        if echo "$remote" | grep -qw "$branch"; then
-            echo "$branch"
-        fi
-    done
+
+    local header_pull="Local.*'git pull'"
+    local header_push="Local.*'git push'"
+    git remote show "$remote" 2>&1 | 
+        sed "0,/$header_pull/d;/$header_push/,\$d" | 
+        awk '{print $1}'
 }
 
 #######################################
@@ -75,7 +93,7 @@ verbose "$verbose"
 current_branch=$(git branch --show-current 2>"$debug")
 echo "Current branch: $current_branch" >"$out"
 
-pull_branches <<<"$(get_branches)"
+pull_branches <<<"$(get_branches "$remote_name")"
 
 echo "Restore to branch: $current_branch" >"$out"
 git switch "$current_branch" >"$debug" 2>&1
