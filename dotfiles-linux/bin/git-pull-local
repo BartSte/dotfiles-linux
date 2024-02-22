@@ -5,7 +5,9 @@ set -euo pipefail
 usage="Usage: git-pull-local [options]
 
 Performs \`git pull\` on all local branches that are tracking an existing
-remote branch.
+remote branch. It is assumed that:
+- The local and remote branches have the same name.
+- The branches do not have whitespace in their names.
 
 Options:
   -h, --help  Show this help message and exit
@@ -42,17 +44,16 @@ verbose() {
     fi
 }
 
-#######################################
-# In the output of git branch -vv, branches that contain the string ': gone]'
-# are no longer on the remote repository.
-#######################################
 get_branches() {
+    local local_ remote
     git fetch --prune 2>"$debug"
-    # TODO: it is better to do branch -a, which will show local and remote
-    # branches. Next, it is easy to filter out the local branches that do not 
-    # have a remote counterpart, assuming that the local and remote branches
-    # have the same name.
-    git branch -vv | grep -v ': gone]' | sed 's/*//' | sed 's/^ *//' | awk '{print $1}' 2>"$debug"
+    local_=$(git branch | sed 's/* //')
+    remote=$(git branch -r | grep -v 'HEAD' | sed 's/origin\///')
+    for branch in $local_; do
+        if echo "$remote" | grep -qw "$branch"; then
+            echo "$branch"
+        fi
+    done
 }
 
 pull_branches() {
