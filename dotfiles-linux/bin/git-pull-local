@@ -45,12 +45,13 @@ verbose() {
 #######################################
 # In the output of git branch -vv, branches that contain the string ': gone]'
 # are no longer on the remote repository.
-# Arguments:
-#
-#
 #######################################
 get_branches() {
     git fetch --prune 2>"$debug"
+    # TODO: it is better to do branch -a, which will show local and remote
+    # branches. Next, it is easy to filter out the local branches that do not 
+    # have a remote counterpart, assuming that the local and remote branches
+    # have the same name.
     git branch -vv | grep -v ': gone]' | sed 's/*//' | sed 's/^ *//' | awk '{print $1}' 2>"$debug"
 }
 
@@ -66,7 +67,7 @@ verbose "$verbose"
 current_branch=$(git branch --show-current 2>"$debug")
 echo "Current branch: $current_branch" >"$out"
 
-pull_branches <<<"$(get_branches "$@")"
+pull_branches <<<"$(get_branches)"
 
 echo "Restore to branch: $current_branch" >"$out"
 git switch "$current_branch" >"$debug" 2>&1
