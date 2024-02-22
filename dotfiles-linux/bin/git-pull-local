@@ -71,8 +71,8 @@ get_branches() {
 
     git fetch --all --prune 2>"$debug"
 
-    local header_pull="Local.*'git pull'"
-    local header_push="Local.*'git push'"
+    local header_pull="Local.*configured for 'git pull':"
+    local header_push="Local.*configured for 'git push':"
     git remote show "$remote" 2>&1 | 
         sed "0,/$header_pull/d;/$header_push/,\$d" | 
         awk '{print $1}'
