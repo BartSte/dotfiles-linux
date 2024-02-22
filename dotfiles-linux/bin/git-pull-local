@@ -50,7 +50,7 @@ verbose() {
 #######################################
 get_branches() {
     local local_ remote
-    git fetch --prune 2>"$debug"
+    git fetch --all --prune 2>"$debug"
     local_=$(git branch | sed 's/* //')
     remote=$(git branch -r | grep -v 'HEAD' | sed 's/ *origin\///')
     for branch in $local_; do
