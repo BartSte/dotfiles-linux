@@ -75,7 +75,7 @@ get_branches() {
     local header_push="Local.*configured for 'git push':"
     git remote show "$remote" 2>&1 | 
         sed "0,/$header_pull/d;/$header_push/,\$d" | 
-        awk '{print $1}'
+        awk '{print $1}' || echo ""
 }
 
 #######################################
@@ -84,16 +84,27 @@ get_branches() {
 pull_branches() {
     while read -r branch; do
         echo "Pull branch: $branch" >"$out"
-        git switch "$branch" >"$debug" 2>&1 || echo "Failed to switch to branch: $branch" >"$out"
-        git pull >"$debug" 2>&1 || echo "Failed to pull branch: $branch" >"$out"
+        git switch "$branch" >"$debug" 2>&1 || { echo "Failed to switch to branch: $branch" >"$out" && exit 1; }
+        git pull >"$debug" 2>&1 || { echo "Failed to pull branch: $branch" >"$out" && exit 1; }
     done
 }
 
 verbose "$verbose"
-current_branch=$(git branch --show-current 2>"$debug")
-echo "Current branch: $current_branch" >"$out"
+current_branch=$(git branch --show-current 2>"$debug" || echo "")
+if [[ -z $current_branch ]]; then
+    echo "No git branch found" >"$out"
+    exit 1
+else
+    echo "Current branch: $current_branch" >"$out"
+fi
 
-pull_branches <<<"$(get_branches "$remote_name")"
+branches="$(get_branches "$remote_name")"
+if [[ -z $branches ]]; then
+    echo "No branches to pull" >"$out"
+    exit 0
+else
+    pull_branches <<<"$branches"
+fi
 
 echo "Restore to branch: $current_branch" >"$out"
 git switch "$current_branch" >"$debug" 2>&1
