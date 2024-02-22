@@ -44,11 +44,15 @@ verbose() {
     fi
 }
 
+#######################################
+# Compare `git branch` with `git branch -r` to find branches that are tracking
+# remote branches.
+#######################################
 get_branches() {
     local local_ remote
     git fetch --prune 2>"$debug"
     local_=$(git branch | sed 's/* //')
-    remote=$(git branch -r | grep -v 'HEAD' | sed 's/origin\///')
+    remote=$(git branch -r | grep -v 'HEAD' | sed 's/ *origin\///')
     for branch in $local_; do
         if echo "$remote" | grep -qw "$branch"; then
             echo "$branch"
@@ -56,6 +60,9 @@ get_branches() {
     done
 }
 
+#######################################
+# Pull branches one by one.
+#######################################
 pull_branches() {
     while read -r branch; do
         echo "Pull branch: $branch" >"$out"
