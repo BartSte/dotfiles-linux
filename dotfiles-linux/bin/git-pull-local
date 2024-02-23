@@ -16,7 +16,7 @@ Options:
   -v, --verbose  Show the git commands being executed"
 
 quiet=false
-verbose=false
+git_quiet="-q"
 remote_name=''
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -29,7 +29,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         -v | --verbose)
-            verbose=true
+            git_quiet=""
             shift
             ;;
         *)
@@ -46,13 +46,6 @@ log() {
     fi
 }
 
-# Redirect stdout and stderr to /dev/null if verbose is false.
-sink() {
-    if [[ $verbose == false ]]; then
-        exec &>/dev/null
-    fi
-}
-
 #######################################
 #######################################
 get_branches() {
@@ -62,10 +55,9 @@ get_branches() {
         remote=$(git remote)
     fi
 
-    git fetch "$remote" --prune
+    git fetch --prune $git_quiet "$remote"
     locals=$(git branch --list --format="%(refname:short)" | grep -v 'HEAD')
     remotes=$(git branch --list --format="%(refname:short)" --remotes | grep -v "^$remote$")
-    # Echo all names from locals that are also in remotes.
     for branch in $locals; do
         if grep -q "^$remote/$branch$" <<<"$remotes"; then
             echo "$branch"
@@ -79,8 +71,8 @@ get_branches() {
 pull_branches() {
     while read -r branch; do
         log "Pull branch: $branch"
-        git switch "$branch"
-        git pull
+        git switch "$branch" $git_quiet
+        git pull $git_quiet
     done
 }
 
@@ -98,5 +90,5 @@ else
     pull_branches <<<"$branches"
 fi
 
-echo "Restore to branch: $current_branch"
-git switch "$current_branch"
+log "Restore to branch: $current_branch"
+git switch "$current_branch" $git_quiet
