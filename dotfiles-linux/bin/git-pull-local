@@ -15,9 +15,8 @@ Options:
   -q, --quiet Do not show informative messages from this script.
   -v, --verbose  Show the git commands being executed"
 
+quiet=false
 verbose=false
-debug=/dev/null
-out=/dev/stderr
 remote_name=''
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -26,12 +25,11 @@ while [[ $# -gt 0 ]]; do
             exit 0
             ;;
         -q | --quiet)
-            out=/dev/null
+            quiet=true
             shift
             ;;
         -v | --verbose)
             verbose=true
-            debug=/dev/stderr
             shift
             ;;
         *)
@@ -41,41 +39,38 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-verbose() {
-    if [[ $1 == true ]]; then
-        set -x
+# Write messages to stderr.
+log() {
+    if [[ $quiet == false ]]; then
+        echo "$1" >&2
+    fi
+}
+
+# Redirect stdout and stderr to /dev/null if verbose is false.
+sink() {
+    if [[ $verbose == false ]]; then
+        exec &>/dev/null
     fi
 }
 
 #######################################
-# git remote show <remote> will give the following output:
-# ....
-#  Remote branches:
-#    develop tracked
-#    main    tracked
-#  Local branches configured for 'git pull':
-#    develop merges with remote develop
-#    main    merges with remote main
-#  Local refs configured for 'git push':
-#    develop pushes to develop (up to date)
-#    main    pushes to main    (up to date)
-#
-# The branches listed under "Local branches configured for 'git pull'" are the
-# ones we want to pull. This function extracts those branches.
 #######################################
 get_branches() {
-    local remote="$1"
+    local locals remotes remote
+    remote=$1
     if [[ -z $remote ]]; then
         remote=$(git remote)
     fi
 
-    git fetch --all --prune 2>"$debug"
-
-    local header_pull="Local.*configured for 'git pull':"
-    local header_push="Local.*configured for 'git push':"
-    git remote show "$remote" 2>&1 | 
-        sed "0,/$header_pull/d;/$header_push/,\$d" | 
-        awk '{print $1}' || echo ""
+    git fetch "$remote" --prune
+    locals=$(git branch --list --format="%(refname:short)" | grep -v 'HEAD')
+    remotes=$(git branch --list --format="%(refname:short)" --remotes | grep -v "^$remote$")
+    # Echo all names from locals that are also in remotes.
+    for branch in $locals; do
+        if grep -q "^$remote/$branch$" <<<"$remotes"; then
+            echo "$branch"
+        fi
+    done
 }
 
 #######################################
@@ -83,28 +78,25 @@ get_branches() {
 #######################################
 pull_branches() {
     while read -r branch; do
-        echo "Pull branch: $branch" >"$out"
-        git switch "$branch" >"$debug" 2>&1 || { echo "Failed to switch to branch: $branch" >"$out" && exit 1; }
-        git pull >"$debug" 2>&1 || { echo "Failed to pull branch: $branch" >"$out" && exit 1; }
+        log "Pull branch: $branch"
+        git switch "$branch"
+        git pull
     done
 }
 
-verbose "$verbose"
-current_branch=$(git branch --show-current 2>"$debug" || echo "")
-if [[ -z $current_branch ]]; then
-    echo "No git branch found" >"$out"
+current_branch=$(git branch --show-current || {
+    log "No git branch found"
     exit 1
-else
-    echo "Current branch: $current_branch" >"$out"
-fi
+})
+log "Current branch: $current_branch"
 
 branches="$(get_branches "$remote_name")"
 if [[ -z $branches ]]; then
-    echo "No branches to pull" >"$out"
+    log "No branches to pull"
     exit 0
 else
     pull_branches <<<"$branches"
 fi
 
-echo "Restore to branch: $current_branch" >"$out"
-git switch "$current_branch" >"$debug" 2>&1
+echo "Restore to branch: $current_branch"
+git switch "$current_branch"
