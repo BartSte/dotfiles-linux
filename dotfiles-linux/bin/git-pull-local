@@ -48,32 +48,25 @@ log() {
 
 #######################################
 #######################################
-get_branches() {
-    local locals remotes remote
+pull_branches() {
+    local remote branch upstream
     remote=$1
     if [[ -z $remote ]]; then
         remote=$(git remote)
     fi
 
+    # TODO: refactor
     git fetch --prune $git_quiet "$remote"
-    locals=$(git branch --list --format="%(refname:short)" | grep -v 'HEAD')
-    remotes=$(git branch --list --format="%(refname:short)" --remotes | grep -v "^$remote$")
-    for branch in $locals; do
-        if grep -q "^$remote/$branch$" <<<"$remotes"; then
-            echo "$branch"
-        fi
-    done
-}
-
-#######################################
-# Pull branches one by one.
-#######################################
-pull_branches() {
-    while read -r branch; do
-        log "Pull branch: $branch"
-        git switch "$branch" $git_quiet
-        git pull $git_quiet
-    done
+    git for-each-ref --format '%(refname:short)' refs/heads/ |
+        while read -r branch; do
+            upstream=$(git for-each-ref --format '%(upstream:short)' refs/heads/"$branch")
+            if [ -n "$upstream" ]; then
+                if git show-ref --verify --quiet refs/remotes/"$upstream"; then
+                    git switch "$branch" $git_quiet
+                    git pull $git_quiet
+                fi
+            fi
+        done
 }
 
 current_branch=$(git branch --show-current || {
@@ -82,13 +75,7 @@ current_branch=$(git branch --show-current || {
 })
 log "Current branch: $current_branch"
 
-branches="$(get_branches "$remote_name")"
-if [[ -z $branches ]]; then
-    log "No branches to pull"
-    exit 0
-else
-    pull_branches <<<"$branches"
-fi
+pull_branches "$remote_name"
 
 log "Restore to branch: $current_branch"
 git switch "$current_branch" $git_quiet
