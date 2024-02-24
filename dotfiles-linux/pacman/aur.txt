@@ -4,7 +4,6 @@ dropbox
 fzf-tab-git
 gcalcli
 kmonad-bin
-rmtrash
 sway-launcher-desktop
 zsh-theme-powerlevel10k-git
 cyrus-sasl-xoauth2-git

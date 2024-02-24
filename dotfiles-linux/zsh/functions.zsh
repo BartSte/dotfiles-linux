@@ -8,12 +8,8 @@ save_source() {
 save_source /usr/share/fzf/key-bindings.zsh
 save_source /usr/share/fzf-help/fzf-help.zsh
 
-rrm() {
-    /usr/bin/rm $@
-}
-
-rm() {
-    rmtrash $@
+dl() {
+    trash-put $@
 }
 
 fps() {
