@@ -8,10 +8,6 @@ save_source() {
 save_source /usr/share/fzf/key-bindings.zsh
 save_source /usr/share/fzf-help/fzf-help.zsh
 
-dl() {
-    trash-put $@
-}
-
 fps() {
     ps aux | fzf
 }

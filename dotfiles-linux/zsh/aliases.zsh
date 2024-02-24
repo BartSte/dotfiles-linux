@@ -22,7 +22,6 @@ alias oldheadphones='bluetoothctl connect $HEADPHONES'
 alias path='echo -e ${PATH//:/\\n}'
 alias py='python3'
 alias reload='source ~/.zshrc && source ~/.zshenv'
-alias rm='rm -i'
 alias ta='tmux attach'
 alias tm='tmux-session ~'
 alias ts='tmux-session $@'
@@ -33,4 +32,15 @@ alias wpip='wpy -m pip $@'
 alias wpytest='wpy -m pytest $@'
 alias yay='export MAKEFLAGS="-j$(nproc)" && yay $@'
 
+# Safety aliases. dl is used instead of rm. This avoids getting careless when
+# using rm on other system, as a habit of using dl is formed. When rm is
+# needed, /bin/rm or /usr/bin/rm should be with the -I flag. If the -f or
+# --force flag is detected, raise a warning that the user must reply with yes
+# or no.
+alias dl='trash-put $@'
+alias rm='echo "Use dl instead of rm. If you need rm, use /bin/rm" > /dev/stderr && echo $@ > /dev/null'
+alias /bin/rm='/bin/rm -I $@'
+alias /usr/bin/rm='/usr/bin/rm -I $@'
+
+# Ensure sudo is used with aliases
 alias sudo='sudo '
