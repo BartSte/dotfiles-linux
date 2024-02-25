@@ -7,3 +7,4 @@ kmonad-bin
 sway-launcher-desktop
 zsh-theme-powerlevel10k-git
 cyrus-sasl-xoauth2-git
+safe-rm
