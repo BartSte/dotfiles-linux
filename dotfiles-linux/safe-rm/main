@@ -6,9 +6,6 @@ if ! command -v safe-rm &>/dev/null; then
     echo "safe-rm could not be found"
     exit 1
 else
-    echo "Linking safe-rm as ~/dotfiles-linux/bin/rm" > /dev/stderr
-    ln -sf $(which safe-rm) ~/dotfiles-linux/bin/rm
-
     echo "Copying config file to /etc/safe-rm.conf" > /dev/stderr
     sudo cp ~/dotfiles-linux/safe-rm/safe-rm.conf /etc/safe-rm.conf
 fi

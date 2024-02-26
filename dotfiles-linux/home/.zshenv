@@ -1,6 +1,15 @@
-[ $OLD_PATH ] || export OLD_PATH=$PATH
+# Prepend a directory to the PATH if it's not already there. Multiple
+# directories can be passed as arguments.
+add_to_path() {
+    for dir in "$@"; do
+        if [[ ":$PATH:" != *":$dir:"* ]]; then
+            export PATH="$dir:$PATH"
+        fi
+    done
+}
 
-export PATH=$HOME/dotfiles-linux/bin:$HOME/.local/bin:$HOME/.cargo/bin:$HOME/go/bin:$OLD_PATH:/usr/bin/vendor_perl
+add_to_path "$HOME/dotfiles-linux/bin" "$HOME/.local/bin" "$HOME/.cargo/bin" "$HOME/go/bin" /usr/bin/vendor_perl
+
 export BROWSER='qutebrowser'
 export WSLBROWSER='/mnt/c/Program Files/qutebrowser/qutebrowser.exe'
 export EDITOR='nvim'
