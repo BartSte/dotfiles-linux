@@ -82,7 +82,7 @@ pull_branches() {
     fi
 
     log "Fetch $remote"
-    git fetch $git_quiet "$remote"
+    git fetch --prune $git_quiet "$remote"
 
     log "Start pulling branches"
     get_local | while read -r branch; do
