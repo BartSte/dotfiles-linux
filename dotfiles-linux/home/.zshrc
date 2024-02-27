@@ -28,7 +28,7 @@ save_source $dir_plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
 save_source $dir_plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 save_source $dir_zsh/bindings.zsh
 
-save_source $HOME/dotfiles-linux/tmux/sessionrc.zsh
+save_source $HOME/dotfiles-linux/tmux/sessionrc/main.zsh
 
 save_source /usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme
 save_source ~/.p10k.zsh  # must stay at the bottom
