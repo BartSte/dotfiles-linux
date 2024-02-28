@@ -66,11 +66,6 @@ get_exe() {
     }
 }
 
-if ! running_wsl; then
-    echo "Not running WSL" >$debug
-    exit 1
-fi
-
 exe=""
 path=false
 debug=/dev/null
@@ -84,6 +79,12 @@ if [[ -n $WINVENV ]]; then
 elif [[ -n $WINPY ]]; then
     exe=$WINPY
 fi
+
+if ! running_wsl; then
+    echo "Not running WSL" > $debug
+    exit 0;
+fi
+
 
 echo "path=$path
 debug=$debug
