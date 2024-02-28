@@ -1,12 +1,5 @@
-save_source() {
-    local file=$1
-    if [ -f "$file" ]; then
-        source $file
-    fi
-}
-
-save_source /usr/share/fzf/key-bindings.zsh
-save_source /usr/share/fzf-help/fzf-help.zsh
+save-source /usr/share/fzf/key-bindings.zsh
+save-source /usr/share/fzf-help/fzf-help.zsh
 
 fps() {
     ps aux | fzf
