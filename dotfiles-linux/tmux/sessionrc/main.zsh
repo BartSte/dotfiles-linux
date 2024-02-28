@@ -1,17 +1,10 @@
+this_dir=$(dirname "$(realpath "${BASH_SOURCE:-$0}")")
+source $this_dir/helpers.zsh
+
 # This file should be sourced from .zshrc. It will load zsh configurations for
 # specific tmux sessions, based on the session name. If tmux is not running,
 # then use the name of the current this_directory instead.
-get_name() {
-    if [[ "$TMUX" ]]; then
-        # Use the name of the current tmux session.
-        tmux display-message -p '#S'
-    else
-        basename $PWD
-    fi
-}
-
-name=$(get_name)
-this_dir=$(dirname "$(realpath "${BASH_SOURCE:-$0}")")
+name=$(session_name)
 
 [[ "$name" == "snapshot" ]] && source $this_dir/snapshotrc.zsh
 
