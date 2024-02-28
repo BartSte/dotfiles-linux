@@ -2,8 +2,9 @@
 # configurations based on the name of the current directory. This is useful for
 # loading project specific configurations.
 reload-session() {
-    local name=$(basename $PWD)
     local this_dir=$HOME/dotfiles-linux/zsh/sessionrc
+    SESSIONRC_NAME=$(basename $PWD)
+    export SESSIONRC_NAME
 
     [[ "$name" == "snapshot" ]] && source $this_dir/snapshotrc.zsh
 
