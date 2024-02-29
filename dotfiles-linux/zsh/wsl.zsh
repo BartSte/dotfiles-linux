@@ -6,17 +6,16 @@ _winenv() {
 }
 
 reload-wsl() {
-    local path_wsl=/mnt/c/Windows/System32:
-    path_wsl+=/mnt/c/Windows/System32/WindowsPowerShell/v1.0/:
-    path_wsl+=/mnt/c/Program\ Files/PowerShell/7-preview/:
-    path_wsl+=/mnt/c/Python310/
-    typeset -U PATH path  # remove duplicat entries from $PATH
-    export PATH=$PATH:$path_wsl
+    append_to_path /mnt/c/Windows/System32
+    append_to_path /mnt/c/Windows/System32/WindowsPowerShell/v1.0/
+    append_to_path /mnt/c/Program\ Files/PowerShell/7-preview/
+    append_to_path /mnt/c/Python310/
+
     export WH=$(wslpath "$(_winenv USERPROFILE)")
     export WSLVENVS="$WH/venvs"
     export PWSH="/mnt/c/Program\ Files/PowerShell/7-preview/pwsh.exe"
 
-    local set_tmux="\$Env:TMUX=\"$TMUX\""
+    set_tmux="\$Env:TMUX=\"$TMUX\""
     alias wh="cd $WH"
     alias mirror='echo $(pwd | sed "s|$HOME|$WH|")'
     alias winmirror='wslpath -w $(mirror)'
