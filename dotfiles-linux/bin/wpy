@@ -40,18 +40,18 @@ escape_backslashes() {
 parse_args() {
     while [[ $# -gt 0 ]]; do
         case $1 in
-            --wpy-path)
-                path=true
-                ;;
-            --debug)
-                debug=/dev/stderr
-                ;;
-            -h | --help)
-                usage
-                ;;
-            *)
-                command+=("$(escape_backslashes "$1")")
-                ;;
+        --wpy-path)
+            path=true
+            ;;
+        --debug)
+            debug=/dev/stderr
+            ;;
+        -h | --help)
+            usage
+            ;;
+        *)
+            command+=("$(escape_backslashes "$1")")
+            ;;
         esac
         shift
     done
@@ -66,11 +66,6 @@ get_exe() {
     }
 }
 
-if ! running_wsl; then
-    echo "Not running WSL" >$debug
-    exit 1
-fi
-
 exe=""
 path=false
 debug=/dev/null
@@ -83,6 +78,11 @@ if [[ -n $WINVENV ]]; then
     exe="$(get_exe "$WINVENV")"
 elif [[ -n $WINPY ]]; then
     exe=$WINPY
+fi
+
+if ! running_wsl; then
+    echo "Not running WSL" >$debug
+    exit 0
 fi
 
 echo "path=$path
