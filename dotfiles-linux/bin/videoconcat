@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+
+usage="Usage: videoconcat <videos> <output>
+
+Concatenate videos using ffmpeg. Here <videos> is a .txt file containing the
+list of videos to concatenate. The syntax is as follows:
+
+files.txt
+----------
+file '/path/to/video1.mp4'
+file '/path/to/video2.mp4'
+----------
+
+The <output> is the name of the output file.
+
+Options:
+  -h, --help  Show this message and exit."
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+    -h | --help)
+        echo "$usage"
+        exit 0
+        ;;
+    *)
+        break
+        ;;
+    esac
+    shift
+done
+
+file="$1"
+output="$2"
+ffmpeg -f concat -safe 0 -i "$file" -c copy "$output"

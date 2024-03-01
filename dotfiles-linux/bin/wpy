@@ -18,10 +18,10 @@ All arguments passed to wpy are directly passed to the python interpreter. When
 one of the options below is passed, no arguments are passed to python.
 
 Options:
-  -h, --help      Show this message. No arguments are passed to python anymore.
+  --wpy-help      Show this message. No arguments are passed to python anymore.
   --wpy-path      Print the path to the python executable, do not execute
                   any command. No arguments are passed to python anymore.
-  --debug         Enable debug output. No arguments are passed to python
+  --wpy-debug     Enable debug output. No arguments are passed to python
                   anymore.
 
 Commands:
@@ -43,10 +43,10 @@ parse_args() {
         --wpy-path)
             path=true
             ;;
-        --debug)
+        --wpy-debug)
             debug=/dev/stderr
             ;;
-        -h | --help)
+        --wpy-help)
             usage
             ;;
         *)
