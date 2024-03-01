@@ -1,9 +1,3 @@
-_zshrc_log() {
-    if ${_zshrc_verbose:-false}; then
-        echo "$@" 2>&1
-    fi
-}
-
 _zshrc_plugins() {
     _zshrc_log "Loading zsh plugins"
     local dir_plugins=$1
@@ -54,5 +48,4 @@ reload() {
     _zshrc_p10k
 }
 
-_zshrc_verbose=false
 reload "$@"
