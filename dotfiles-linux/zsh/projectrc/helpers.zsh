@@ -3,7 +3,7 @@
 # possible, as this gives the same settings for the whole session, even when
 # you are changing your current working directory.
 get_project_name() {
-    if [ -n "$TMUX" ]; then
+    if [ -n "${TMUX:-}" ]; then
         tmux display-message -p '#S'
     else
         basename $(pwd)
