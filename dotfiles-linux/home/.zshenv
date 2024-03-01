@@ -1,12 +1,4 @@
-# Prepend a directory to the PATH if it's not already there. Multiple
-# directories can be passed as arguments.
-add_to_path() {
-    for dir in "$@"; do
-        if [[ ":$PATH:" != *":$dir:"* ]]; then
-            export PATH="$dir:$PATH"
-        fi
-    done
-}
+source "$HOME/dotfiles-linux/zsh/bootstrap.zsh"
 
 add_to_path "$HOME/dotfiles-linux/bin" "$HOME/.local/bin" "$HOME/.cargo/bin" "$HOME/go/bin" /usr/bin/vendor_perl
 
