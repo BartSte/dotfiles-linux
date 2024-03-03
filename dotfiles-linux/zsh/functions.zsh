@@ -89,7 +89,7 @@ fullsync() {
     dotu
 
     echo "\n### Syncing dropbox"
-    rclone sync dropbox: ~/dropbox
+    rclone bisync dropbox: ~/dropbox
 
     echo "\n### Syncing calendar"
     mycalsync
