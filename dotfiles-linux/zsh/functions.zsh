@@ -86,7 +86,7 @@ fullsync() {
     rbw unlock && rbw sync > _zsh_log
 
     echo "Syncing dotfiles"
-    dotu
+    dotu > _zsh_log
 
     echo "Syncing dropbox"
     rclone sync dropbox: ~/dropbox
