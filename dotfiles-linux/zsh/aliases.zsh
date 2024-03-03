@@ -32,5 +32,6 @@ alias wpip='wpy -m pip'
 alias wpytest='wpy -m pytest'
 alias yay='export MAKEFLAGS="-j$(nproc)" && yay'
 alias rm='echo "Tip: use dl to delete to trash" > /dev/stderr; /usr/lib/safe-rm/rm -i'
-alias bisync='rclone bisync dropbox: ~/dropbox'
-alias update='dotu '
+alias dropsync='rclone bisync dropbox: ~/dropbox'
+
+alias fullsync='unl; dotu; dropsync; mycalsync; mailsync'
