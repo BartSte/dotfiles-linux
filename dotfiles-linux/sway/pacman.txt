@@ -3,6 +3,7 @@ bluez-utils
 brightnessctl
 gammastep
 imv
+noto-fonts-emoji
 pavucontrol
 pulseaudio
 pulseaudio-alsa
