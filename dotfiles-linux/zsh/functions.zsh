@@ -80,3 +80,21 @@ fzf-cd-widget-no-ignore() {
 
     FZF_ALT_C_COMMAND=$_OLD_FZF_ALT_C_COMMAND
 }
+
+fullsync() {
+    echo "Syncing rbw"
+    rbw unlock
+    rbw sync
+
+    echo "Syncing dotfiles"
+    dotu
+
+    echo "Syncing dropbox"
+    rclone sync dropbox: ~/dropbox
+
+    echo "Syncing calendar"
+    mycalsync
+
+    echo "Syncing mail"
+    mailsync
+}
