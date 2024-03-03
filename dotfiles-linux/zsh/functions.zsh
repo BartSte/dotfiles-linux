@@ -83,8 +83,7 @@ fzf-cd-widget-no-ignore() {
 
 fullsync() {
     echo "Syncing rbw"
-    rbw unlock
-    rbw sync
+    rbw unlock && rbw sync > _zsh_log
 
     echo "Syncing dotfiles"
     dotu
