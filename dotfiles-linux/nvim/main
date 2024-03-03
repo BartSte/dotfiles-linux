@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
-get_spell(){
+get_spell() {
     lang=$1
     mkdir ~/.config/nvim/spell --parent
     curl -o ~/.config/nvim/spell/$lang.utf-8.spl http://ftp.vim.org/pub/vim/runtime/spell/$lang.utf-8.spl
 }
 
-symlink_config () {
+symlink_config() {
 
     dotfiles=~/dotfiles/nvim
     directory_config=~/.config/nvim
@@ -17,22 +17,23 @@ symlink_config () {
     mkdir $directory_config/lua
 
     # Avoids including .luarc.json
+    ln $dotfiles/lua/after $directory_config/lua -sf
     ln $dotfiles/lua/config $directory_config/lua -sf
     ln $dotfiles/lua/helpers $directory_config/lua -sf
     ln $dotfiles/lua/plugins $directory_config/lua -sf
-    ln $dotfiles/lua/init.lua $directory_config/lua/init.lua -sf
-    ln $dotfiles/lua/after $directory_config/lua -sf
 
     ln $dotfiles/vim $directory_config -sf
-    ln $dotfiles/after $directory_config -sf
-    ln $dotfiles/plugin $directory_config -sf
+
     ln $dotfiles/init.lua $directory_config/init.lua -sf
+    ln $dotfiles/lua/settings.lua $directory_config/lua/settings.lua -sf
+    ln $dotfiles/lua/init.lua $directory_config/lua/init.lua -sf
+
     ln $dotfiles/lazy-lock.json $directory_config/lazy-lock.json -f # needs to be hardlink
 
 }
 
 echo "# nvim"
-symlink_config 
+symlink_config
 get_spell nl
 get_spell en
 ln -sf ~/dotfiles/scripts/sorters/sort_variable_length ~/dotfiles-linux/bin/
