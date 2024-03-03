@@ -82,18 +82,18 @@ fzf-cd-widget-no-ignore() {
 }
 
 fullsync() {
-    echo "Syncing rbw"
-    rbw unlock && rbw sync > _zsh_log
+    echo "### Syncing rbw"
+    rbw unlock && rbw sync
 
-    echo "Syncing dotfiles"
-    dotu > _zsh_log
+    echo "\n### Syncing dotfiles"
+    dotu
 
-    echo "Syncing dropbox"
+    echo "\n### Syncing dropbox"
     rclone sync dropbox: ~/dropbox
 
-    echo "Syncing calendar"
+    echo "\n### Syncing calendar"
     mycalsync
 
-    echo "Syncing mail"
+    echo "\n### Syncing mail"
     mailsync
 }
