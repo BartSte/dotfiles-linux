@@ -15,7 +15,7 @@ reload-wsl() {
     export WSLVENVS="$WH/venvs"
     export PWSH="/mnt/c/Program\ Files/PowerShell/7-preview/pwsh.exe"
 
-    set_tmux="\$Env:TMUX=\"$TMUX\""
+    set_tmux="\$Env:TMUX=\"${TMUX:-}\""
     alias wh="cd $WH"
     alias mirror='echo $(pwd | sed "s|$HOME|$WH|")'
     alias winmirror='wslpath -w $(mirror)'
