@@ -12,22 +12,14 @@ symlink_config() {
     directory_config=~/.config/nvim
 
     rm $directory_config -rf
-
     mkdir $directory_config -p
-    mkdir $directory_config/lua
 
-    # Avoids including .luarc.json
-    ln $dotfiles/lua/after $directory_config/lua -sf
-    ln $dotfiles/lua/config $directory_config/lua -sf
-    ln $dotfiles/lua/helpers $directory_config/lua -sf
-    ln $dotfiles/lua/plugins $directory_config/lua -sf
-
+    # Subdirectories are linked to avoid spell and .luarc.json files to be
+    # added to my dotfiles. Also, it works better if lazy-lock.json is a
+    # hardlink
+    ln $dotfiles/lua $directory_config -sf
     ln $dotfiles/vim $directory_config -sf
-
     ln $dotfiles/init.lua $directory_config/init.lua -sf
-    ln $dotfiles/lua/settings.lua $directory_config/lua/settings.lua -sf
-    ln $dotfiles/lua/init.lua $directory_config/lua/init.lua -sf
-
     ln $dotfiles/lazy-lock.json $directory_config/lazy-lock.json -f # needs to be hardlink
 
 }
