@@ -1,6 +1,5 @@
 chromium-widevine
 davmail
-dropbox
 fzf-tab-git
 gcalcli
 kmonad-bin

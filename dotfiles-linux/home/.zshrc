@@ -38,7 +38,7 @@ _zshrc_p10k() {
 
 # Load zsh config. Loading ~/.p10k.zsh must not be loaded with
 # `set -euo pipefail`, therefore it is excluded from _zshrc_load.
-reload() {
+zshrc() {
     source "$HOME/dotfiles-linux/zsh/bootstrap.zsh"
 
     [[ $1 == "-v" || $1 == "--verbose" ]] && _zshrc_verbose=true
@@ -48,4 +48,4 @@ reload() {
     _zshrc_p10k
 }
 
-reload "$@"
+zshrc "$@"
