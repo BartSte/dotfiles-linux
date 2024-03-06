@@ -1,8 +1,7 @@
 #!/bin/bash
 
-running_wsl && dropbox=$WH/Dropbox || dropbox=$HOME/dropbox
 calsync \
     $HOME/.config/davmail/davmail.properties \
-    $dropbox/org/outlook.org \
+    $HOME/dropbox/org/outlook.org \
     outlook_local today 180d \
     $@

@@ -7,7 +7,6 @@ link_config() {
     ln -sf $target $link
 }
 
-# The bookmarks are private and shared across Dropbox.
 link_bookmarks() {
     target_urls="$HOME/dotfiles/qutebrowser/urls"
     target_quickmarks="$HOME/dotfiles/qutebrowser/quickmarks"
