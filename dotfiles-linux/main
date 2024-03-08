@@ -64,9 +64,8 @@ main_raspberry() {
 # On wsl, do not install:
 # - sway: using the windows gui instead
 # - kmonad: using the windows kmonad instead
-# - dropbox: using the windows dropbox instead
 main_arch_wsl() {
-    execute_exclude apt sway kmonad dropbox
+    execute_exclude apt sway kmonad
 }
 
 while [[ $# -gt 0 ]]; do
