@@ -34,7 +34,7 @@ running_wsl() {
 }
 
 escape_backslashes() {
-    echo "$1" | sed 's/\\/\\\\/g'
+    sed 's/\\/\\\\/g'
 }
 
 parse_args() {
@@ -50,7 +50,9 @@ parse_args() {
             usage
             ;;
         *)
-            command+=("$(escape_backslashes "$1")")
+            echo "Adding $1 to command" >$debug
+            command+=("$(printf "%s\n" "$1" | escape_backslashes)")
+            echo "Command is now: ${command[*]}" >$debug
             ;;
         esac
         shift
