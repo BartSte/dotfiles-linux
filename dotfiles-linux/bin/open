@@ -105,7 +105,8 @@ is_pytest_error() {
 }
 
 is_python_error() {
-    # TODO: this one does not recognize the pyton_errors ...
+    # TODO: python errors are not passed correctly to open by fzf-url becaues
+    # of the whitespace between the file and line number
     [[ $1 =~ "\"[a-zA-Z0-9\\\/\_\.]*\.py\",\sline\s[0-9]+" ]]
 }
 
@@ -121,8 +122,8 @@ open_pytest_error() {
 }
 
 open_python() {
-    local file=$1
-    local line=$2
+    local file=$(sed 's/^[^\/]*\(.*\.py\).*$/\1/' <<<"$1")
+    local line=${2:-0}
 
     echo "Opening python file: $file at line $line at window:pane $TVIM_WINDOW:$TVIM_PANE" >>$debug
 
