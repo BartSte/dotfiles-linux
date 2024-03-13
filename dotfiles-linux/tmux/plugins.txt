@@ -1,2 +1,2 @@
 https://github.com/IngoMeyer441/tmux-easy-motion
-https://github.com/BartSte/tmux-fzf-url
+https://github.com/wfxr/tmux-fzf-url
