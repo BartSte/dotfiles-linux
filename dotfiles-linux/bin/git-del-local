@@ -11,33 +11,40 @@ specified, the default remote is used by calling \`git remote\`.
 It is assumed that the branches do not have whitespace in their names.
 
 Options:
+  -y, --yes         Do not prompt for confirmation before deleting branches.
   -h, --help        Show this help message and exit
   -q, --quiet       Do not show informative messages from this script.
   -v, --verbose     Show the git commands being executed"
 
+yes=false
 quiet=false
 git_quiet="-q"
 remote_name=''
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        -h | --help)
-            echo "$usage"
-            exit 0
-            ;;
-        -q | --quiet)
-            quiet=true
-            shift
-            ;;
-        -v | --verbose)
-            git_quiet=""
-            shift
-            ;;
-        *)
-            remote_name="$1"
-            shift
-            ;;
+    -h | --help)
+        echo "$usage"
+        exit 0
+        ;;
+    -y | --yes)
+        yes=true
+        shift
+        ;;
+    -q | --quiet)
+        quiet=true
+        shift
+        ;;
+    -v | --verbose)
+        git_quiet=""
+        shift
+        ;;
+    *)
+        remote_name="$1"
+        shift
+        ;;
     esac
 done
+remote_name=${remote_name:-$(git remote)}
 
 ##############################################################################
 # Prints the message $1 to stderr if the script is not running in quiet mode.
@@ -46,6 +53,13 @@ log() {
     if [[ $quiet == false ]]; then
         echo "$1" >&2
     fi
+}
+
+##############################################################################
+# Check if the git remote $1 exists.
+##############################################################################
+remote_exists() {
+    git remote | grep -q "^$1$"
 }
 
 ##############################################################################
@@ -71,7 +85,47 @@ upstream_exists() {
 }
 
 ##############################################################################
-# Delete local branches that are not tracking an existing upstream branch on
-# the remote called $1.
+# Delets all local branches that are not tracking an existing upstream branch on
+# the remote called $1. If no remote is specified, the default remote is used.
+# Before deleting a branch, the user is prompted for confirmation.
 ##############################################################################
-# TODO:
+delete_branches() {
+    remote="$1"
+    local local_branch
+    for local_branch in $(get_local); do
+        local remote_branch="$remote/$local_branch"
+        if ! upstream_exists "$remote_branch"; then
+            log "No upstream branch found for $local_branch on remote $remote"
+            if [[ $yes == false ]]; then
+                echo "Delete $local_branch? [y/N]"
+                read -r response
+            fi
+
+            if [[ $yes == true || $response == "y" || $response == "Y" ]]; then
+                log "Deleting $local_branch"
+                git branch -D "$local_branch" $git_quiet
+            elif [[ $response == "n" || $response == "N" ]]; then
+                log "Keep $local_branch"
+            else
+                log "Invalid response: $response"
+                log "Keep $local_branch"
+            fi
+            log ""
+        fi
+    done
+}
+
+if ! git rev-parse --is-inside-work-tree &>/dev/null; then
+    echo "Not in a git repository" >&2
+    exit 1
+fi
+
+if $(remote_exists "$remote_name"); then
+    log "Using remote: $remote_name"
+else
+    log "Remote $remote_name does not exist"
+    exit 1
+fi
+
+delete_branches "$remote_name"
+log "Done"
