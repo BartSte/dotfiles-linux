@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+
+. ~/dotfiles-linux/open/conditions.bash
+. ~/dotfiles-linux/open/openers.bash
+. ~/dotfiles-linux/open/wsl.bash
+
+usage="Usage: $0 <path>
+Opens a path in a preferred program.
+
+The option -w, --win can be used to convert all windows paths to wsl paths. 
+This is useful when you want to open a windows file in wsl. All arguments
+after the options will be interpreted as a path that should be opened, though 
+-- can also be used to indicate the end of the options.
+
+Options:
+    -h, --help      Show this message and exit.
+    -w, --win       Convert windows paths to wsl paths, by default this is not
+                    done. If wsl is not running, this fails and is ignored.
+    -d, --debug     Send debug messages to stdout or a file. For example:
+                    -d /dev/stdout or -d /tmp/debug.log"
+
+win=false
+debug=/dev/null
+while [[ $# -gt 0 ]]; do
+    case $1 in
+    -h | --help)
+        echo "$usage"
+        exit 0
+        ;;
+    -w | --win)
+        win=true
+        ;;
+    -d | --debug)
+        debug=$2
+        date >$debug
+        shift
+        ;;
+    --)
+        path="$@"
+        break
+        ;;
+    *)
+        path="$@"
+        break
+        ;;
+    esac
+    shift
+done
+
+echo "Opening path/url: $path" >>$debug
+echo "option: win is: $win" >>$debug
+
+if is_url $path; then
+    open_url $path
+    exit 0
+fi
+
+if is_html "$path"; then
+    open_url "$path"
+
+elif is_image "$path"; then
+    open_img "$path"
+
+elif is_pdf "$path"; then
+    zathura "$path"
+
+elif is_python "$path" || is_cpp "$path"; then
+    open_text "$path"
+
+elif running_tmux; then
+    tmux display-message -d 2000 "No handler for $path."
+
+else
+    echo "No handler for $path."
+fi
