@@ -13,7 +13,11 @@ This script is used to grep the follow text from stdin:
 | pytest error | {file}:{line}:             | test/test.py:123:                 | yes                  |
 | clang error  | {file}:{line}:{column}:    | test/test.cpp:123:4:              | no                   |
 |--------------+----------------------------+-----------------------------------+----------------------|
-  
+
+The types are detected base on their patterns. After the detection, they are
+converted to the following convetion:
+
+- {file}:{line}:{column}
 
 options:
     -h, --help: show this help message and exit
@@ -26,8 +30,26 @@ if [[ $1 == '-h' || $1 == '--help' ]]; then
 fi
 
 RE_PYTEST_ERROR="^[a-zA-Z0-9\\\/\_\.\-]*\.py:[0-9]+:"
-RE_PYTHON_ERROR="\"[a-zA-Z0-9\\\/\_\.]*\.py\",\sline\s[0-9]+"
+RE_PYTHON_ERROR="\"([a-zA-Z0-9\\\/\_\.]*\.py)\",\sline\s([0-9]+)"
 RE_CLANG_ERROR=""
-
 RE="($RE_PYTEST_ERROR)|($RE_CLANG_ERROR)|($RE_PYTHON_ERROR)"
-grep -Eoi $RE
+
+################################################################################
+# The convention for opening python files is: file:line:column. This is not the
+# case for pytest errors. This function corrects that.
+################################################################################
+convert_python_error() {
+    sed -E "s/$RE_PYTHON_ERROR/\1:\2:/g"
+}
+
+################################################################################
+# The main function.
+# Grep the all patterns from stdin. Later apply the other functions to the
+# output.
+################################################################################
+main() {
+    grep -Eoi $RE |
+        convert_python_error
+}
+
+main

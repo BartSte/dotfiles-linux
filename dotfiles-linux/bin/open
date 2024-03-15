@@ -22,26 +22,26 @@ EOF
 parse_args() {
     while [[ $# -gt 0 ]]; do
         case $1 in
-            -h | --help)
-                show_usage
-                exit 0
-                ;;
-            -w | --win)
-                win=true
-                ;;
-            -d | --debug)
-                debug=$2
-                date >$debug
-                shift
-                ;;
-            --)
-                path="$@"
-                break
-                ;;
-            *)
-                path="$@"
-                break
-                ;;
+        -h | --help)
+            show_usage
+            exit 0
+            ;;
+        -w | --win)
+            win=true
+            ;;
+        -d | --debug)
+            debug=$2
+            date >$debug
+            shift
+            ;;
+        --)
+            path="$@"
+            break
+            ;;
+        *)
+            path="$@"
+            break
+            ;;
         esac
         shift
     done
@@ -100,49 +100,20 @@ is_cpp() {
     [[ $1 =~ .*\.c ]] || [[ $1 =~ .*\.h ]] || [[ $1 =~ .*\.cpp ]] || [[ $1 =~ .*\.hpp ]]
 }
 
-is_pytest_error() {
-    [[ $1 =~ [a-zA-Z0-9\\\/\_]*\.py:[0-9]+: ]]
-}
-
-is_python_error() {
-    # TODO: python errors are not passed correctly to open by fzf-url becaues
-    # of the whitespace between the file and line number
-    [[ $1 =~ "\"[a-zA-Z0-9\\\/\_\.]*\.py\",\sline\s[0-9]+" ]]
-}
-
-open_pytest_error() {
-    local path=$1
-
-    local file=$(echo $path | cut -d ':' -f 1 | convert_win_path)
-    local line=$(echo $path | cut -d ':' -f 2 -s)
-
-    echo "Opening pytest error as file $file at line $line" >>$debug
-
-    open_python $file $line
-}
-
 open_python() {
-    local file=$(sed 's/^[^\/]*\(.*\.py\).*$/\1/' <<<"$1")
-    local line=${2:-0}
+    local path=$1
+    local file=$(echo $path | cut -d ':' -f 1)
+    local line=$(echo $path | cut -d ':' -f 2 -s) # -s ensures nothing is returned if ':' is not found
+    line=${line:-1}
 
+    echo "Path is: $path" >>$debug
     echo "Opening python file: $file at line $line at window:pane $TVIM_WINDOW:$TVIM_PANE" >>$debug
 
     if running_tmux; then
-        tvim -d /tmp/tvim.log -l $line $file 
+        tvim -d /tmp/tvim.log -l $line $file
     else
         nvim -c ":e $file|$line"
     fi
-}
-
-open_python_error() {
-    local path=$1
-
-    local file=$(echo $path | grep -o "[a-zA-Z0-9\\\/\_\.]*\.py" | convert_win_path)
-    local line=$(echo $path | grep -o "line\s[0-9]*" | grep -o "[0-9]*")
-
-    echo "Opening python error as file $file at line $line" >>$debug
-
-    open_python $file $line
 }
 
 open_cpp() {
@@ -188,12 +159,6 @@ elif is_image "$path"; then
 
 elif is_pdf "$path"; then
     zathura "$path"
-
-elif is_pytest_error "$path"; then
-    open_pytest_error "$path"
-
-elif is_python_error "$path"; then
-    open_python_error "$path"
 
 elif is_python "$path"; then
     open_python "$path"
