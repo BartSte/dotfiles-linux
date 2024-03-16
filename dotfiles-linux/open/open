@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
+set -euo pipefail
+this_dir=$(dirname "$(readlink -f "$0")")
 
-. ~/dotfiles-linux/open/conditions.bash
-. ~/dotfiles-linux/open/openers.bash
-. ~/dotfiles-linux/open/wsl.bash
+. "$this_dir"/conditions.bash
+. "$this_dir"/openers.bash
+. "$this_dir"/logger.bash
 
 usage="Usage: $0 <path>
 Opens a path in a preferred program.
@@ -16,11 +18,12 @@ Options:
     -h, --help      Show this message and exit.
     -w, --win       Convert windows paths to wsl paths, by default this is not
                     done. If wsl is not running, this fails and is ignored.
-    -d, --debug     Send debug messages to stdout or a file. For example:
-                    -d /dev/stdout or -d /tmp/debug.log"
+    -l, --log       Send debug messages a file.
+    -q, --quiet     Suppress all output.
+    -v, --verbose   Show more output."
 
-win=false
-debug=/dev/null
+path=""
+win=""
 while [[ $# -gt 0 ]]; do
     case $1 in
     -h | --help)
@@ -28,34 +31,41 @@ while [[ $# -gt 0 ]]; do
         exit 0
         ;;
     -w | --win)
-        win=true
+        win="-w"
         ;;
-    -d | --debug)
-        debug=$2
-        date >$debug
+    -l | --log)
+        OPEN_LOG_FILE="$2"
         shift
         ;;
+    -q | --quiet)
+        OPEN_LOG_LEVEL="quiet"
+        ;;
+    -v | --verbose)
+        OPEN_LOG_LEVEL="verbose"
+        ;;
     --)
-        path="$@"
+        shift
         break
         ;;
     *)
-        path="$@"
-        break
+        if [[ -z $path ]]; then
+            path=$1
+        else
+            echo "Unknown option: $1" >&2
+            exit 1
+        fi
         ;;
     esac
     shift
 done
 
-echo "Opening path/url: $path" >>$debug
-echo "option: win is: $win" >>$debug
+log "Opening path/url: $path" -v
+log "Options: win is: $win" -v
 
-if is_url $path; then
-    open_url $path
-    exit 0
-fi
+if is_url "$path"; then
+    open_url "$path"
 
-if is_html "$path"; then
+elif is_html "$path"; then
     open_url "$path"
 
 elif is_image "$path"; then
@@ -64,8 +74,8 @@ elif is_image "$path"; then
 elif is_pdf "$path"; then
     zathura "$path"
 
-elif is_python "$path" || is_cpp "$path"; then
-    open_text "$path"
+elif is_text "$path"; then
+    open_text "$path" "$win"
 
 elif running_tmux; then
     tmux display-message -d 2000 "No handler for $path."

@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+this_dir="$(dirname "$(readlink -f "$0")")"
+. "$this_dir/regexes.sh"
+
+################################################################################
+# The convention for opening python files is: file:line:column. This is not the
+# case for pytest errors. This function corrects that.
+################################################################################
+sed -E "s/$RE_PYTHON_ERROR/\1:\2:/g"

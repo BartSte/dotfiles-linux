@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+this_dir="$(dirname "$(readlink -f "$0")")"
+. "$this_dir/regexes.sh"
+
+################################################################################
+# Grep the all patterns from stdin. Later apply the other functions to the
+# output.
+################################################################################
+RE="($RE_PYTEST_ERROR)|($RE_CLANG_ERROR)|($RE_PYTHON_ERROR)"
+grep -Eoi "$RE"
