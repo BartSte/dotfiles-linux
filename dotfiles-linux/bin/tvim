@@ -4,7 +4,9 @@ usage() {
     cat <<EOF
 Usage: tvim [options] [file] 
 
-Open file in Neovim in the tmux window of session at line. If the:
+Open a file in Neovim in a tmux window, session, and line, that can be specified
+through the options. If the:
+
 - session is not specified, the current session will be used. 
 - window is not specified, TVIM_WINDOW will be used, if not set, the current
   window will be used.
@@ -12,8 +14,8 @@ Open file in Neovim in the tmux window of session at line. If the:
   will be used.
 - line is not specified, the first line will be used.
 
-When no vim/neovim is running in the pane, a new neovim instance will be
-started if the pane is running a shell (zsh or bash). Otherwise, the script
+When no vim/neovim is running in the specified pane, a new neovim instance will
+be started if the pane is running a shell (zsh or bash). Otherwise, the script
 will exit with code 1.
 
 When passing the --debug option, debug messages will be printed to stdout.
@@ -54,34 +56,34 @@ assert_tmux() {
 parse_args() {
     while [[ $# -gt 0 ]]; do
         case $1 in
-            -h | --help)
-                usage
-                exit 0
-                ;;
-            -s | --session)
-                session=$2
-                shift
-                ;;
-            -w | --window)
-                window=$2
-                shift
-                ;;
-            -p | --pane)
-                pane=$2
-                shift
-                ;;
-            -l | --line)
-                line=$2
-                shift
-                ;;
-            -d | --debug)
-                debug=$2
-                date >$debug
-                shift
-                ;;
-            *)
-                file=$1
-                ;;
+        -h | --help)
+            usage
+            exit 0
+            ;;
+        -s | --session)
+            session=$2
+            shift
+            ;;
+        -w | --window)
+            window=$2
+            shift
+            ;;
+        -p | --pane)
+            pane=$2
+            shift
+            ;;
+        -l | --line)
+            line=$2
+            shift
+            ;;
+        -d | --debug)
+            debug=$2
+            date >$debug
+            shift
+            ;;
+        *)
+            file=$1
+            ;;
         esac
         shift
     done
