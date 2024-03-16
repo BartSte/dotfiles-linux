@@ -5,7 +5,16 @@ this_dir="$(dirname "$(readlink -f "$0")")"
 . "$this_dir/regexes.sh"
 
 ################################################################################
-# The convention for opening python files is: file:line:column. This is not the
-# case for pytest errors. This function corrects that.
+# Some patterns that can be selected by fzf cannot be accepted by the program
+# that opens them. The functions in this file correct that.
 ################################################################################
-sed -E "s/$RE_PYTHON_ERROR/\1:\2:/g"
+
+################################################################################
+# Python errors do not respect the file:line:column convention for a text file.
+# This is corrected using sed.
+################################################################################
+pytest_error() {
+    sed -E "s/$RE_PYTEST_ERROR/\1:\2:/g"
+}
+
+pytest_error
