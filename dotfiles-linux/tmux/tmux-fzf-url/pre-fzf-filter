@@ -2,7 +2,7 @@
 set -euo pipefail
 
 this_dir="$(dirname "$(readlink -f "$0")")"
-. "$this_dir/regexes.sh"
+. "$this_dir/regexes.bash"
 
 ################################################################################
 # Combine the regexes into 1. All patterns that match will also be send to fzf

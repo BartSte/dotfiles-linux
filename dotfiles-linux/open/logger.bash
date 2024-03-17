@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
 usage="Usage: $0 <message> [-h | --help]
 
@@ -17,10 +18,17 @@ Together with the following variables:
 Options:
     -h, --help      Show this message and exit."
 
-if [[ $1 == "-h" || $1 == "--help" ]]; then
-    echo "$usage"
-    exit 0
-fi
+while [[ $# -gt 0 ]]; do
+    case $1 in
+    -h | --help)
+        echo "$usage"
+        exit 0
+        ;;
+    *)
+        break
+        ;;
+    esac
+done
 
 ################################################################################
 # If the OPEN_LOG_FILE is set, always log to it.
