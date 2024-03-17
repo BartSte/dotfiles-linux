@@ -65,3 +65,9 @@ log() {
 
     echo "$message" >&2
 }
+
+log_clear() {
+    if [[ -n ${OPEN_LOG_FILE:-} ]]; then
+        echo -n "" >"$OPEN_LOG_FILE"
+    fi
+}

@@ -119,6 +119,7 @@ abort() {
 # that fails, it tries to open the input as a file.
 ################################################################################
 main() {
+    log_clear
     try_url "$1" || try_file "$1" "$2" || abort "Could not open $1"
 }
 
