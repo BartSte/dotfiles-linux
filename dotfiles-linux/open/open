@@ -2,27 +2,27 @@
 set -euo pipefail
 this_dir=$(dirname "$(readlink -f "$0")")
 
-. "$this_dir"/conditions.bash
 . "$this_dir"/openers.bash
+. "$this_dir"/helpers.bash
 . "$this_dir"/logger.bash
 
 usage="Usage: $0 <path>
-Opens a path in a preferred program.
+Opens a url or path in a preferred program.
 
-The option -w, --win can be used to convert all windows paths to wsl paths. 
-This is useful when you want to open a windows file in wsl. All arguments
-after the options will be interpreted as a path that should be opened, though 
--- can also be used to indicate the end of the options.
+The option -w, --wslpath can be used to convert a windows paths to a wsl path.
+This is useful when you want to open a windows file in wsl. When you are not 
+running wsl, or the path is already a wsl path, this option has no effect.
 
 Options:
     -h, --help      Show this message and exit.
-    -w, --win       Convert windows paths to wsl paths, by default this is not
-                    done. If wsl is not running, this fails and is ignored.
+    -w, --wslpath   Tries to convert a windows path to a wsl path. Turned off by
+                    default. This option has no effect if: wsl is not running, 
+                    or the path is already a wsl path.
     -l, --log       Send debug messages a file.
     -q, --quiet     Suppress all output.
     -v, --verbose   Show more output."
 
-path=""
+input=""
 win=""
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -31,7 +31,7 @@ while [[ $# -gt 0 ]]; do
         exit 0
         ;;
     -w | --win)
-        win="-w"
+        win=true
         ;;
     -l | --log)
         OPEN_LOG_FILE="$2"
@@ -43,13 +43,9 @@ while [[ $# -gt 0 ]]; do
     -v | --verbose)
         OPEN_LOG_LEVEL="verbose"
         ;;
-    --)
-        shift
-        break
-        ;;
     *)
-        if [[ -z $path ]]; then
-            path=$1
+        if [[ -z $input ]]; then
+            input=$1
         else
             echo "Unknown option: $1" >&2
             exit 1
@@ -59,27 +55,71 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 
-log "Opening path/url: $path" -v
-log "Options: win is: $win" -v
+################################################################################
+# Tries to open a url in a browser. If the url is not a url, the function returns
+# 1.
+################################################################################
+try_url() {
+    log "Try url: $1" -v
+    if is_url "$1"; then
+        open_url "$1"
+    fi
+    return 1
+}
 
-if is_url "$path"; then
-    open_url "$path"
+################################################################################
+# Tries to open a file in a preferred program. If the file is not a file that is
+# supported, the function returns 1.
+#
+# The input may be a path to a file, or in the format: path:line:column. The line
+# and column are optional. If the line and column are not provided, the default
+# is 1.
+################################################################################
+try_file() {
+    local to_open file line column win
+    to_open=$1
+    win=$2
 
-elif is_html "$path"; then
-    open_url "$path"
+    # Split the `to_open` string by setting the word separator to a colon
+    # temporarily.
+    IFS=':' read -r file line column <<<"$to_open"
+    IFS=' ' # Reset IFS
+    line=${line:-1}
+    column=${column:-1}
 
-elif is_image "$path"; then
-    open_img "$path"
+    if $win && running_wsl; then
+        file=$(wslpath -u "$file")
+    fi
 
-elif is_pdf "$path"; then
-    zathura "$path"
+    log "Try file: $file, line: $line, column: $column, win: $win" -v
+    if has_type "$file" image; then
+        open_img "$file"
 
-elif is_text "$path"; then
-    open_text "$path" "$win"
+    elif has_type "$file" pdf; then
+        zathura "$file"
 
-elif running_tmux; then
-    tmux display-message -d 2000 "No handler for $path."
+    elif has_type "$file" text; then
+        open_text "$file" "$line"
+    fi
+}
 
-else
-    echo "No handler for $path."
-fi
+################################################################################
+# Aborts the program with an error message.
+################################################################################
+abort() {
+    log "$1"
+    if running_tmux; then
+        tmux display-message -d 2000 "$1"
+    fi
+    exit 1
+}
+
+################################################################################
+# The main function of the program. It tries to open the input as a url, and if
+# that fails, it tries to open the input as a file.
+################################################################################
+main() {
+    try_url "$1" || try_file "$1" "$2" || abort "Could not open $1"
+}
+
+main "$input" "$win"

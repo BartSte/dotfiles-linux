@@ -2,8 +2,8 @@
 set -euo pipefail
 this_dir=$(dirname "$(readlink -f "$0")")
 
-. "$this_dir"/wsl.bash
 . "$this_dir"/logger.bash
+. "$this_dir"/helpers.bash
 
 open_url() {
     log "Url detected, opening in browser." -v
@@ -30,33 +30,12 @@ open_img() {
 # is running.
 ################################################################################
 open_text() {
-    local path win file line
-    path=""
-    win=false
-    while [[ $# -gt 0 ]]; do
-        case $1 in
-        -w | --win)
-            win=true
-            ;;
-        *)
-            if [[ -z $path ]]; then
-                path=$1
-            else
-                echo "Unknown option: $1" >&2
-                exit 1
-            fi
-            ;;
-        esac
-        shift
-    done
-
-    file=$(echo "$path" | cut -d ':' -f 1 | convert_win_path)
-    line=$(echo "$path" | cut -d ':' -f 2 -s) # -s ensures nothing is returned if ':' is not found
-    line=${line:-1}
+    local file=$1
+    local line=$2
     log "Opening text file: $file at line $line at window:pane $TVIM_WINDOW:$TVIM_PANE" -v
     if running_tmux; then
-        tvim -d /tmp/tvim.log -l $line $file
+        tvim -d /tmp/tvim.log -l "$line" "$file"
     else
-        nvim -c ":e $file|$line"
+        nvim -c ":e $file | $line"
     fi
 }
