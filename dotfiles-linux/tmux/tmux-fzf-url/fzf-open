@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+# items=$(cat -)
+
+# result=$(while read -r item; do
+#     text=$(echo "$item" | sed -E 's/^[ 0-9]+ //')
+#     line_number=$(grep -n "$text" /tmp/tmux-fzf-url-capture | head -n 1 | cut -d: -f1)
+#     echo "$line_number:$text"
+# done <<<"$items")
+
+# eval "echo $items | fzf-tmux $FZF_URL_OPTS --preview 'cat /tmp/tmux-fzf-url-capture | $HOME/dotfiles-linux/tmux/tmux-fzf-url/preview.bash \"$result\" {n}'"
+
+eval "fzf-tmux $FZF_URL_OPTS --preview '$HOME/dotfiles-linux/tmux/tmux-fzf-url/preview.bash {}'"

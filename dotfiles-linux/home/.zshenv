@@ -60,9 +60,8 @@ zshenv() {
     export FZF_ALT_D_OPTS=$FZF_ALT_C_OPTS
 
     _FZF_URL_BINDS="--bind 'ctrl-p:toggle-preview'"
-    _FZF_URL_PREVIEW="--preview '$HOME/dotfiles-linux/tmux/tmux-fzf-url/preview.bash {}'"
     _FZF_URL_WINDOW="--preview-window=hidden"
-    FZF_URL_OPTS="$FZF_DEFAULT_OPTS $_FZF_URL_PREVIEW $_FZF_URL_WINDOW $_FZF_URL_BINDS"
+    FZF_URL_OPTS="$FZF_DEFAULT_OPTS $_FZF_URL_WINDOW $_FZF_URL_BINDS"
     export FZF_URL_OPTS
 }
 zshenv
