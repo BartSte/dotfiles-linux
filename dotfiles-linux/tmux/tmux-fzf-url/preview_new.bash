@@ -1,33 +1,50 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-usage="Usage: $(basename "$0") [-h | --help] <opts> <index>
+usage="Usage: $(basename "$0") [-h | --help] <numbers> <index>
 
-Uses bat to display the help message from stdin. The command line options are
-provided as argument <opts>, where the nth value (<index>) of these options is
-highlighted in the help message. 
+Uses bat to display the text recieved stdin, while highlighting the line number
+that corresponds to the <index>th element of <numbers>. Here, <numbers> is a
+string of line numbers, separated by a whitespace, and <index> is a number.
 
-stdin can, for example, be the output of the \`--help\` command of a program.
+For example: 
 
-The options <opts> must be provided in the following format:
+- stdin:
+    1: This is the first line
+    2: This is the second line
+    3: This is the third line
+    4: and so on ...
+    5: and on ...
 
-    line_number:option1
-    line_number:option2
-    line_number:option3
+- <numbers>: 2 3 5
+- <index>: 2
 
-Where <index> is used to get the line-option pair. This format corresponds to
-the output of the 'ag --only-matching --numbers' command.
+Now the line number 3 will be highlighted in the output using bat.
+
+This script is typically used in combination with fzf's preview-window as
+follows:
+
+    fzf --preview 'echo \$text | \$this_script \$numbers {n}'
+
+where, \$text is the text to display, \$numbers is the list of line numbers,
+and {n} is the index of the selected fzf entry. The assumption is that the
+order of the \$numbers is the same as the order of the fzf entries.
+
+The list of <numbers> that corresponds to a list of \`items\` can be obtained
+using the following command:
+
+    TODO
 
 stdin:
-    The help message to display
+    The text to display.
 
 options:
     -h --help   shows this help messages
     -d --debug  prints debug information instead of executing the command
 
 positional:
-    <opts>  the command line options
-    <index> the index of the option to highlight"
+    <numbers>   the list of line numbers
+    <index>     the index of the <numbers> to highlight"
 
 bat_warning="
 ##############################################################################
