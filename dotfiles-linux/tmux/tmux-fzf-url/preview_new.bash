@@ -23,34 +23,49 @@ Now the line number 3 will be highlighted in the output using bat:
 
     1: This is the first line
     2: This is the second line
---> 3: This is the third line <-- highlighted
+    --> 3: This is the third line <-- highlighted
     4: and so on ...
     5: and on ...
 
 This script is typically used in combination with fzf's preview-window as
 follows:
 
-    fzf --preview 'echo \$text | \$this_script \$numbers {n}'
+fzf --preview 'echo \$text | \$this_script \$numbers {n}'
 
 where, \$text is the text to display, \$numbers is the list of line numbers,
 and {n} is the index of the selected fzf entry. The assumption is that the
 order of the \$numbers is the same as the order of the fzf entries.
 
-The list of <numbers> that corresponds to a list of \`items\` can be obtained
-using the following command:
+The list of <numbers> corresponds to the following:
+- We have a list of items, where each item is a fragment of text.
+- For each item, i.e. the text fragment, there is a line in the text that
+contains the item. 
 
-    TODO
+In the example abov, the list of items could be:
+
+    items=\"first line\nand so on ...\"
+where the items are separated by a newline. 
+
+Now the <numbers> would be: 1 4. 
+
+The <numbers> above can, for example, be obtained by using the following
+command on the text and the items:
+
+    echo -e \$items | grep -n -F -f <(echo -e \$items) | cut -d: -f1
+
+TODO:
+
 
 stdin:
-    The text to display.
+The text to display.
 
 options:
-    -h --help   shows this help messages
-    -d --debug  prints debug information instead of executing the command
+-h --help   shows this help messages
+-d --debug  prints debug information instead of executing the command
 
 positional:
-    <numbers>   the list of line numbers
-    <index>     the index of the <numbers> to highlight"
+<numbers>   the list of line numbers
+<index>     the index of the <numbers> to highlight"
 
 bat_warning="
 ##############################################################################
