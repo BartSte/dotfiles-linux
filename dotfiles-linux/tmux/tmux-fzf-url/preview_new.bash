@@ -19,7 +19,13 @@ For example:
 - <numbers>: 2 3 5
 - <index>: 2
 
-Now the line number 3 will be highlighted in the output using bat.
+Now the line number 3 will be highlighted in the output using bat:
+
+    1: This is the first line
+    2: This is the second line
+--> 3: This is the third line <-- highlighted
+    4: and so on ...
+    5: and on ...
 
 This script is typically used in combination with fzf's preview-window as
 follows:
@@ -58,24 +64,24 @@ environment variable FZF_HELP_BAT_WARNING to false.
 parse_args() {
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            -h | --help)
+        -h | --help)
+            echo "$usage"
+            exit 0
+            ;;
+        -d | --debug)
+            debug=true
+            ;;
+        *)
+            if [[ -z $opts ]]; then
+                opts="$1"
+            elif [[ -z $index ]]; then
+                index="$1"
+            else
+                echo "Unknown argument: $1"
                 echo "$usage"
-                exit 0
-                ;;
-            -d | --debug)
-                debug=true
-                ;;
-            *)
-                if [[ -z $opts ]]; then
-                    opts="$1"
-                elif [[ -z $index ]]; then
-                    index="$1"
-                else
-                    echo "Unknown argument: $1"
-                    echo "$usage"
-                    exit 1
-                fi
-                ;;
+                exit 1
+            fi
+            ;;
         esac
         shift
     done
@@ -183,4 +189,3 @@ scroll=$(get_scroll_lines "$line_number")
 
 printf '\033[2J'
 exec_bat -f -pp -H "$line_number" -r "$scroll": --language="$fzf_help_syntax"
-
