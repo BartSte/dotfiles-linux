@@ -176,10 +176,11 @@ show_bat_warning="${FZF_URL_BAT_WARNING:-true}"
 [[ -z $numbers ]] && echo "Missing <numbers>" && echo "$usage" && exit 1
 [[ -z $index ]] && echo "Missing <index>" && echo "$usage" && exit 1
 
-number=$(sed -n "${index}p" <<<"$numbers")
+number=$(sed -n "$((index + 1))p" <<<"$numbers")
 scroll=$(get_scroll_lines "$number")
 
-[[ -z $number ]] && abort "Invalid index: $index"
+[[ -z $index ]] && abort "Invalid index: $index"
+[[ -z $number ]] && abort "Invalid number: $number"
 [[ -z $scroll ]] && abort "Invalid scroll: $scroll"
 
 printf '\033[2J'
