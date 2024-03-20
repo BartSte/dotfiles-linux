@@ -9,4 +9,4 @@ this_dir="$(dirname "$(readlink -f "$0")")"
 # for selection.
 ################################################################################
 RE="($RE_PYTEST_ERROR)|($RE_CLANG_ERROR)|($RE_PYTHON_ERROR)"
-grep -Eoi "$RE"
+grep -noiE "$RE"

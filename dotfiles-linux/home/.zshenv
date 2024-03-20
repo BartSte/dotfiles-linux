@@ -59,9 +59,11 @@ zshenv() {
 
     export FZF_ALT_D_OPTS=$FZF_ALT_C_OPTS
 
+    _FZF_URL_WINDOW="--layout=reverse -d 40"
+    _FZF_URL_WINDOW+=" --preview-window=hidden,right,75%"
     _FZF_URL_BINDS="--bind 'ctrl-p:toggle-preview'"
-    _FZF_URL_WINDOW="--preview-window=hidden"
-    FZF_URL_OPTS="$FZF_DEFAULT_OPTS $_FZF_URL_WINDOW $_FZF_URL_BINDS"
+    _FZF_URL_BINDS+=" --bind 'ctrl-a:change-preview-window(down,75%,nowrap|right,75%,nowrap)'"
+    FZF_URL_OPTS="$_FZF_URL_WINDOW $_FZF_URL_BINDS"
     export FZF_URL_OPTS
 }
 zshenv

@@ -1,8 +1,2 @@
 #!/usr/bin/env bash
-
-eval "fzf-tmux $FZF_URL_OPTS --preview '$HOME/dotfiles-linux/tmux/tmux-fzf-url/preview.bash {}'"
-
-# items=$(cat -)
-# numbers=$(sed -E 's/^[ 0-9]+ ([0-9]+):.*/\1/' <<<"$items")
-# matches=$(sed -E 's/^([ 0-9]+ )[0-9]+:(.*)/\1\2/' <<<"$items")
-# eval "echo \"$matches\" | fzf-tmux $FZF_URL_OPTS --preview 'cat /tmp/tmux-fzf-url-capture | $HOME/dotfiles-linux/tmux/tmux-fzf-url/preview_new.bash \"$numbers\" {n}'"
+eval "fzf-tmux $FZF_URL_OPTS --preview 'cat /tmp/tmux-fzf-url-capture | $HOME/dotfiles-linux/tmux/tmux-fzf-url/preview_new.bash \"$1\" {n}'"
