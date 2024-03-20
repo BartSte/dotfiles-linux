@@ -28,5 +28,4 @@ echo "# nvim"
 symlink_config
 get_spell nl
 get_spell en
-ln -sf ~/dotfiles/scripts/sorters/sort_variable_length ~/dotfiles-linux/bin/
 sudo pacman -S python-pynvim --noconfirm
