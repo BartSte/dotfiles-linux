@@ -1,2 +1,0 @@
-#!/usr/bin/env bash
-eval "fzf-tmux $FZF_URL_OPTS --preview 'cat /tmp/tmux-fzf-url-capture | $HOME/dotfiles-linux/tmux/tmux-fzf-url/preview_new.bash \"$1\" {n}'"
