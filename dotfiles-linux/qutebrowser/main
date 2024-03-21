@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. $HOME/dotfiles-linux/qutebrowser/helpers.sh
+. "$HOME"/dotfiles-linux/qutebrowser/helpers.sh
 
 echo "Qutebrowser: link config files"
 link_config
