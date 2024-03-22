@@ -17,5 +17,4 @@ sed_python_error() {
     sed -E "s/$RE_PYTHON_ERROR/\1:\2:/g"
 }
 
-# sed_python_error
-cat
+sed_python_error

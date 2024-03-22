@@ -12,7 +12,6 @@ cmake
 exa
 fd
 fzf
-git-crypt
 grim
 inetutils
 isync
