@@ -25,4 +25,4 @@ reload-wsl() {
     alias powh="$PWSH -NoLogo -NoExit -Command 'cd ~;$set_tmux'"
     alias powm="$PWSH -NoLogo -NoExit -Command 'cd $(winmirror);$set_tmux'"
 }
-running_wsl && reload-wsl
+running wsl && reload-wsl

@@ -84,16 +84,16 @@ done
 echo "Installing BartSte/dotfiles-linux repository"
 source ~/.dotfiles_config.sh
 
-if running_arch && running_wsl; then
+if running arch && running wsl; then
     echo "Running on Arch Linux WSL"
     main_arch_wsl
-elif running_arch; then
+elif running arch; then
     echo "Running on Arch Linux"
     main_arch
-elif running_wsl; then
+elif running wsl; then
     echo "Running on Windows WSL"
     echo "Unknown WSL system"
-elif running_raspberry; then
+elif running raspberry; then
     echo "Running on Raspberry Pi"
     main_raspberry
 else

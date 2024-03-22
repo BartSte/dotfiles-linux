@@ -7,7 +7,7 @@ this_dir=$(dirname "$(readlink -f "$0")")
 
 open_url() {
     log "Url detected, opening in browser." -v
-    if running_wsl; then
+    if running wsl; then
         log "Opening url with WSLBROWSER: $WSLBROWSER" -v
         "$WSLBROWSER" "$1" 2>&1 | log -v &
     else
@@ -33,7 +33,7 @@ open_text() {
     local file=$1
     local line=$2
     log "Opening text file: $file at line $line at window:pane $TVIM_WINDOW:$TVIM_PANE" -v
-    if running_tmux; then
+    if running tmux; then
         tvim -d /tmp/tvim.log -l "$line" "$file"
     else
         nvim -c ":e $file | $line"

@@ -29,10 +29,6 @@ Commands:
 EOF
 }
 
-running_wsl() {
-    grep -iq microsoft /proc/version
-}
-
 escape_backslashes() {
     sed 's/\\/\\\\/g'
 }
@@ -82,7 +78,7 @@ elif [[ -n $WINPY ]]; then
     exe=$WINPY
 fi
 
-if ! running_wsl; then
+if ! running wsl; then
     echo "Not running WSL" >$debug
     exit 0
 fi

@@ -87,7 +87,7 @@ try_file() {
     line=${line:-1}
     column=${column:-1}
 
-    if $win && running_wsl; then
+    if $win && running wsl; then
         file=$(wslpath -u "$file")
     fi
 
@@ -108,7 +108,7 @@ try_file() {
 ################################################################################
 abort() {
     log "$1"
-    if running_tmux; then
+    if running tmux; then
         tmux display-message -d 2000 "$1"
     fi
     exit 1

@@ -1,12 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-running_wsl() {
-    grep -iq microsoft /proc/version
-}
-
-running_tmux() { [[ -n $TMUX ]]; }
-
 ################################################################################
 # Checks if a file has a specific extension.
 ################################################################################
