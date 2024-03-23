@@ -63,8 +63,9 @@ try_url() {
     log "Try url: $1" -v
     if is_url "$1"; then
         open_url "$1"
+    else
+        return 1
     fi
-    return 1
 }
 
 ################################################################################
@@ -100,6 +101,9 @@ try_file() {
 
     elif has_type "$file" text; then
         open_text "$file" "$line"
+
+    else
+        return 1
     fi
 }
 

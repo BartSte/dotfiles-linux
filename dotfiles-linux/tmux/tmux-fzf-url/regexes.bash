@@ -13,6 +13,9 @@
 
 # - {file}:{line}:{column}
 
+RE_URL='(https?|ftp|file):/?//[-A-Za-z0-9+&@#/%?=~_|!:,.;]*[-A-Za-z0-9+&@#/%=~_|]'
+RE_WWW='(http://|https://)?www\.[a-zA-Z](-?[a-zA-Z0-9])+\.[a-zA-Z]{2,}(/\S+)*'
+RE_IP='[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}(:[0-9]{1,5})?(/\S+)*'
 RE_PYTEST_ERROR="^[a-zA-Z0-9\\\/\_\.\-]*\.py:[0-9]+:"
 RE_PYTHON_ERROR="\"([a-zA-Z0-9\\\/\_\.]*\.py)\",\sline\s([0-9]+)"
 RE_CLANG_ERROR=""

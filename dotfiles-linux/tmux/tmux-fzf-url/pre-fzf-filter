@@ -8,5 +8,5 @@ this_dir="$(dirname "$(readlink -f "$0")")"
 # Combine the regexes into 1. All patterns that match will also be send to fzf
 # for selection.
 ################################################################################
-RE="($RE_PYTEST_ERROR)|($RE_CLANG_ERROR)|($RE_PYTHON_ERROR)"
+RE="($RE_URL)|($RE_WWW)|($RE_IP)|($RE_PYTEST_ERROR)|($RE_CLANG_ERROR)|($RE_PYTHON_ERROR)"
 grep -noiE "$RE"
