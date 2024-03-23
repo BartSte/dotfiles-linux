@@ -6,9 +6,6 @@ _zshrc_plugins() {
 }
 
 _zshrc_config() {
-    setopt LOCAL_OPTIONS
-    set -euo pipefail
-
     local dir_zsh=$1
     local files=(
         "p10k_init.zsh" # must be first

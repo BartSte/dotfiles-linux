@@ -1,6 +1,6 @@
-setopt autocd extendedglob nomatch notify 
 unsetopt beep
+setopt autocd extendedglob nomatch notify 
 
 # History
-setopt INC_APPEND_HISTORY 
-setopt HIST_IGNORE_ALL_DUPS
+setopt histignorealldups
+setopt incappendhistory
