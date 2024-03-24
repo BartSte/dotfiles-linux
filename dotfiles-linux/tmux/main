@@ -2,9 +2,11 @@
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
-. $script_dir/helpers.sh
+. "$script_dir"/helpers.sh
 
-install_tmux_plugins_from_file $script_dir/plugins.txt
+
+remove_plugins
+install_tmux_plugins_from_file "$script_dir"/plugins.txt
 install_tmux_session
 
 link_tmux_session

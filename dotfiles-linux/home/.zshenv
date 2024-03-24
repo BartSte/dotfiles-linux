@@ -66,7 +66,7 @@ zshenv() {
     FZF_OPEN_OPTS="$_FZF_OPEN_SELECT $_FZF_OPEN_WINDOW $_FZF_OPEN_BINDS"
     export FZF_OPEN_OPTS
 
-    FZF_OPEN_REGEX_EXTRA=$("$HOME"/dotfiles-linux/tmux/tmux-fzf-url/regex-extra)
+    FZF_OPEN_REGEX_EXTRA=$(~/dotfiles-linux/tmux/tmux-fzf-open/regex-extra)
     export FZF_OPEN_REGEX_EXTRA
 }
 zshenv
