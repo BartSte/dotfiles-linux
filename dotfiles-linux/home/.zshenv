@@ -59,11 +59,14 @@ zshenv() {
 
     export FZF_ALT_D_OPTS=$FZF_ALT_C_OPTS
 
-    _FZF_URL_WINDOW="--layout=reverse -d 40"
-    _FZF_URL_WINDOW+=" --preview-window=hidden,right,75%"
-    _FZF_URL_BINDS="--bind 'ctrl-p:toggle-preview'"
-    _FZF_URL_BINDS+=" --bind 'ctrl-a:change-preview-window(down,75%,nowrap|right,75%,nowrap)'"
-    FZF_URL_OPTS="$_FZF_URL_WINDOW $_FZF_URL_BINDS"
-    export FZF_URL_OPTS
+    _FZF_OPEN_SELECT="--multi --layout=reverse -d 40"
+    _FZF_OPEN_WINDOW="--preview-window=hidden,right,75%"
+    _FZF_OPEN_BINDS="--bind 'ctrl-p:toggle-preview'"
+    _FZF_OPEN_BINDS+=" --bind 'ctrl-a:change-preview-window(down,75%,nowrap|right,75%,nowrap)'"
+    FZF_OPEN_OPTS="$_FZF_OPEN_SELECT $_FZF_OPEN_WINDOW $_FZF_OPEN_BINDS"
+    export FZF_OPEN_OPTS
+
+    FZF_OPEN_REGEX_EXTRA=$("$HOME"/dotfiles-linux/tmux/tmux-fzf-url/regex-extra)
+    export FZF_OPEN_REGEX_EXTRA
 }
 zshenv
