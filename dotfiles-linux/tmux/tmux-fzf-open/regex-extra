@@ -8,4 +8,4 @@ this_dir="$(dirname "$(readlink -f "$0")")"
 # Combine the regexes into 1. All patterns that match will also be send to fzf
 # for selection.
 ################################################################################
-echo "($RE_PYTEST_ERROR)|($RE_CLANG_ERROR)|($RE_PYTHON_ERROR)"
+echo "($RE_PYTEST_ERROR)|($RE_PYTHON_ERROR)"
