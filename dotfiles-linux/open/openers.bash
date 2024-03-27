@@ -32,9 +32,9 @@ open_img() {
 open_text() {
     local file=$1
     local line=$2
-    log "Opening text file: $file at line $line at window:pane $TVIM_WINDOW:$TVIM_PANE" -v
+    log "Opening text file: $file at line $line at window:pane $KEY2PANE_WINDOW:$KEY2PANE_PANE" -v
     if running tmux; then
-        tvim -d /tmp/tvim.log -l "$line" "$file"
+        key2pane -d /tmp/key2pane.log -l "$line" "$file"
     else
         nvim -c ":e $file | $line"
     fi

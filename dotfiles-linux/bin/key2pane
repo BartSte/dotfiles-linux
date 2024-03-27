@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 
-usage="Usage: tvim [options] [file] 
+usage="Usage: key2pane [options] [file] 
 
 Open a file in Neovim in a tmux window, session, and line, that can be specified
 through the options. If the:
 
 - session is not specified, the current session will be used. 
-- window is not specified, TVIM_WINDOW will be used, if not set, the current
+- window is not specified, KEY2PANE_WINDOW will be used, if not set, the current
   window will be used.
-- pane is not specified, TVIM_PANE will be used, if not set, the current pane
+- pane is not specified, KEY2PANE_PANE will be used, if not set, the current pane
   will be used.
 - line is not specified, the first line will be used.
 
@@ -151,10 +151,10 @@ sendkeys() {
 assert_tmux
 
 line=1
-pane=${TVIM_PANE:-$(tmux display-message -p '#P')}
-window=${TVIM_WINDOW:-$(tmux display-message -p '#I')}
+pane=${KEY2PANE_PANE:-$(tmux display-message -p '#P')}
+window=${KEY2PANE_WINDOW:-$(tmux display-message -p '#I')}
 verbose=false
-logfile=$(dirname "$(mktemp -u)")/tvim.log
+logfile=$(dirname "$(mktemp -u)")/key2pane.log
 session=$(tmux display-message -p '#S')
 
 parse_args "$@"
@@ -164,8 +164,8 @@ parse_args "$@"
     exit 1
 }
 
-log "TVIM_PANE: $TVIM_PANE"
-log "TVIM_WINDOW: $TVIM_WINDOW"
+log "KEY2PANE_PANE: $KEY2PANE_PANE"
+log "KEY2PANE_WINDOW: $KEY2PANE_WINDOW"
 log "The pane is set to: $pane"
 log "Then window is set to: $window"
 log "The current session is: $session"
