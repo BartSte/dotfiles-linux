@@ -32,7 +32,7 @@ zshenv() {
     export FZF_ALT_H_COMMAND="$FZF_DEFAULT_COMMAND . $HOME"
     export FZF_ALT_D_COMMAND="$FZF_ALT_C_COMMAND . $HOME"
 
-    export FZF_DEFAULT_OPTS="--height 40% --layout=reverse --preview-window=right,65%"
+    export FZF_DEFAULT_OPTS="--height 50% --layout=reverse --preview-window=right,65%"
 
     _FZF_CTRL_T_OPTS_FILES='bat --theme=gruvbox-dark --style=numbers --color=always --line-range :500 {}'
     _FZF_CTRL_T_OPTS_DIR='exa --icons -T -L 1 -a {} | head -200'
@@ -59,7 +59,7 @@ zshenv() {
 
     export FZF_ALT_D_OPTS=$FZF_ALT_C_OPTS
 
-    _FZF_OPEN_SELECT="--multi --layout=reverse -d 40"
+    _FZF_OPEN_SELECT="-w 100% -h 80% --multi --layout=reverse"
     _FZF_OPEN_WINDOW="--preview-window=hidden,right,75%"
     _FZF_OPEN_BINDS="--bind 'ctrl-p:toggle-preview'"
     _FZF_OPEN_BINDS+=" --bind 'ctrl-a:change-preview-window(down,75%,nowrap|right,75%,nowrap)'"

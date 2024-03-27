@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 
-usage() {
-    cat <<EOF
-Usage: tvim [options] [file] 
+usage="Usage: tvim [options] [file] 
 
 Open a file in Neovim in a tmux window, session, and line, that can be specified
 through the options. If the:
@@ -18,7 +16,7 @@ When no vim/neovim is running in the specified pane, a new neovim instance will
 be started if the pane is running a shell (zsh or bash). Otherwise, the script
 will exit with code 1.
 
-When passing the --debug option, debug messages will be printed to stdout.
+When passing the --verbose option, log messages will be printed to stdout.
 
 Arguments:
   file            The file to open
@@ -29,8 +27,20 @@ Options:
   -w, --window    Specify the tmux window, default to current window
   -p, --pane      Specify the tmux pane, default to current pane
   -l, --line      Specify the line number, default to 1
-  -d, --debug     Print debug messages to a device of file.
-EOF
+  -v, --verbose   Also log messages to stdout
+  --logfile       Specify the log file"
+
+#######################################
+# Log a message to a log file, and stdout if verbose is set.
+# Arguments:
+#  message: The message to log.
+#######################################
+log() {
+    local message=$1
+    echo "$message" >>"$logfile"
+    if $verbose; then
+        echo "$message" >&2
+    fi
 }
 
 #######################################
@@ -41,23 +51,13 @@ assert_tmux() {
 }
 
 #######################################
-# Get the options passed to the script. It relies on the following globals:
-#  session: The session name
-#  window: The window number
-#  pane: The pane number
-#  line: The line number
-#  debug: The debug file
-#  file: The file to open
-#
-# Arguments:
-#   $@: The options passed to the script.
-#
+# Parse the cli options and arguments.
 #######################################
 parse_args() {
     while [[ $# -gt 0 ]]; do
         case $1 in
         -h | --help)
-            usage
+            echo "$usage"
             exit 0
             ;;
         -s | --session)
@@ -76,9 +76,11 @@ parse_args() {
             line=$2
             shift
             ;;
-        -d | --debug)
-            debug=$2
-            date >$debug
+        -v | --verbose)
+            verbose=true
+            ;;
+        --logfile)
+            logfile=$2
             shift
             ;;
         *)
@@ -104,7 +106,7 @@ tmux_commands() {
     local pane=$1
     local window=$2
     local session=$3
-    tmux list-panes -t $session:$window -F '#{pane_index} #{pane_current_command}'
+    tmux list-panes -t "$session":"$window" -F '#{pane_index} #{pane_current_command}'
 }
 
 #######################################
@@ -122,12 +124,13 @@ has_cmd() {
     local window=$2
     local session=$3
     local re_cmd=$4
+    local cmd cmds
 
-    local cmds=$(tmux_commands $pane $window $session)
-    echo "Tmux commands: $cmds" >>$debug
+    cmds=$(tmux_commands "$pane" "$window" "$session")
+    log "Tmux commands per pane number: $cmds"
 
-    local cmd=$(echo "$cmds" | awk -v pane=$pane '{if ($1 == pane) print $2}')
-    echo "Current command: $cmd" >>$debug
+    cmd=$(awk -v pane="$pane" '{if ($1 == pane) print $2}' <<<"$cmds")
+    log "Command for pane $pane is: $cmd"
 
     [[ $cmd =~ $re_cmd ]]
 }
@@ -141,42 +144,47 @@ has_cmd() {
 # line: The line number
 #######################################
 sendkeys() {
-    echo "Sending keys: $@" >>$debug
-    tmux send-keys -t $session:$window.$pane "$@"
+    log "Sending keys: $@"
+    tmux send-keys -t "$session":"$window"."$pane" "$@"
 }
 
 assert_tmux
 
 line=1
-pane=$([[ $TVIM_PANE ]] && echo $TVIM_PANE || tmux display-message -p '#P')
-debug=/dev/null
-window=$([[ $TVIM_WINDOW ]] && echo $TVIM_WINDOW || tmux display-message -p '#I')
+pane=${TVIM_PANE:-$(tmux display-message -p '#P')}
+window=${TVIM_WINDOW:-$(tmux display-message -p '#I')}
+verbose=false
+logfile=$(dirname "$(mktemp -u)")/tvim.log
 session=$(tmux display-message -p '#S')
 
-parse_args $@
+parse_args "$@"
 
 [[ -z $file ]] && {
-    usage
+    echo "$usage"
     exit 1
 }
 
-echo "Pane: $pane" >>$debug
-echo "TVIM_PANE: $TVIM_PANE" >>$debug
-echo "Window: $window" >>$debug
-echo "TVIM_WINDOW: $TVIM_WINDOW" >>$debug
-echo "Session: $session" >>$debug
+log "TVIM_PANE: $TVIM_PANE"
+log "TVIM_WINDOW: $TVIM_WINDOW"
+log "The pane is set to: $pane"
+log "Then window is set to: $window"
+log "The current session is: $session"
 
-if has_cmd $pane $window $session 'vim|nvim'; then
-    echo "Neovim is running in $session:$window.$pane" >>$debug
+# TODO: make this modular by allowing the user to map a a regex for the pane
+# command to a string that is used by the sendkeys function. For example:
+# - 'vim|nvim' -> ':e $file|$line' Enter
+# - 'zsh|bash' -> 'nvim -c ":e $file|$line"' Enter
+if has_cmd "$pane" "$window" "$session" 'vim|nvim'; then
+    log "Neovim is running in $session:$window.$pane"
     sendkeys C-c
     sendkeys ":e $file|$line" Enter
 
-elif has_cmd $pane $window $session 'zsh|bash'; then
-    echo "A shell is running in $session:$window.$pane" >>$debug
+elif has_cmd "$pane" "$window" "$session" 'zsh|bash'; then
+    log "A shell is running in $session:$window.$pane"
     sendkeys C-c
     sendkeys "nvim -c ':e $file|$line'" Enter
 
 else
-    echo "No vim or a shell is running in $session:$window.$pane" >>$debug
+    log "No vim or a shell is running in $session:$window.$pane"
     exit 1
 fi
