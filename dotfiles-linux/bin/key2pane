@@ -170,21 +170,20 @@ log "The pane is set to: $pane"
 log "Then window is set to: $window"
 log "The current session is: $session"
 
-# TODO: make this modular by allowing the user to map a a regex for the pane
-# command to a string that is used by the sendkeys function. For example:
-# - 'vim|nvim' -> ':e $file|$line' Enter
-# - 'zsh|bash' -> 'nvim -c ":e $file|$line"' Enter
-if has_cmd "$pane" "$window" "$session" 'vim|nvim'; then
-    log "Neovim is running in $session:$window.$pane"
-    sendkeys C-c
-    sendkeys ":e $file|$line" Enter
+# TODO: make this a user configuration
+declare -A cmd_vs_sendkeys
+cmd_vs_sendkeys['vim|nvim']=':e $file|$line'
+cmd_vs_sendkeys['zsh|bash']='nvim $file'
 
-elif has_cmd "$pane" "$window" "$session" 'zsh|bash'; then
-    log "A shell is running in $session:$window.$pane"
-    sendkeys C-c
-    sendkeys "nvim -c ':e $file|$line'" Enter
+for cmd in "${!cmd_vs_sendkeys[@]}"; do
+    if has_cmd "$pane" "$window" "$session" "$cmd"; then
+        log "Command $cmd is running in $session:$window.$pane"
+        sendkeys C-c
+        eval "sendkeys \"${cmd_vs_sendkeys[$cmd]}\""
+        sendkeys Enter
+        exit 0
+    fi
+done
 
-else
-    log "No vim or a shell is running in $session:$window.$pane"
-    exit 1
-fi
+log "No vim or a shell is running in $session:$window.$pane"
+exit 1
