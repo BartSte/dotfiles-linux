@@ -16,8 +16,8 @@ zshenv() {
     export PYTHONBREAKPOINT='ipdb.set_trace'
     export IPDB_CONTEXT_SIZE=10
     export TMUX_PLUGIN_DIR="$HOME/.tmux/plugins"
-    export TVIM_WINDOW="0"
-    export TVIM_PANE="0"
+    export KEY2PANE_WINDOW="0"
+    export KEY2PANE_PANE="0"
     export VI_MODE_SET_CURSOR=true
     export FZF_HELP_SYNTAX='help'
     export CLI_OPTIONS_CMD='ag -o --numbers -- $RE'
