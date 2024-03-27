@@ -3,25 +3,40 @@
 usage="Usage: key2pane [options] [arguments]
 
 Sends a sequence of keys to any tmux pane, based on the pane's current command.
-Which keys to send, must be specified in as an associative array in the
-environment variable KEY2PANE_CMD_KEYS. For example:
+Which keys to send, must be specified in a tmux configuration file:
 
-declare -A KEY2PANE_KEYS
-KEY2PANE_KEYS['bash|zsh|fish']='echo {}'
+set -g @key2pane-cmd-shell 'bash|zsh|fish'
+set -g @key2pane-keys-shell 'echo hello_world'
 
-where {} is replaced by the arguments that are passed to the script. Now when we
-call: \`key2pane foo bar\` the sequence of keys \`echo foo bar\` will be sent to
-to the current session, window 0, and pane 0.
+set -g @key2pane-cmd-foo 'some other command'
+set -g @key2pane-keys-foo 'some other keys'
+
+here, the prefix @key2pane-cmd and @key2pane-keys must be the same, while the
+suffixes (shell, foo) can be anything. The only thing these suffixes are used for
+is to indicate which cmd belongs to which keys. Note that the cmd can be a bash 
+regex, in this case, the \`shell\` keys will be sent if the current pane's
+command is either bash, zsh, or fish.
+
+The positional arguments can be used to populate placeholders in the keys. The
+placeholders are curly braces with an optional number inside, where the number
+indicates which argument to use, starting from 1. So {1} will be replaced by the
+first argument, {2} by the second, and so on. If no number is provided, all the
+arguments will be used. For example, if the command is: \`key2pane foo bar\`, 
+and the keys are: \`echo {1} {2}\`, then the following keys will be sent to the
+pane: \`echo foo bar\`.
+
+The curly braces can be escaped by using a backslash. For example, \{1\} will be
+replaced by {1}, and not by the first argument.
 
 Arguments:
-  arguments       The arguments that will populate the {} placeholder in the
-                  KEY2PANE_CMD_KEYS. By supplying a number within curly braces,
-                  only that argument will be used. For example, if the command
-                  is: \`key2pane foo bar\`, then {1} will be replaced by foo and
-                  {2} will be replaced by bar. A curly brace without a number
-                  will be replaced by all the arguments. The curly braces can be
-                  escaped by using a backslash. For example, \{1\} will be
-                  replaced by {1}, and not by the first argument.
+  arguments     The arguments that will populate the {} placeholder in the
+                KEY2PANE_CMD_KEYS. By supplying a number within curly braces,
+                only that argument will be used. For example, if the command is:
+                \`key2pane foo bar\`, then {1} will be replaced by foo and {2}
+                will be replaced by bar. A curly brace without a number will be
+                replaced by all the arguments. The curly braces can be escaped
+                by using a backslash. For example, \{1\} will be replaced by
+                {1}, and not by the first argument.
 
 Options:
   -h, --help      Print this help message and exit
@@ -170,20 +185,25 @@ parse_args "$@"
     exit 1
 }
 
+declare -A cmd_vs_keys
+cmd_shell=$(tmux show -gv "@key2pane-cmd-shell")
+keys_shell=$(tmux show -gv "@key2pane-keys-shell")
+# cmd_vim=$(tmux show -gv "@key2pane-cmd-vim")
+# keys_vim=$(tmux show -gv "@key2pane-keys-vim")
+
+cmd_vs_keys[$cmd_shell]=$keys_shell
+# cmd_vs_keys[$cmd_shell]=$keys_shell
+
 log "KEY2PANE_PANE: $KEY2PANE_PANE"
 log "KEY2PANE_WINDOW: $KEY2PANE_WINDOW"
+log "cmd_vs_keys: $cmd_vs_keys"
 log "The session:window:pane is: $session:$window:$pane"
 
-# TODO: make this a user configuration
-declare -A cmd_vs_sendkeys
-cmd_vs_sendkeys['vim|nvim']=':e $file|$line'
-cmd_vs_sendkeys['zsh|bash']='nvim $file'
-
-for cmd in "${!cmd_vs_sendkeys[@]}"; do
+for cmd in "${!cmd_vs_keys[@]}"; do
     if has_cmd "$pane" "$window" "$session" "$cmd"; then
         log "Command $cmd is running in $session:$window.$pane"
         sendkeys C-c
-        eval "sendkeys \"${cmd_vs_sendkeys[$cmd]}\""
+        eval "sendkeys \"${cmd_vs_keys[$cmd]}\""
         sendkeys Enter
         exit 0
     fi

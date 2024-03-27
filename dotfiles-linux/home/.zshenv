@@ -16,8 +16,6 @@ zshenv() {
     export PYTHONBREAKPOINT='ipdb.set_trace'
     export IPDB_CONTEXT_SIZE=10
     export TMUX_PLUGIN_DIR="$HOME/.tmux/plugins"
-    export KEY2PANE_WINDOW="0"
-    export KEY2PANE_PANE="0"
     export VI_MODE_SET_CURSOR=true
     export FZF_HELP_SYNTAX='help'
     export CLI_OPTIONS_CMD='ag -o --numbers -- $RE'
@@ -25,6 +23,9 @@ zshenv() {
     export HISTFILE=$HOME/.histfile
     export HISTSIZE=1000000000
     export SAVEHIST=100000
+
+    export KEY2PANE_WINDOW="0"
+    export KEY2PANE_PANE="0"
 
     export FZF_DEFAULT_COMMAND="fd --hidden --no-ignore-vcs --ignore-file $HOME/.ignore --type f"
     export FZF_ALT_C_COMMAND="fd --hidden --no-ignore-vcs --ignore-file $HOME/.ignore -t d"
