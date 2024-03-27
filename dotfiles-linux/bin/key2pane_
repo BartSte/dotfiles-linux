@@ -1,0 +1,193 @@
+#!/usr/bin/env bash
+
+usage="Usage: key2pane [options] [arguments]
+
+Sends a sequence of keys to any tmux pane, based on the pane's current command.
+Which keys to send, must be specified in as an associative array in the
+environment variable KEY2PANE_CMD_KEYS. For example:
+
+declare -A KEY2PANE_KEYS
+KEY2PANE_KEYS['bash|zsh|fish']='echo {}'
+
+where {} is replaced by the arguments that are passed to the script. Now when we
+call: \`key2pane foo bar\` the sequence of keys \`echo foo bar\` will be sent to
+to the current session, window 0, and pane 0.
+
+Arguments:
+  arguments       The arguments that will populate the {} placeholder in the
+                  KEY2PANE_CMD_KEYS. By supplying a number within curly braces,
+                  only that argument will be used. For example, if the command
+                  is: \`key2pane foo bar\`, then {1} will be replaced by foo and
+                  {2} will be replaced by bar. A curly brace without a number
+                  will be replaced by all the arguments. The curly braces can be
+                  escaped by using a backslash. For example, \{1\} will be
+                  replaced by {1}, and not by the first argument.
+
+Options:
+  -h, --help      Print this help message and exit
+  -s, --session   Specify the tmux session, default to current session
+  -w, --window    Specify the tmux window. If not provided, the KEY2PANE_WINDOW
+                  environment variable will be used, if not set, the current
+                  window will be used.
+  -p, --pane      Specify the tmux pane. If not provided, the KEY2PANE_PANE
+                  environment variable will be used, if not set, the current
+                  pane will be used.
+  -l, --line      Specify the line number, default to 1
+  -v, --verbose   Also log messages to stdout
+  --logfile       Specify the log file"
+
+#######################################
+# Log a message to a log file, and stdout if verbose is set.
+# Arguments:
+#  message: The message to log.
+#######################################
+log() {
+    local message=$1
+    echo "$message" >>"$logfile"
+    if $verbose; then
+        echo "$message" >&2
+    fi
+}
+
+#######################################
+# Check if tmux is running.
+#######################################
+assert_tmux() {
+    [[ -z $TMUX ]] && echo "Not in a tmux session" && exit 1
+}
+
+#######################################
+# Parse the cli options and arguments.
+#######################################
+parse_args() {
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+        -h | --help)
+            echo "$usage"
+            exit 0
+            ;;
+        -s | --session)
+            session=$2
+            shift
+            ;;
+        -w | --window)
+            window=$2
+            shift
+            ;;
+        -p | --pane)
+            pane=$2
+            shift
+            ;;
+        -l | --line)
+            line=$2
+            shift
+            ;;
+        -v | --verbose)
+            verbose=true
+            ;;
+        --logfile)
+            logfile=$2
+            shift
+            ;;
+        *)
+            file=$1
+            ;;
+        esac
+        shift
+    done
+}
+
+#######################################
+# Get the commands running in each pane of a window in a session.
+# Arguments:
+#   pane: The pane number
+#   window: The window number
+#   session: The session name
+#
+# Returns:
+#  The commands running in each pane of a window in a session.
+#  The format is: <pane_index> <pane_current_command>
+#######################################
+tmux_commands() {
+    local pane=$1
+    local window=$2
+    local session=$3
+    tmux list-panes -t "$session":"$window" -F '#{pane_index} #{pane_current_command}'
+}
+
+#######################################
+# Check if the pane is running `cmd`.
+# Arguments:
+#  pane: The pane number
+#  window: The window number
+#  session: The session name
+#
+# Returns:
+# 0 if the pane is running neovim, 1 otherwise.
+#######################################
+has_cmd() {
+    local pane=$1
+    local window=$2
+    local session=$3
+    local re_cmd=$4
+    local cmd cmds
+
+    cmds=$(tmux_commands "$pane" "$window" "$session")
+    log "Tmux commands per pane number: $cmds"
+
+    cmd=$(awk -v pane="$pane" '{if ($1 == pane) print $2}' <<<"$cmds")
+    log "Command for pane $pane is: $cmd"
+
+    [[ $cmd =~ $re_cmd ]]
+}
+
+#######################################
+# Send keys to the pane. Relies on the following globals:
+# session: The session name
+# window: The window number
+# pane: The pane number
+# file: The file to open
+# line: The line number
+#######################################
+sendkeys() {
+    log "Sending keys: $@"
+    tmux send-keys -t "$session":"$window"."$pane" "$@"
+}
+
+assert_tmux
+
+line=1
+pane=${KEY2PANE_PANE:-$(tmux display-message -p '#P')}
+window=${KEY2PANE_WINDOW:-$(tmux display-message -p '#I')}
+verbose=false
+logfile=$(dirname "$(mktemp -u)")/key2pane.log
+session=$(tmux display-message -p '#S')
+
+parse_args "$@"
+
+[[ -z $file ]] && {
+    echo "$usage"
+    exit 1
+}
+
+log "KEY2PANE_PANE: $KEY2PANE_PANE"
+log "KEY2PANE_WINDOW: $KEY2PANE_WINDOW"
+log "The session:window:pane is: $session:$window:$pane"
+
+# TODO: make this a user configuration
+declare -A cmd_vs_sendkeys
+cmd_vs_sendkeys['vim|nvim']=':e $file|$line'
+cmd_vs_sendkeys['zsh|bash']='nvim $file'
+
+for cmd in "${!cmd_vs_sendkeys[@]}"; do
+    if has_cmd "$pane" "$window" "$session" "$cmd"; then
+        log "Command $cmd is running in $session:$window.$pane"
+        sendkeys C-c
+        eval "sendkeys \"${cmd_vs_sendkeys[$cmd]}\""
+        sendkeys Enter
+        exit 0
+    fi
+done
+
+log "No vim or a shell is running in $session:$window.$pane"
+exit 1
