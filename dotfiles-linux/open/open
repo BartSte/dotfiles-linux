@@ -87,9 +87,18 @@ try_file() {
     IFS=' ' # Reset IFS
     line=${line:-1}
     column=${column:-1}
-
     if $win && running wsl; then
-        file=$(wslpath -u "$file")
+        log "file before escaping: $file, win: $win" -v
+        file_win=$(sed 's/\\/\\\\/g' <<<"$file")
+        log "file after escaping: $file_win" -v
+        file_wsl=$(wslpath "$file_win")
+        log "file after wslpath: $file_wsl" -v
+        if [[ -f "$file_wsl" ]]; then
+            log "The path can be resolved: $file_wsl"
+            file=$file_wsl
+        else
+            abort "The wsl path cannot be resolved: $file_win"
+        fi
     fi
 
     log "Try file: $file, line: $line, column: $column, win: $win" -v
