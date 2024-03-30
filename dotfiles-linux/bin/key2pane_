@@ -3,7 +3,7 @@
 usage="Usage: key2pane [options] [arguments]
 
 Sends a sequence of keys to any tmux pane, based on the pane's current command.
-Which keys to send, must be specified in a tmux configuration file:
+Which keys to send, must be specified in a configuration file:
 
 set -g @key2pane-cmd-shell 'bash|zsh|fish'
 set -g @key2pane-keys-shell 'echo hello_world'
@@ -16,6 +16,19 @@ suffixes (shell, foo) can be anything. The only thing these suffixes are used fo
 is to indicate which cmd belongs to which keys. Note that the cmd can be a bash 
 regex, in this case, the \`shell\` keys will be sent if the current pane's
 command is either bash, zsh, or fish.
+
+Update: Using the tmux config is cumbersome when you want to have multiple
+arguments for the send-keys command. Sure, you can store them as a string, but
+then you need to parse them in the script, while you need to make sure that the
+quotes are escaped properly. This is why I've decided to switch to using a json
+instead. The json can be parsed using jq. For example, the following json:
+
+{
+    \"bash|zsh|fish\": [\"echo 'hello world'\", \"Enter\"],
+}
+
+Which is nice, as you can even input a real Enter key.
+
 
 The positional arguments can be used to populate placeholders in the keys. The
 placeholders are curly braces with an optional number inside, where the number
