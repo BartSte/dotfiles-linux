@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+this_dir=$(readlink -f "$(dirname "$0")")
+
+sudo "$this_dir"/update_hosts "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-gambling-porn/hosts"
+sudo systemctl restart NetworkManager
