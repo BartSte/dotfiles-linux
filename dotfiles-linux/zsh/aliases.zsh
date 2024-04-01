@@ -34,3 +34,4 @@ alias yay='export MAKEFLAGS="-j$(nproc)" && yay'
 alias rm='echo "Tip: use dl to delete to trash" > /dev/stderr; /usr/lib/safe-rm/rm -i'
 alias dropsync='rclone bisync dropbox: ~/dropbox'
 alias o='open'
+alias suspend="systemctl suspend"
