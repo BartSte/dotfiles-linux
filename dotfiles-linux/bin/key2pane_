@@ -3,6 +3,7 @@
 usage="Usage: key2pane [options] [arguments]
 
 Sends a sequence of keys to any tmux pane, based on the pane's current command.
+
 Which keys to send, must be specified in a json with the following format:
 
 {
