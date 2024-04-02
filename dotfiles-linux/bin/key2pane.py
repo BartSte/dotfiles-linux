@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 from argparse import ArgumentParser, Namespace, RawDescriptionHelpFormatter
-from dataclasses import dataclass
 import logging
 from os import environ
 from os.path import expanduser
@@ -39,7 +38,8 @@ replaced by {1}, and not by the first argument.
 
 
 class Tmux:
-    def __init__(self):
+    def __init__(self, pane: "Pane | None" = None):
+        self._destination_pane: Pane | None = pane
         self._active_pane: Pane = Pane.from_active()
 
     @staticmethod
@@ -50,6 +50,14 @@ class Tmux:
     def active_pane(self) -> "Pane":
         return self._active_pane
 
+    @property
+    def destination_pane(self) -> "Pane | None":
+        return self._destination_pane
+
+    @destination_pane.setter
+    def destination_pane(self, pane: "Pane | None"):
+        self._destination_pane = pane
+
 
 class Pane:
     SEP: str = ":"
@@ -59,15 +67,13 @@ class Pane:
         self._window: int = window
         self._index: int = index
         self._command: str = self._find_command()
-        logging.debug("Pane created: %s", self)
+        logging.debug("Pane object created: %s", self)
 
     @classmethod
     def from_active(cls) -> "Pane":
         stdout: str = Tmux.command(
             "display-message", "-p", f"#S{cls.SEP}#I{cls.SEP}#P"
         )
-        logging.debug("Active session:window:pane is: %s", stdout)
-
         session, window, pane = stdout.split(cls.SEP)
         return cls(session, int(window), int(pane))
 
@@ -79,8 +85,6 @@ class Pane:
             "-F",
             "#{pane_index}:#{pane_current_command}",
         )
-        logging.debug("tmux list-panes stdout: %s", stdout)
-
         splitted: Generator = (line.split(":") for line in stdout.splitlines())
         index_vs_commands: Generator = (
             (
@@ -92,7 +96,6 @@ class Pane:
 
         for index, command in index_vs_commands:
             if int(index) == self.index:
-                logging.debug("Current command: %s", self.command)
                 return command
 
         logging.error("Current pane not found in %s", index_vs_commands)
@@ -115,13 +118,16 @@ class Pane:
         return self._command
 
     def __repr__(self) -> str:
-        return f"{self.session}{self.SEP}{self.window}{self.SEP}{self.index}"
+        return (
+            f"{self.session}{self.SEP}{self.window}{self.SEP}{self.index}"
+            f"{self.SEP}{self.command}"
+        )
 
     def __str__(self) -> str:
         return self.__repr__()
 
 
-def make_parser(session: str, window: int, pane: int) -> ArgumentParser:
+def make_parser(pane: Pane) -> ArgumentParser:
     parser: ArgumentParser = ArgumentParser(
         description=_DESCRIPTION, formatter_class=RawDescriptionHelpFormatter
     )
@@ -135,46 +141,62 @@ def make_parser(session: str, window: int, pane: int) -> ArgumentParser:
     parser.add_argument(
         "-s",
         "--session",
-        default=session,
+        default=pane.session,
         help="Specify the tmux session, default to current session",
     )
     parser.add_argument(
         "-w",
         "--window",
-        default=environ.get("KEY2PANE_WINDOW", window),
+        default=environ.get("KEY2PANE_WINDOW", pane.window),
         help="Specify the tmux window. If not provided, the KEY2PANE_WINDOW "
         "environment variable will be used, if not set, the current window will"
         " be used.",
     )
     parser.add_argument(
-        "-p",
-        "--pane",
-        default=environ.get("KEY2PANE_PANE", pane),
-        help="Specify the tmux pane. If not provided, the KEY2PANE_PANE "
-        "environment variable will be used, if not set, the current pane will be"
-        " used.",
-    )
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        default=False,
-        help="Also log messages to stdout",
-        action="store_true",
+        "-i",
+        "--index",
+        default=environ.get("KEY2PANE_PANE", pane.index),
+        help="Specify the tmux pane index. If not provided, the KEY2PANE_PANE "
+        "environment variable will be used, if not set, the current pane its "
+        "index will be used.",
     )
     parser.add_argument(
         "--logfile",
         default=expanduser("~/.local/state/key2pane.log"),
         help="Specify the log file",
     )
-
+    parser.add_argument(
+        "--loglevel",
+        default="WARNING",
+        help="Specify the log level",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+    )
+    parser.add_argument("keys", nargs="*", help="The keys to send to the pane")
     return parser
 
 
+def set_logging(loglevel: str, logfile: str) -> None:
+    logger: logging.Logger = logging.getLogger()
+    logger.setLevel(loglevel)
+
+    formatter: logging.Formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
+    file_handler: logging.FileHandler = logging.FileHandler(logfile)
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
+
+
 def main():
-    logging.basicConfig(level=logging.DEBUG)
     tmux: Tmux = Tmux()
-    parser: ArgumentParser = make_parser(tmux.session, tmux.window, tmux.pane)
+    parser: ArgumentParser = make_parser(tmux.active_pane)
     args: Namespace = parser.parse_args()
+
+    set_logging(args.loglevel, args.logfile)
+
+    tmux.destination_pane = Pane(
+        args.session, int(args.window), int(args.index)
+    )
 
 
 if __name__ == "__main__":
