@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 
+from argparse import ArgumentParser, Namespace, RawDescriptionHelpFormatter
+from dataclasses import dataclass
 import logging
 from os import environ
-import subprocess
 from os.path import expanduser
-from argparse import ArgumentParser, Namespace, RawDescriptionHelpFormatter
+import subprocess
+from typing import Generator
 
 _DESCRIPTION: str = """
 Sends a sequence of keys to any tmux pane, based on the pane's current command.
@@ -37,63 +39,64 @@ replaced by {1}, and not by the first argument.
 
 
 class Tmux:
-    def __init__(self, sep: str = ":"):
-        self._sep: str = sep
-        self._session: str
-        self._window: int
-        self._pane: int
-        self._command: str
+    def __init__(self):
+        self._active_pane: Pane = Pane.from_active()
 
-        self.update()
+    @staticmethod
+    def command(*args) -> str:
+        return subprocess.check_output(["tmux", *args]).decode("utf-8").strip()
 
-    def update(self):
-        self._update_active_interface(self._sep)
-        self._update_command(*self.active_interface)
+    @property
+    def active_pane(self) -> "Pane":
+        return self._active_pane
 
-    def _update_active_interface(self, sep: str = ":"):
-        active: str = self._cmd(("display-message", "-p", f"#S{sep}#I{sep}#P"))
-        self._session, window, pane = active.split(sep)
-        self._window = int(window)
-        self._pane = int(pane)
-        logging.debug("Active session:window:pane is: %s", active)
 
-    def _update_command(self, session: str, window: int, pane: int):
-        stdout_lines: list[str] = self._cmd(
-            (
-                "list-panes",
-                "-t",
-                f"{session}:{window}",
-                "-F",
-                "#{pane_index}:#{pane_current_command}",
-            )
-        ).splitlines()
-        logging.debug(
-            "Commands for %s:%s per pane: %s",
-            session,
-            window,
-            stdout_lines,
+class Pane:
+    SEP: str = ":"
+
+    def __init__(self, session: str, window: int, index: int):
+        self._session: str = session
+        self._window: int = window
+        self._index: int = index
+        self._command: str = self._find_command()
+        logging.debug("Pane created: %s", self)
+
+    @classmethod
+    def from_active(cls) -> "Pane":
+        stdout: str = Tmux.command(
+            "display-message", "-p", f"#S{cls.SEP}#I{cls.SEP}#P"
         )
-        index_vs_commands: tuple[tuple[int, str], ...] = tuple(
+        logging.debug("Active session:window:pane is: %s", stdout)
+
+        session, window, pane = stdout.split(cls.SEP)
+        return cls(session, int(window), int(pane))
+
+    def _find_command(self) -> str:
+        stdout: str = Tmux.command(
+            "list-panes",
+            "-t",
+            f"{self.session}{self.SEP}{self.window}",
+            "-F",
+            "#{pane_index}:#{pane_current_command}",
+        )
+        logging.debug("tmux list-panes stdout: %s", stdout)
+
+        splitted: Generator = (line.split(":") for line in stdout.splitlines())
+        index_vs_commands: Generator = (
             (
                 int(index),
                 command,
             )
-            for index, command in (line.split(":") for line in stdout_lines)
+            for index, command in splitted
         )
+
         for index, command in index_vs_commands:
-            if int(index) == pane:
-                self._command = command
+            if int(index) == self.index:
                 logging.debug("Current command: %s", self.command)
-                break
-        else:
-            logging.error("Current pane not found in %s", index_vs_commands)
+                return command
 
-    def _cmd(self, args: tuple[str, ...]) -> str:
-        return subprocess.check_output(["tmux", *args]).decode("utf-8").strip()
-
-    @property
-    def active_interface(self) -> tuple[str, int, int]:
-        return self._session, self._window, self._pane
+        logging.error("Current pane not found in %s", index_vs_commands)
+        return ""
 
     @property
     def session(self) -> str:
@@ -104,12 +107,18 @@ class Tmux:
         return self._window
 
     @property
-    def pane(self) -> int:
-        return self._pane
+    def index(self) -> int:
+        return self._index
 
     @property
     def command(self) -> str:
         return self._command
+
+    def __repr__(self) -> str:
+        return f"{self.session}{self.SEP}{self.window}{self.SEP}{self.index}"
+
+    def __str__(self) -> str:
+        return self.__repr__()
 
 
 def make_parser(session: str, window: int, pane: int) -> ArgumentParser:
