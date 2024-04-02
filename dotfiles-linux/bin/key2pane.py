@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import logging
 from os import environ
 import subprocess
 from os.path import expanduser
@@ -35,7 +36,83 @@ replaced by {1}, and not by the first argument.
 """
 
 
-def make_parser() -> ArgumentParser:
+class Tmux:
+    def __init__(self, sep: str = ":"):
+        self._sep: str = sep
+        self._session: str
+        self._window: int
+        self._pane: int
+        self._command: str
+
+        self.update()
+
+    def update(self):
+        self._update_active_interface(self._sep)
+        self._update_command(*self.active_interface)
+
+    def _update_active_interface(self, sep: str = ":"):
+        active: str = self._cmd(("display-message", "-p", f"#S{sep}#I{sep}#P"))
+        self._session, window, pane = active.split(sep)
+        self._window = int(window)
+        self._pane = int(pane)
+        logging.debug("Active session:window:pane is: %s", active)
+
+    def _update_command(self, session: str, window: int, pane: int):
+        stdout_lines: list[str] = self._cmd(
+            (
+                "list-panes",
+                "-t",
+                f"{session}:{window}",
+                "-F",
+                "#{pane_index}:#{pane_current_command}",
+            )
+        ).splitlines()
+        logging.debug(
+            "Commands for %s:%s per pane: %s",
+            session,
+            window,
+            stdout_lines,
+        )
+        index_vs_commands: tuple[tuple[int, str], ...] = tuple(
+            (
+                int(index),
+                command,
+            )
+            for index, command in (line.split(":") for line in stdout_lines)
+        )
+        for index, command in index_vs_commands:
+            if int(index) == pane:
+                self._command = command
+                logging.debug("Current command: %s", self.command)
+                break
+        else:
+            logging.error("Current pane not found in %s", index_vs_commands)
+
+    def _cmd(self, args: tuple[str, ...]) -> str:
+        return subprocess.check_output(["tmux", *args]).decode("utf-8").strip()
+
+    @property
+    def active_interface(self) -> tuple[str, int, int]:
+        return self._session, self._window, self._pane
+
+    @property
+    def session(self) -> str:
+        return self._session
+
+    @property
+    def window(self) -> int:
+        return self._window
+
+    @property
+    def pane(self) -> int:
+        return self._pane
+
+    @property
+    def command(self) -> str:
+        return self._command
+
+
+def make_parser(session: str, window: int, pane: int) -> ArgumentParser:
     parser: ArgumentParser = ArgumentParser(
         description=_DESCRIPTION, formatter_class=RawDescriptionHelpFormatter
     )
@@ -49,15 +126,13 @@ def make_parser() -> ArgumentParser:
     parser.add_argument(
         "-s",
         "--session",
-        default=tmux("display-message", "-p", "#S"),
+        default=session,
         help="Specify the tmux session, default to current session",
     )
     parser.add_argument(
         "-w",
         "--window",
-        default=environ.get(
-            "KEY2PANE_WINDOW", tmux("display-message", "-p", "#I")
-        ),
+        default=environ.get("KEY2PANE_WINDOW", window),
         help="Specify the tmux window. If not provided, the KEY2PANE_WINDOW "
         "environment variable will be used, if not set, the current window will"
         " be used.",
@@ -65,9 +140,7 @@ def make_parser() -> ArgumentParser:
     parser.add_argument(
         "-p",
         "--pane",
-        default=environ.get(
-            "KEY2PANE_PANE", tmux("display-message", "-p", "#P")
-        ),
+        default=environ.get("KEY2PANE_PANE", pane),
         help="Specify the tmux pane. If not provided, the KEY2PANE_PANE "
         "environment variable will be used, if not set, the current pane will be"
         " used.",
@@ -88,12 +161,10 @@ def make_parser() -> ArgumentParser:
     return parser
 
 
-def tmux(*args) -> str:
-    return subprocess.check_output(["tmux", *args]).decode("utf-8").strip()
-
-
 def main():
-    parser: ArgumentParser = make_parser()
+    logging.basicConfig(level=logging.DEBUG)
+    tmux: Tmux = Tmux()
+    parser: ArgumentParser = make_parser(tmux.session, tmux.window, tmux.pane)
     args: Namespace = parser.parse_args()
 
 
