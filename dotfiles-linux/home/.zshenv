@@ -24,9 +24,6 @@ zshenv() {
     export HISTSIZE=1000000000
     export SAVEHIST=100000
 
-    export KEY2PANE_WINDOW="0"
-    export KEY2PANE_PANE="0"
-
     export FZF_DEFAULT_COMMAND="fd --hidden --no-ignore-vcs --ignore-file $HOME/.ignore --type f"
     export FZF_ALT_C_COMMAND="fd --hidden --no-ignore-vcs --ignore-file $HOME/.ignore -t d"
     export FZF_CTRL_T_COMMAND=$FZF_DEFAULT_COMMAND
