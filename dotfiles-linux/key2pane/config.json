@@ -1,0 +1,20 @@
+{
+    "window": 0,
+    "index": 0,
+    "actions": [
+        {
+            "regex": "bash|zsh",
+            "keys": [
+                "nvim -c ':e {0} | {1}'",
+                "Enter"
+            ]
+        },
+        {
+            "regex": "n?vim",
+            "keys": [
+                ":e {0} | {1}",
+                "Enter"
+            ]
+        }
+    ]
+}

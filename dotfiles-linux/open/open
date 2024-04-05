@@ -94,7 +94,7 @@ try_file() {
         file_wsl=$(wslpath "$file_win")
         log "file after wslpath: $file_wsl" -v
         if [[ -f "$file_wsl" ]]; then
-            log "The path can be resolved: $file_wsl"
+            log "The path can be resolved: $file_wsl" -v
             file=$file_wsl
         else
             abort "The wsl path cannot be resolved: $file_win"
