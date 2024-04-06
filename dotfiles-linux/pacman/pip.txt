@@ -4,3 +4,4 @@ khal
 khalorg
 khard
 vdirsyncer
+key2pane

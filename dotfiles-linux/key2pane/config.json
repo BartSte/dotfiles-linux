@@ -1,6 +1,9 @@
 {
+    "session": null,
     "window": 0,
     "index": 0,
+    "logfile": null,
+    "loglevel": null,
     "actions": [
         {
             "regex": "bash|zsh",
@@ -13,6 +16,13 @@
             "regex": "n?vim",
             "keys": [
                 ":e {0} | {1}",
+                "Enter"
+            ]
+        },
+        {
+            "regex": "python[0-9]*",
+            "keys": [
+                "print('{0}')",
                 "Enter"
             ]
         }
