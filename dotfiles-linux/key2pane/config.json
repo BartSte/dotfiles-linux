@@ -2,6 +2,7 @@
     "session": null,
     "window": 0,
     "index": 0,
+    "reset": true,
     "logfile": null,
     "loglevel": null,
     "actions": [
