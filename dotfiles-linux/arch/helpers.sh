@@ -14,10 +14,10 @@ install_yay() {
     local dir="$1"
     git clone https://aur.archlinux.org/yay.git "$dir"
     old_dir=$(pwd)
-    cd "$dir" 
+    cd "$dir" || exit
     makepkg -si --noconfirm
     rm -rf "$dir"
-    cd "$old_dir"
+    cd "$old_dir" || exit
 }
 
 # See BarsSte/tmux-session
