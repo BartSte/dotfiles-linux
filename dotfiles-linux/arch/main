@@ -7,11 +7,18 @@ dir=~/dotfiles-linux/pacman
 echo "# Installing dependencies pacman"
 sudo pacman -Syu --noconfirm
 sudo pacman -S --needed base-devel --noconfirm
-install_yay
-sudo pacman -S --noconfirm - < $dir/pacman.txt
-yay -S --noconfirm - < $dir/aur.txt
+sudo pacman -S --noconfirm - <$dir/pacman.txt
+
+echo "# Installing dependencies AUR"
+install_yay /tmp/yay
+yay -S --noconfirm - <$dir/aur.txt
+
+echo "# Installing node.js"
 install_node_js
+
+echo "# Installing python packages"
 install_python_packages $dir/pip.txt
+
+echo "# Installing zsh plugins"
 install-tmux-session
 install_fzf_help
-cat $dir/pip.txt | xargs -n 1 pipx install

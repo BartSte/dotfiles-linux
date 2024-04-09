@@ -29,7 +29,7 @@ main_arch() {
 execute_exclude() {
     local exclude dirs module front
     exclude=("$@")
-    front=("pacman" "systemd" "bitwarden" "crypt" "home")
+    front=("arch" "systemd" "bitwarden" "home")
 
     # Get all the directories in the $DIR directory.
     dirs=$(find $DIR -maxdepth 1 -mindepth 1 -type d -exec basename {} \; | sort)
