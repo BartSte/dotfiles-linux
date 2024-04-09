@@ -32,7 +32,7 @@ open_img() {
 open_text() {
     local file=$1
     local line=$2
-    log "Opening text file: $file at line $line at window:pane $KEY2PANE_WINDOW:$KEY2PANE_PANE" -v
+    log "Opening text file: $file at line $line" -v
     if running tmux; then
         key2pane --loglevel INFO "$file" "$line" 2>&1 | log -v
     else

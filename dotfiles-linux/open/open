@@ -103,12 +103,15 @@ try_file() {
 
     log "Try file: $file, line: $line, column: $column, win: $win" -v
     if has_type "$file" image; then
+        log "Opening image: $file" -v
         open_img "$file"
 
     elif has_type "$file" pdf; then
+        log "Opening pdf: $file" -v
         zathura "$file"
 
     elif has_type "$file" text; then
+        log "Opening text: $file" -v
         open_text "$file" "$line"
 
     else
