@@ -29,8 +29,3 @@ install-tmux-session() {
     sudo "$tmp_dir"/install
     rm -rf "$tmp_dir"
 }
-
-# See BarsSte/fzf-help
-install_fzf_help() {
-    bash -c 'tmp_dir=$(mktemp -d); git clone https://github.com/BartSte/fzf-help.git $tmp_dir; $tmp_dir/install; rm -rf $tmp_dir;'
-}

@@ -1,9 +1,10 @@
 chromium-widevine
+cyrus-sasl-xoauth2-git
 davmail
+fzf-help
 fzf-tab-git
 gcalcli
 kmonad-bin
+safe-rm
 sway-launcher-desktop
 zsh-theme-powerlevel10k-git
-cyrus-sasl-xoauth2-git
-safe-rm

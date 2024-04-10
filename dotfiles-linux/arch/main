@@ -21,4 +21,3 @@ install_python_packages $dir/pip.txt
 
 echo "# Installing zsh plugins"
 install-tmux-session
-install_fzf_help
