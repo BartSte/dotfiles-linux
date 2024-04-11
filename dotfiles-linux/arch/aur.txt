@@ -7,4 +7,5 @@ gcalcli
 kmonad-bin
 safe-rm
 sway-launcher-desktop
+tmux-session
 zsh-theme-powerlevel10k-git

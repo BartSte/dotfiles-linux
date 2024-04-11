@@ -19,13 +19,3 @@ install_yay() {
     rm -rf "$dir"
     cd "$old_dir" || exit
 }
-
-# See BarsSte/tmux-session
-install-tmux-session() {
-    echo "Install tmux-session"
-    local tmp_dir
-    tmp_dir=$(mktemp -d)
-    git clone https://github.com/BartSte/tmux-session.git "$tmp_dir"
-    sudo "$tmp_dir"/install
-    rm -rf "$tmp_dir"
-}
