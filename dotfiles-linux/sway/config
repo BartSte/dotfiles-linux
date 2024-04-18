@@ -74,8 +74,8 @@ client.placeholder      #282828 #282828 #ebdbb2 #282828 #282828
 # black background
 output * bg #000000 solid_color
 
-bindsym XF86AudioRaiseVolume exec "amixer -qD pulse sset Master 5%+"
-bindsym XF86AudioLowerVolume exec "amixer -qD pulse sset Master 5%-"
+bindsym XF86AudioRaiseVolume exec "amixer -qD pulse sset Master 1%+"
+bindsym XF86AudioLowerVolume exec "amixer -qD pulse sset Master 1%-"
 bindsym XF86AudioMute exec "amixer -qD pulse sset Master toggle"
 bindsym XF86MonBrightnessUp exec brightnessctl s 5%+
 bindsym XF86MonBrightnessDown exec brightnessctl s 5%-
@@ -89,7 +89,6 @@ for_window [app_id="^launcher$"] floating enable, sticky enable, resize set 30 p
 
 exec --no-startup-id waybar --config ~/.config/waybar/config.json
 exec --no-startup-id gammastep -m wayland -l 52.373882:6.891711 -t 6500:2500
-exec dbus-update-activation-environment --systemd WAYLAND_DISPLAY DISPLAY SWAYSOCK XDG_CURRENT_DESKTOP=sway XDG_SESSION_DESKTOP=sway
 
 # Touchpad settings
 input "type:touchpad" {
