@@ -74,8 +74,8 @@ client.placeholder      #282828 #282828 #ebdbb2 #282828 #282828
 # black background
 output * bg #000000 solid_color
 
-bindsym XF86AudioRaiseVolume exec "amixer -qD pulse sset Master 5%+"
-bindsym XF86AudioLowerVolume exec "amixer -qD pulse sset Master 5%-"
+bindsym XF86AudioRaiseVolume exec "amixer -qD pulse sset Master 1%+"
+bindsym XF86AudioLowerVolume exec "amixer -qD pulse sset Master 1%-"
 bindsym XF86AudioMute exec "amixer -qD pulse sset Master toggle"
 bindsym XF86MonBrightnessUp exec brightnessctl s 5%+
 bindsym XF86MonBrightnessDown exec brightnessctl s 5%-
