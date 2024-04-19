@@ -24,7 +24,7 @@ reload-session() {
     # python windows interpreter from wsl. See the wpy executable for more
     # info. Also, the name is changed to winpyprojectrc to group their
     # configurations.
-    local winpyprojects=(navigation fc-sonar-server automated-reporting)
+    local winpyprojects=(navigation fc-sonar-server automated-reporting fc-deckcam-software)
     if [[ " ${winpyprojects[@]} " =~ " $PROJECTRC " ]]; then
         PROJECTRC="winpyproject"
         _zshrc_log "Windows python project detected. Loading winpyprojectrc.zsh"
