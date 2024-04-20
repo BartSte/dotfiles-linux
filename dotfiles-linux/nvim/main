@@ -8,24 +8,24 @@ get_spell() {
 
 symlink_config() {
 
+    local directory_config=$1
     dotfiles=~/dotfiles/nvim
-    directory_config=~/.config/nvim
 
-    rm $directory_config -rf
-    mkdir $directory_config -p
+    rm "$directory_config" -rf
+    mkdir "$directory_config" -p
 
     # Subdirectories are linked to avoid spell and .luarc.json files to be
     # added to my dotfiles. Also, it works better if lazy-lock.json is a
     # hardlink
-    ln $dotfiles/lua $directory_config -sf
-    ln $dotfiles/vim $directory_config -sf
-    ln $dotfiles/init.lua $directory_config/init.lua -sf
-    ln $dotfiles/lazy-lock.json $directory_config/lazy-lock.json -f # needs to be hardlink
+    ln $dotfiles/lua "$directory_config" -sf
+    ln $dotfiles/vim "$directory_config" -sf
+    ln $dotfiles/init.lua "$directory_config"/init.lua -sf
+    ln $dotfiles/lazy-lock.json "$directory_config"/lazy-lock.json -f # needs to be hardlink
 
 }
 
 echo "# nvim"
-symlink_config
+symlink_config ~/.config/nvim
 get_spell nl
 get_spell en
 sudo pacman -S python-pynvim --noconfirm
