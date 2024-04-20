@@ -8,3 +8,5 @@ python3-pynvim
 silversearcher-ag
 snapd
 zsh
+fzf
+neovim

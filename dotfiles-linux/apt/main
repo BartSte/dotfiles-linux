@@ -1,11 +1,8 @@
 #!/bin/bash
 
-. "$HOME"/dotfiles-linux/pacman/helpers.sh
-
 dir=~/dotfiles-linux/apt
 
 echo "Installing apt dependencies"
 sudo apt-get update -y
 sudo apt-get upgrade -y
 cat $dir/apt.txt | xargs sudo apt-get install -y
-install-tmux-session
