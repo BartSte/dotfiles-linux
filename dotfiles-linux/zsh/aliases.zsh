@@ -30,9 +30,9 @@ alias dropsync='rclone bisync dropbox: ~/dropbox'
 alias o='open'
 alias suspend="systemctl suspend"
 
-command -v exa alias la='exa -hal --icons --git'
-command -v exa alias ll='exa -hl --icons --git'
-command -v exa alias ls='exa -h --icons'
-command -v exa alias lsa='exa -ah --icons'
+command -v exa && alias la='exa -hal --icons --git'
+command -v exa && alias ll='exa -hl --icons --git'
+command -v exa && alias ls='exa -h --icons'
+command -v exa && alias lsa='exa -ah --icons'
 command -v safe-rm && alias rm='echo "Tip: use dl to delete to trash" > /dev/stderr; /usr/lib/safe-rm/rm -i'
 command -v trash-put && alias dl='trash-put'
