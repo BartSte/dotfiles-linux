@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+this_dir="$(dirname "$(readlink -f "$0")")"
+. "$this_dir/regexes.sh"
+
+################################################################################
+# Combine the regexes into 1. All patterns that match will also be send to fzf
+# for selection.
+################################################################################
+echo "($RE_PYTEST_ERROR)|($RE_PYTHON_ERROR)"

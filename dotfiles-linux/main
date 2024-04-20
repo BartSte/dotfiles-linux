@@ -29,7 +29,7 @@ main_arch() {
 execute_exclude() {
     local exclude dirs module front
     exclude=("$@")
-    front=("pacman" "systemd" "bitwarden" "crypt" "home")
+    front=("arch" "systemd" "bitwarden" "home")
 
     # Get all the directories in the $DIR directory.
     dirs=$(find $DIR -maxdepth 1 -mindepth 1 -type d -exec basename {} \; | sort)
@@ -64,9 +64,8 @@ main_raspberry() {
 # On wsl, do not install:
 # - sway: using the windows gui instead
 # - kmonad: using the windows kmonad instead
-# - dropbox: using the windows dropbox instead
 main_arch_wsl() {
-    execute_exclude apt sway kmonad dropbox
+    execute_exclude apt sway kmonad
 }
 
 while [[ $# -gt 0 ]]; do
@@ -85,16 +84,16 @@ done
 echo "Installing BartSte/dotfiles-linux repository"
 source ~/.dotfiles_config.sh
 
-if running_arch && running_wsl; then
+if running arch && running wsl; then
     echo "Running on Arch Linux WSL"
     main_arch_wsl
-elif running_arch; then
+elif running arch; then
     echo "Running on Arch Linux"
     main_arch
-elif running_wsl; then
+elif running wsl; then
     echo "Running on Windows WSL"
     echo "Unknown WSL system"
-elif running_raspberry; then
+elif running raspberry; then
     echo "Running on Raspberry Pi"
     main_raspberry
 else

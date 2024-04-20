@@ -1,0 +1,72 @@
+#!/usr/bin/bash
+
+set -eo pipefail
+
+usage="Usage: $0 <type> 
+
+Check if the machien is running one of the following systems:
+
+- wsl
+- arch
+- raspberry OS
+- tmux
+
+where:
+    <type>  the type of the distro to check"
+
+log() {
+    echo "$1" >&2
+}
+
+if [ "$1" == "" ]; then
+    log "Error: missing argument"
+    echo "$usage"
+    exit 1
+elif [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
+    echo "$usage"
+    exit
+elif [ "$2" != "" ]; then
+    log "Error: too many arguments"
+    echo "$usage"
+    exit 1
+elif ! [[ "$1" =~ ^(wsl|arch|raspberry|tmux)$ ]]; then
+    log "Error: unknown argument"
+    echo "$usage"
+    exit 1
+fi
+
+wsl() {
+    grep -iq "microsoft" /proc/version
+}
+
+arch() {
+    if [ -f /etc/os-release ]; then
+        grep -q "Arch Linux" /etc/os-release
+        if [ $? -eq 0 ]; then
+            exit 0
+        else
+            exit 1
+        fi
+    else
+        exit 1
+    fi
+}
+
+raspberry() {
+    if [ -f /proc/device-tree/model ]; then
+        grep -q "Raspberry Pi" /proc/device-tree/model
+        if [ $? -eq 0 ]; then
+            exit 0
+        else
+            exit 1
+        fi
+    else
+        exit 1
+    fi
+}
+
+tmux() {
+    [[ -n $TMUX ]]
+}
+
+eval "$1"

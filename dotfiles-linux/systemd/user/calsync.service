@@ -1,9 +1,0 @@
-[Unit]
-Description=Runs calsync perodically
-
-[Service]
-Type=simple
-ExecStart=/bin/bash -c "exec /home/barts/bin/calsync /home/barts/.config/davmail/davmail.properties /home/barts/Dropbox/org/outlook.org outlook_local today 180d -q"
-
-[Install]
-WantedBy=default.target

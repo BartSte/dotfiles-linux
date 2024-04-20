@@ -1,3 +1,12 @@
+remove_plugins() {
+    echo "Removing tmux plugins"
+
+    source ~/.zshenv
+    [[ -z $TMUX_PLUGIN_DIR ]] && { echo "TMUX_PLUGIN_DIR is not set" && exit 1; }
+
+    rm -rf "$TMUX_PLUGIN_DIR"
+}
+
 install_tmux_plugin() {
     echo "Installing tmux plugin"
 

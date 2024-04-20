@@ -1,0 +1,11 @@
+[Unit]
+Description=Dropbox sync service using rclone
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/rclone bisync dropbox: /home/barts/dropbox
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=timers.target

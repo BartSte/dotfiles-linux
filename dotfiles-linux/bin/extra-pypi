@@ -12,8 +12,8 @@
 pypirc="$HOME/.pypirc"
 [[ -f $pypirc ]] || exit 1
 
-pypi_username=$(grep "^username = " $pypirc | sed "s/^username = //")
-pypi_token=$(grep "^password = " $pypirc | sed "s/^password = //")
+pypi_username=$(grep "^username = " "$pypirc" | sed "s/^username = //")
+pypi_token=$(grep "^password = " "$pypirc" | sed "s/^password = //")
 url="https://$pypi_username:$pypi_token@gitlab.com/api/v4/groups/2265086/-/packages/pypi/simple/"
 
-[[ -z $pypi_username || -z $pypi_token ]] || echo $url
+[[ -z $pypi_username || -z $pypi_token ]] || echo "$url"

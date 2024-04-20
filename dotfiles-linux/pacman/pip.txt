@@ -1,8 +1,0 @@
-ipython
-khalorg
-gpg
-khal
-khalorg
-khard
-oauth2client
-vdirsyncer

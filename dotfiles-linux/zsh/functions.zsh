@@ -1,20 +1,5 @@
-save_source() {
-    local file=$1
-    if [ -f "$file" ]; then
-        source $file
-    fi
-}
-
-save_source /usr/share/fzf/key-bindings.zsh
-save_source /usr/share/fzf-help/fzf-help.zsh
-
-rrm() {
-    /usr/bin/rm $@
-}
-
-rm() {
-    rmtrash $@
-}
+save-source /usr/share/fzf/key-bindings.zsh
+save-source /usr/share/fzf-help/fzf-help.zsh
 
 fps() {
     ps aux | fzf
@@ -94,4 +79,21 @@ fzf-cd-widget-no-ignore() {
     fzf-cd-widget
 
     FZF_ALT_C_COMMAND=$_OLD_FZF_ALT_C_COMMAND
+}
+
+fullsync() {
+    echo "### Syncing rbw"
+    rbw unlock && rbw sync
+
+    echo "\n### Syncing dotfiles"
+    dotu
+
+    echo "\n### Syncing dropbox"
+    rclone bisync dropbox: ~/dropbox
+
+    echo "\n### Syncing calendar"
+    mycalsync
+
+    echo "\n### Syncing mail"
+    mailsync
 }

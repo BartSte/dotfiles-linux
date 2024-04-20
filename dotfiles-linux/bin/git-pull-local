@@ -1,0 +1,107 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+usage="Usage: git-pull-local [options] <remote>
+
+Performs \`git pull\` on all local branches that are tracking an existing
+upstream branch on the remote called <remote>. If no remote is specified, the
+default remote is used by calling \`git remote\`.
+
+It is assumed that the branches do not have whitespace in their names.
+
+Options:
+  -h, --help        Show this help message and exit
+  -q, --quiet       Do not show informative messages from this script.
+  -v, --verbose     Show the git commands being executed"
+
+quiet=false
+git_quiet="-q"
+remote_name=''
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -h | --help)
+            echo "$usage"
+            exit 0
+            ;;
+        -q | --quiet)
+            quiet=true
+            shift
+            ;;
+        -v | --verbose)
+            git_quiet=""
+            shift
+            ;;
+        *)
+            remote_name="$1"
+            shift
+            ;;
+    esac
+done
+
+##############################################################################
+# Prints the message $1 to stderr if the script is not running in quiet mode.
+##############################################################################
+log() {
+    if [[ $quiet == false ]]; then
+        echo "$1" >&2
+    fi
+}
+
+##############################################################################
+# Returns the names of all local branches.
+# The output is a list of branch names, one per line.
+##############################################################################
+get_local() {
+    git for-each-ref --format '%(refname:short)' refs/heads/
+}
+
+##############################################################################
+# Returns the upstream branch of the local branch $1.
+##############################################################################
+get_upstream() {
+    git for-each-ref --format '%(upstream:short)' refs/heads/"$1"
+}
+
+##############################################################################
+# Fails if the upstream branch of the local branch $1 does not exist.
+##############################################################################
+upstream_exists() {
+    [[ -n "$1" ]] && git show-ref --verify --quiet refs/remotes/"$1"
+}
+
+##############################################################################
+# Pulls all local branches that are tracking an existing upstream branch on the
+# remote called $1. If no remote is specified, the default remote is used.
+##############################################################################
+pull_branches() {
+    local remote branch upstream
+    remote=$1
+    if [[ -z $remote ]]; then
+        remote=$(git remote)
+    fi
+
+    log "Fetch $remote"
+    git fetch --prune $git_quiet "$remote"
+
+    log "Start pulling branches"
+    get_local | while read -r branch; do
+        upstream=$(get_upstream "$branch")
+        if upstream_exists "$upstream"; then
+            log "Pulling $branch"
+            git switch "$branch" $git_quiet
+            git pull $git_quiet
+        fi
+    done
+}
+
+current_branch=$(git branch --show-current || {
+    log "No git branch found"
+    exit 1
+})
+log "Current branch: $current_branch"
+
+pull_branches "$remote_name"
+
+log "Restore to branch: $current_branch"
+git switch "$current_branch" $git_quiet

@@ -1,34 +1,48 @@
-# Only source the file if it exists. If it does not exist print a warning
-# to stderr.
-save_source() {
-    local file=$1
-    if [ -f "$file" ]; then
-        source $file
-    else
-        echo "WARNING: $file does not exist" >&2
-    fi
+_zshrc_plugins() {
+    _zshrc_log "Loading zsh plugins"
+    local dir_plugins=$1
+    save-source "$dir_plugins/zsh-autosuggestions/zsh-autosuggestions.zsh"
+    save-source "$dir_plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
 }
 
-dir_zsh=$HOME/dotfiles-linux/zsh
-dir_plugins=/usr/share/zsh/plugins
+_zshrc_config() {
+    local dir_zsh=$1
+    local files=(
+        "p10k_init.zsh" # must be first
+        "git.zsh"
+        "wsl.zsh"
+        "settings.zsh"
+        "aliases.zsh"
+        "functions.zsh"
+        "completion.zsh"
+        "vi-mode.zsh"
+        "bindings.zsh"
+        "projectrc.zsh")
 
-save_source $dir_zsh/p10k_init.zsh  # must stay at the top
+    _zshrc_log "Loading zsh configs"
+    save-source "$HOME/.dotfiles_config.sh"
+    for file in "${files[@]}"; do
+        _zshrc_log "Loading $file"
+        save-source "$dir_zsh/$file" || _zshrc_log "An error in $file"
+    done
+}
 
-save_source $HOME/.dotfiles_config.sh
+_zshrc_p10k() {
+    _zshrc_log "Finalize Powerlevel10k"
+    save-source "/usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme"
+    save-source "$HOME/.p10k.zsh" # must be after _zshrc_load
+}
 
-save_source $dir_zsh/git.zsh
-running_wsl && . $dir_zsh/wsl.zsh
-save_source $dir_zsh/settings.zsh
-save_source $dir_zsh/aliases.zsh
-save_source $dir_zsh/functions.zsh
-save_source $dir_zsh/completion.zsh
-save_source $dir_zsh/vi-mode.zsh
+# Load zsh config. Loading ~/.p10k.zsh must not be loaded with
+# `set -euo pipefail`, therefore it is excluded from _zshrc_load.
+zshrc() {
+    source "$HOME/dotfiles-linux/zsh/bootstrap.zsh"
 
-save_source $dir_plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
-save_source $dir_plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-save_source $dir_zsh/bindings.zsh
+    [[ $1 == "-v" || $1 == "--verbose" ]] && _zshrc_verbose=true
 
-save_source $HOME/dotfiles-linux/tmux/sessionrc.zsh
+    _zshrc_config "$HOME/dotfiles-linux/zsh"
+    _zshrc_plugins /usr/share/zsh/plugins
+    _zshrc_p10k
+}
 
-save_source /usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme
-save_source ~/.p10k.zsh  # must stay at the bottom
+zshrc "$@"

@@ -1,0 +1,142 @@
+#!/usr/bin/env bash
+set -euo pipefail
+this_dir=$(dirname "$(readlink -f "$0")")
+
+. "$this_dir"/openers.bash
+. "$this_dir"/helpers.bash
+. "$this_dir"/logger.bash
+
+usage="Usage: $0 <path>
+Opens a url or path in a preferred program.
+
+The option -w, --wslpath can be used to convert a windows paths to a wsl path.
+This is useful when you want to open a windows file in wsl. When you are not 
+running wsl, or the path is already a wsl path, this option has no effect.
+
+Options:
+    -h, --help      Show this message and exit.
+    -w, --wslpath   Tries to convert a windows path to a wsl path. Turned off by
+                    default. This option has no effect if: wsl is not running, 
+                    or the path is already a wsl path.
+    -l, --log       Send debug messages a file.
+    -q, --quiet     Suppress all output.
+    -v, --verbose   Show more output."
+
+input=""
+win=""
+while [[ $# -gt 0 ]]; do
+    case $1 in
+    -h | --help)
+        echo "$usage"
+        exit 0
+        ;;
+    -w | --win)
+        win=true
+        ;;
+    -l | --log)
+        OPEN_LOG_FILE="$2"
+        shift
+        ;;
+    -q | --quiet)
+        OPEN_LOG_LEVEL="quiet"
+        ;;
+    -v | --verbose)
+        OPEN_LOG_LEVEL="verbose"
+        ;;
+    *)
+        if [[ -z $input ]]; then
+            input=$1
+        else
+            echo "Unknown option: $1" >&2
+            exit 1
+        fi
+        ;;
+    esac
+    shift
+done
+
+################################################################################
+# Tries to open a url in a browser. If the url is not a url, the function returns
+# 1.
+################################################################################
+try_url() {
+    log "Try url: $1" -v
+    if is_url "$1"; then
+        open_url "$1"
+    else
+        return 1
+    fi
+}
+
+################################################################################
+# Tries to open a file in a preferred program. If the file is not a file that is
+# supported, the function returns 1.
+#
+# The input may be a path to a file, or in the format: path:line:column. The line
+# and column are optional. If the line and column are not provided, the default
+# is 1.
+################################################################################
+try_file() {
+    local to_open file line column win
+    to_open=$1
+    win=$2
+
+    # Split the `to_open` string by setting the word separator to a colon
+    # temporarily.
+    IFS=':' read -r file line column <<<"$to_open"
+    IFS=' ' # Reset IFS
+    line=${line:-1}
+    column=${column:-1}
+    if $win && running wsl; then
+        log "file before escaping: $file, win: $win" -v
+        file_win=$(sed 's/\\/\\\\/g' <<<"$file")
+        log "file after escaping: $file_win" -v
+        file_wsl=$(wslpath "$file_win")
+        log "file after wslpath: $file_wsl" -v
+        if [[ -f "$file_wsl" ]]; then
+            log "The path can be resolved: $file_wsl" -v
+            file=$file_wsl
+        else
+            abort "The wsl path cannot be resolved: $file_win"
+        fi
+    fi
+
+    log "Try file: $file, line: $line, column: $column, win: $win" -v
+    if has_type "$file" image; then
+        log "Opening image: $file" -v
+        open_img "$file"
+
+    elif has_type "$file" pdf; then
+        log "Opening pdf: $file" -v
+        zathura "$file"
+
+    elif has_type "$file" text; then
+        log "Opening text: $file" -v
+        open_text "$file" "$line"
+
+    else
+        return 1
+    fi
+}
+
+################################################################################
+# Aborts the program with an error message.
+################################################################################
+abort() {
+    log "$1"
+    if running tmux; then
+        tmux display-message -d 2000 "$1"
+    fi
+    exit 1
+}
+
+################################################################################
+# The main function of the program. It tries to open the input as a url, and if
+# that fails, it tries to open the input as a file.
+################################################################################
+main() {
+    log_clear
+    try_url "$1" || try_file "$1" "$2" || abort "Could not open $1"
+}
+
+main "$input" "$win"

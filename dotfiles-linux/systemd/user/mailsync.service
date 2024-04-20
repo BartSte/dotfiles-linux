@@ -1,9 +1,0 @@
-[Unit]
-Description=Runs mailsync perodically
-
-[Service]
-Type=simple
-ExecStart=/bin/bash -c "exec /home/barts/bin/mailsync /home/barts/.config/davmail/davmail.properties -q"
-
-[Install]
-WantedBy=default.target

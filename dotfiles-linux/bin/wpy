@@ -4,98 +4,98 @@ usage() {
     cat <<EOF
 Usage: wpy [options] <command>
 
-wpy checks for a python virtual environment in the WSLVENVS directory, where
-WSLVENVS is an environment variable. If it exists, it will be executed. By 
-default, the venv is selected that has the same name as the current working
-directory. It can also be set using the --venv option. Everything after the
-options is passed to the python executable. Alternatively, everything after --
-is also passed to the python executable.
+Uses a windows python interpreter in WSL, instead of the one supplied by your
+linux distribution. It is assumed that you are running WSL with a mounted
+windows drive.
 
-If you need the path to the python executable, you can pass the --path option.
-Now no command is executed, but the path to the python executable is printed.
+This program checks for the the following environment variables, in order of 
+priority:
+  - WINVENV: The path to a python virtual environment in windows (e.g. /mnt/c/Users/foo/venv)
+  - WINPY: The path to a python interpreter in windows (e.g. /mnt/c/Python/python.exe)
+
+When one of these variables is set, it will be used as the python interpreter.
+All arguments passed to wpy are directly passed to the python interpreter. When
+one of the options below is passed, no arguments are passed to python.
 
 Options:
-  --venv <name>   Name of the venv to use
-  -p,--path       Print the path to the python executable, do not execute
-                  any command.
-  -h, --help      Show this message
-  --debug         Enable debug output
+  --wpy-help      Show this message. No arguments are passed to python anymore.
+  --wpy-path      Print the path to the python executable, do not execute
+                  any command. No arguments are passed to python anymore.
+  --wpy-debug     Enable debug output. No arguments are passed to python
+                  anymore.
 
 Commands:
     <command>     Command to execute
 EOF
 }
 
-running_wsl() {
-    [[ $(grep -i microsoft /proc/version) ]]
+escape_backslashes() {
+    sed 's/\\/\\\\/g'
 }
 
 parse_args() {
     while [[ $# -gt 0 ]]; do
         case $1 in
-            --venv)
-                venv_name=$2
-                shift
-                shift
-                ;;
-            -p|--path)
-                path=true
-                shift
-                ;;
-            --debug)
-                debug=/dev/stderr
-                shift
-                ;;
-            -h|--help)
-                usage
-                exit 0
-                ;;
-            --)
-                 shift
-                 break
-                 ;;    
-            *)
-                break
-                ;;
+        --wpy-path)
+            path=true
+            ;;
+        --wpy-debug)
+            debug=/dev/stderr
+            ;;
+        --wpy-help)
+            usage
+            ;;
+        *)
+            echo "Adding $1 to command" >$debug
+            command+=("$(printf "%s\n" "$1" | escape_backslashes)")
+            echo "Command is now: ${command[*]}" >$debug
+            ;;
         esac
+        shift
     done
-    command=$@
 }
 
 get_exe() {
     venv_dir=$1
     echo "Checking for venv directory $venv_dir" >$debug
     [[ -d "$venv_dir" ]] && {
-        echo "Using venv $venv_dir" >$debug;
+        echo "Using venv $venv_dir" >$debug
         echo "$venv_dir/Scripts/python.exe"
     }
 }
 
-venv_name=''
+exe=""
 path=false
 debug=/dev/null
-parse_args $@
+wpy_ops_passed=false
+command=()
+parse_args "$@"
 
-echo "venv_name=$venv_name" >$debug
-echo "path=$path" >$debug
-echo "command=$command" >$debug
+if [[ -n $WINVENV ]]; then
+    echo "Using WINVENV" >$debug
+    exe="$(get_exe "$WINVENV")"
+elif [[ -n $WINPY ]]; then
+    exe=$WINPY
+fi
 
-running_wsl || {
+if ! running wsl; then
     echo "Not running WSL" >$debug
-    exit 1
-}
+    exit 0
+fi
 
-venv=${venv_name:-$(basename $(pwd))}
-venv_dir="$WSLVENVS/$venv"
-
-exe=$(get_exe $venv_dir)
+echo "path=$path
+debug=$debug
+wpy_ops_passed=$wpy_ops_passed
+command=${command[*]}
+exe=$exe" >$debug
 
 if [[ -z $exe ]]; then
-    echo "No venv found" >$debug
+    echo "No python interpreter found" >$debug
+    exit 1
 elif [[ $path == true ]]; then
     echo "Printing path to executable" >$debug
-    echo $exe
-else
-    echo "Executing $exe $command" >$debug
-    $exe $command
+    echo "$exe"
+elif [[ $wpy_ops_passed == false ]]; then
+    echo "Executing $exe ${command[*]}" >$debug
+    eval "$exe ${command[*]}"
 fi
