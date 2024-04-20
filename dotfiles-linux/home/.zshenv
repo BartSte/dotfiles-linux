@@ -5,7 +5,7 @@ zshenv() {
 
     export BROWSER='qutebrowser'
     export WSLBROWSER='/mnt/c/Program Files/qutebrowser/qutebrowser.exe'
-    command -v nvim && export EDITOR='nvim'
+    hash nvim && export EDITOR='nvim'
     export GPG_TTY=$(tty)
     export EARBUDS='30:53:C1:B8:CE:F6'
     export ESCDELAY=0
