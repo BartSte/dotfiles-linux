@@ -44,46 +44,8 @@ curl -O https://raw.githubusercontent.com/BartSte/dotfiles-linux/master/dotfiles
 - Complete the environment variables in `~/.dotfiles_config.sh`.
 - Run the script: `~/dotfiles-linux/main`
 - Afterwards, authenticate for:
-  - Dropbox
-  - Git crypt
   - Mutt
   - Khal & khalorg
-
-### Authenticate dropbox
-
-After installing dropbox, you need to authenticate it with your account. At the
-moment of writing, the only way was to do this through a tray icon. Waybar did
-not work from me so I did the following:
-
-- Run xwayland
-- Intall the program `trayer`
-- Run trayer.
-- Run dropbox.
-- Dropbox will apear in the tray icon.
-- Press `sign in` and follow the instructions.
-
-After dropbox is working, re-run the following scripts as they rely on files
-(containing personal data) that are synced by dropbox:
-
-```bash
-dotfiles-linux/qutebrowser/main
-dotfiles-linux/wakatime/main
-```
-
-### Git crypt
-
-The `dotfiles` repository contains some files that are encrypted using
-`git-crypt`. To be able to read the encrypted files, the
-`dotfiles-linux\crypt\main` script is used is executed when running het main
-file.
-
-#### get-rbw-base64-keys
-
-The function `get-rbw-base64-keys` will convert the output of \`base crypt
-export-key\` to a base64 string. This sting can be stored in the password
-manager. In the \`main\` script this key is decoced and piped to \`base crypt
-unlock\`. The `get-rbw-base64-keys` is only needed when you want to update the
-keys in `rbw` and does not have to run when you are initializing your dotfiles.
 
 ### Mutt
 
@@ -273,6 +235,35 @@ will also be synced when het `mycalsync` script is called. You can check if
 ```bash
 khard list
 ```
+
+#### Setting up OpenVino + GPU
+
+I had some issue making OpenVino detect my GPU (Intel UHD Graphics 620). The
+following solved the issue:
+
+```bash
+sudo pacman -S level-zero-headers level-zero-loader intel-graphics-compiler
+yay -S ocl-icd intel-opencl
+```
+
+#### Pinentry endless password input
+
+I need do set many passwords: login, rbw, mail. I want to set 1 password for
+all apps and I want to enter just 1 password. I still want to be able to use
+pinentry for other apps in the future I guess. One hacky way could be:
+
+- Create a personal `pinentry` program and put it at the front of the PATH.
+- Check who is calling: if it is rbw or mail, echo the password (in the format
+  pinentry expects). Otherwise, call the real pinentry program.
+
+- Note, when possible, it is easier to do:
+
+```bash
+rbg get field | gpg --pinentry-mode loopback --batch --passphrase-fd 0 -d ./foo.txt.gpg
+```
+
+This will read the password from stdin, instead of using pinentry. This cannot
+be done when you have no access to the command that is calling gpg.
 
 ### Dotfiles-windows (Windows 10 & 11)
 
