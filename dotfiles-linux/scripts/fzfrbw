@@ -4,6 +4,8 @@
 
 rbw_to_clipboard(){
     id=$(rbw list | fzf)
+
+    # FIXME: the wl-copy breaks.
     rbw_get $cmd $id | wl-copy
 }
 
