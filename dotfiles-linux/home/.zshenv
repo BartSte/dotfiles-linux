@@ -33,7 +33,7 @@ zshenv() {
     export FZF_DEFAULT_OPTS="--height 50% --layout=reverse --preview-window=right,65%"
 
     _FZF_CTRL_T_OPTS_FILES='bat --theme=gruvbox-dark --style=numbers --color=always --line-range :500 {}'
-    _FZF_CTRL_T_OPTS_DIR='exa --icons -T -L 1 -a {} | head -200'
+    _FZF_CTRL_T_OPTS_DIR='exa --color=always --icons -T -L 1 -a {} | head -200'
     _FZF_CTRL_T_OPTS_BIND="ctrl-d:reload($FZF_ALT_C_COMMAND)+change-preview($_FZF_CTRL_T_OPTS_DIR)+change-preview-window(hidden),"
     _FZF_CTRL_T_OPTS_BIND+="ctrl-o:reload($FZF_CTRL_T_COMMAND)+change-preview($_FZF_CTRL_T_OPTS_FILES)+change-preview-window(hidden),"
     _FZF_CTRL_T_OPTS_BIND+="ctrl-p:toggle-preview"
