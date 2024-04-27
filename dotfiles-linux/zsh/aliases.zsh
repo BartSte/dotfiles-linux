@@ -17,7 +17,7 @@ alias oldheadphones='bluetoothctl connect $HEADPHONES'
 alias path='echo -e ${PATH//:/\\n}'
 alias py='python3'
 alias sudo='sudo '
-alias ta='tmux attach'
+alias ta='tmux -u attach'
 alias tm='tmux-session ~'
 alias ts='tmux-session'
 alias unl='rbw unlock'
@@ -31,7 +31,7 @@ alias o='open'
 alias suspend="systemctl suspend"
 
 qhash() {
-  hash $1 2>/dev/null
+    hash $1 2>/dev/null
 }
 
 qhash exa && alias la='exa -hal --icons --git'
