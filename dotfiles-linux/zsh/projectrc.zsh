@@ -1,6 +1,6 @@
-# This file should be sourced from .zshrc. It will load extra zsh
-# configurations based on the name of the current directory. This is useful for
-# loading project specific configurations.
+# This file should be sourced from .zshrc. It will load extra zsh configurations
+# based on the name of the current directory. This is useful for loading project
+# specific configurations.
 reload-session() {
     setopt LOCAL_OPTIONS
     set -euo pipefail
