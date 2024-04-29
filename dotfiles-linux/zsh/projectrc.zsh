@@ -30,8 +30,8 @@ reload-session() {
         fc-sonar-server
         navigation
         quay-detector
-        iss-gui
-        iss-backend
+        fcissgui
+        fcisscore
     )
     if [[ " ${winpyprojects[@]} " =~ " $PROJECTRC " ]]; then
         PROJECTRC="winpyproject"
