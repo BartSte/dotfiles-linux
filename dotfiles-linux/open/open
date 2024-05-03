@@ -77,7 +77,7 @@ try_url() {
 # is 1.
 ################################################################################
 try_file() {
-    local to_open file line column win
+    local to_open file line column win file_wsl file_escaped file_wsl_escaped
     to_open=$1
     win=$2
 
@@ -88,16 +88,23 @@ try_file() {
     line=${line:-1}
     column=${column:-1}
     if $win && running wsl; then
+        file_wsl=$(wslpath "$file")
         log "file before escaping: $file, win: $win" -v
-        file_win=$(sed 's/\\/\\\\/g' <<<"$file")
-        log "file after escaping: $file_win" -v
-        file_wsl=$(wslpath "$file_win")
-        log "file after wslpath: $file_wsl" -v
+        file_escaped=$(sed 's/\\/\\\\/g' <<<"$file")
+        log "file after escaping: $file_escaped" -v
+        file_wsl_escaped=$(wslpath "$file_escaped")
+
+        log "file after wslpath: $file_wsl_escaped" -v
         if [[ -f "$file_wsl" ]]; then
             log "The path can be resolved: $file_wsl" -v
             file=$file_wsl
+        elif [[ -f "$file_wsl_escaped" ]]; then
+            log "The escaped path can be resolved: $file_wsl_escaped" -v
+            file=$file_wsl_escaped
         else
-            abort "The wsl path cannot be resolved: $file_win"
+            log "The wsl path cannot be resolved: $file_wsl"
+            log "The escaped wsl paths cannot be resolved: $file_wsl_escaped"
+            abort "The wsl paths cannot be resolved: $file_escaped"
         fi
     fi
 

@@ -13,8 +13,9 @@ this_dir="$(dirname "$(readlink -f "$0")")"
 # Python errors do not respect the file:line:column convention for a text file.
 # This is corrected using sed.
 ################################################################################
+RE="$RE_PYTHON_ERROR|$RE_PYTHON_ERROR_WIN"
 sed_python_error() {
-    sed -E "s/$RE_PYTHON_ERROR/\1:\2:/g"
+    sed -E "s/$RE/\1:\2:/g"
 }
 
 sed_python_error
