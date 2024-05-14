@@ -5,7 +5,7 @@ source ~/dotfiles-linux/mutt/binds.muttrc
 # Style
 source ~/dotfiles-linux/mutt/colors-gruvbox-shuber.muttrc 
 source ~/dotfiles-linux/mutt/gruvbox-powerline.neomuttrc
-# source ~/dotfiles-linux/mutt/powerline.neomuttrc
+source ~/dotfiles-linux/mutt/powerline.neomuttrc
 
 # Variables
 set my_email=`rbw_get username $MICROSOFT_ACCOUNT`
