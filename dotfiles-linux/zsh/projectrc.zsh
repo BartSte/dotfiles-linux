@@ -32,7 +32,6 @@ reload-session() {
         quay-detector
         fcissgui
         fcisscore
-        khalorg
     )
     if [[ " ${winpyprojects[@]} " =~ " $PROJECTRC " ]]; then
         PROJECTRC="winpyproject"
