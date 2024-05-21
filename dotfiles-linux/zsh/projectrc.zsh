@@ -19,6 +19,11 @@ reload-session() {
         save-source "$dir/snapshotrc.zsh"
     fi
 
+    if [[ "$PROJECTRC" == "kmonad-tray" ]]; then
+        _zshrc_log "kmonad-tray project detected. Loading kmonad-trayrc.zsh"
+        save-source "$dir/kmonad-trayrc.zsh"
+    fi
+
     # If a project is a python project that is developed for windows, then
     # loading the winpyprojectrc.zsh file is nice as it allows you to call the
     # python windows interpreter from wsl. See the wpy executable for more
