@@ -14,14 +14,15 @@ reload-session() {
     export PROJECTRC
 
     _zshrc_log "Project name: $PROJECTRC"
-    if [[ "$PROJECTRC" == "snapshot" ]]; then
-        _zshrc_log "Snapshot project detected. Loading snapshotrc.zsh"
-        save-source "$dir/snapshotrc.zsh"
-    fi
 
-    if [[ "$PROJECTRC" == "kmonad-tray" ]]; then
-        _zshrc_log "kmonad-tray project detected. Loading kmonad-trayrc.zsh"
-        save-source "$dir/kmonad-trayrc.zsh"
+    local cpp_projects=(
+        snapshot
+        kmonadtray
+    )
+    if [[ " ${cpp_projects[@]} " =~ " $PROJECTRC " ]]; then
+        _zshrc_log "C++ project detected. Loading cppproject.zsh"
+        PROJECTRC="cppproject"
+        save-source "$dir/cppproject.zsh"
     fi
 
     # If a project is a python project that is developed for windows, then
