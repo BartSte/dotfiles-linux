@@ -15,16 +15,6 @@ reload-session() {
 
     _zshrc_log "Project name: $PROJECTRC"
 
-    local cpp_projects=(
-        snapshot
-        kmonadtray
-    )
-    if [[ " ${cpp_projects[@]} " =~ " $PROJECTRC " ]]; then
-        _zshrc_log "C++ project detected. Loading cppproject.zsh"
-        PROJECTRC="cppproject"
-        save-source "$dir/cppproject.zsh"
-    fi
-
     # If a project is a python project that is developed for windows, then
     # loading the winpyprojectrc.zsh file is nice as it allows you to call the
     # python windows interpreter from wsl. See the wpy executable for more
@@ -39,10 +29,9 @@ reload-session() {
         fcissgui
         fcisscore
     )
-    if [[ " ${winpyprojects[@]} " =~ " $PROJECTRC " ]]; then
-        PROJECTRC="winpyproject"
-        _zshrc_log "Windows python project detected. Loading winpyprojectrc.zsh"
-        save-source "$dir/winpyprojectrc.zsh"
-    fi
+    [[ " ${winpyprojects[@]} " =~ " $PROJECTRC " ]] && PROJECTRC="winpyproject"
+
+    # Load the project specific zsh configuration file if it exists.
+    . "$dir/$PROJECTRC.zsh" 2>/dev/null || true
 }
 reload-session "$@"
