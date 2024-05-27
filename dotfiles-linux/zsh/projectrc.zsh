@@ -38,6 +38,7 @@ reload-session() {
         quay-detector
         fcissgui
         fcisscore
+        fcenums
     )
     if [[ " ${winpyprojects[@]} " =~ " $PROJECTRC " ]]; then
         PROJECTRC="winpyproject"
