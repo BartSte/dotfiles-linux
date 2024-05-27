@@ -43,10 +43,10 @@ bindsym $mod+Shift+7 move container to workspace $ws7
 bindsym $mod+Shift+8 move container to workspace $ws8
 
 bindsym $mod+F11 fullscreen toggle
-bindsym $mod+Mod1+c reload
-bindsym $mod+Mod1+r restart
-bindsym $mod+r mode "resize"
+bindsym $mod+shift+c reload
+bindsym $mod+shift+r restart
 bindsym $mod+shift+e exit
+bindsym $mod+r mode "resize"
 
 bindsym $mod+space exec $menu
 bindsym Mod1+F4 kill
@@ -70,9 +70,6 @@ client.focused_inactive #282828 #282828 #ebdbb2 #282828 #282828
 client.unfocused        #282828 #282828 #ebdbb2 #282828 #282828
 client.urgent           #282828 #282828 #fb4934 #282828 #282828
 client.placeholder      #282828 #282828 #ebdbb2 #282828 #282828
-
-# black background
-output * bg #000000 solid_color
 
 bindsym XF86AudioRaiseVolume exec "amixer -qD pulse sset Master 1%+"
 bindsym XF86AudioLowerVolume exec "amixer -qD pulse sset Master 1%-"
