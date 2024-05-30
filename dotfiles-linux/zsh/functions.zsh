@@ -1,10 +1,6 @@
 save-source /usr/share/fzf/key-bindings.zsh
 save-source /usr/share/fzf-help/fzf-help.zsh
 
-fps() {
-    ps aux | fzf
-}
-
 fkill() {
     local pid
 
@@ -16,15 +12,6 @@ fkill() {
     )" || return
 
     kill -"${1:-9}" "$pid"
-}
-
-act() {
-    source .venv/bin/activate >/dev/null 2>&1
-}
-
-vims() {
-    [ -f Session.vim ] && {act
-    nvim -S Session.vim $@} || echo "No session found."
 }
 
 fzf-file-widget-home() {
