@@ -30,6 +30,7 @@ reload-session() {
         fcisscore
         fcenums
         fc-report
+        fctools
     )
     [[ " ${winpyprojects[@]} " =~ " $PROJECTRC " ]] && PROJECTRC="winpyproject"
 
