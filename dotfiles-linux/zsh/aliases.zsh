@@ -5,30 +5,31 @@ alias ....='cd ./../../../'
 alias .....='cd ./../../../../'
 alias ......='cd ./../../../../../'
 
-alias fps="ps aux | fzf"
-alias vims='nvim -S Session.vim'
 alias act='source .venv/bin/activate'
 alias bat='bat --theme gruvbox-dark'
 alias blueoff='bluetoothctl power off'
 alias blueon='bluetoothctl power on; bluetoothctl discoverable on; bluetoothctl pairable on;'
+alias c="calc "
 alias dact='deactivate'
+alias dropsync='rclone bisync dropbox: ~/dropbox'
 alias dsize='du -h -d1' # use the du command for further inspection
 alias earbuds='bluetoothctl connect $EARBUDS'
+alias fps="ps aux | fzf"
 alias headphones='bluetoothctl connect $SONY'
 alias mutt='neomutt'
+alias o='open'
 alias oldheadphones='bluetoothctl connect $HEADPHONES'
 alias path='echo -e ${PATH//:/\\n}'
 alias py='python3'
 alias sudo='sudo '
+alias suspend="systemctl suspend"
 alias ta='tmux -u attach'
 alias tm='tmux-session ~'
 alias ts='tmux-session'
 alias unl='rbw unlock'
 alias v='nvim'
+alias vims='nvim -S Session.vim'
 alias yay='export MAKEFLAGS="-j$(nproc)" && yay'
-alias dropsync='rclone bisync dropbox: ~/dropbox'
-alias o='open'
-alias suspend="systemctl suspend"
 
 qhash() {
     hash $1 2>/dev/null

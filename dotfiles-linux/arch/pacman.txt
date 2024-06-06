@@ -52,8 +52,10 @@ redshift
 ripgrep
 ruby
 tar
-texlive-bin
 texlive-core
+texlive-latex 
+texlive-latexextra 
+texlive-plaingeneric
 the_silver_searcher
 tmux
 trash-cli
