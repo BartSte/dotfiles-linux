@@ -37,16 +37,19 @@ dotc() {
 
     echo 'Base:'
     /usr/bin/rm $(fd nvim.shada ~/dotfiles --type f) &>/dev/null
-    base add ~/dotfiles
+    /usr/bin/rm $(fd Session.vim ~/dotfiles --type f) &>/dev/null
 
     # Cannot be linked as it is being replaced by Lazy instead of altered.
-    base add ~/.config/nvim/lazy-lock.json
+    cp -u ~/.config/nvim/lazy-lock.json ~/dotfiles/nvim/lazy-lock.json
 
+    base add ~/dotfiles
     bases
     base commit --untracked-files=no -a -m "$message" | shorten_stdout
 
     echo $'\nLinux'
     /usr/bin/rm $(fd nvim.shada ~/dotfiles-linux --type f) &>/dev/null
+    /usr/bin/rm $(fd Session.vim ~/dotfiles-linux --type f) &>/dev/null
+
     lin add ~/dotfiles-linux
     lins
     lin commit --untracked-files=no -a -m "$message" | shorten_stdout
