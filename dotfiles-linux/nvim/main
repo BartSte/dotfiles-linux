@@ -20,7 +20,7 @@ symlink_config() {
     ln $dotfiles/lua "$directory_config" -sf
     ln $dotfiles/vim "$directory_config" -sf
     ln $dotfiles/init.lua "$directory_config"/init.lua -sf
-    ln $dotfiles/lazy-lock.json "$directory_config"/lazy-lock.json -f # needs to be hardlink
+    cp $dotfiles/lazy-lock.json "$directory_config"/lazy-lock.json # cannot be linked
 
 }
 
