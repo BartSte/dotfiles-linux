@@ -1,11 +1,32 @@
 #!/usr/bin/env bash
+usage="
+Usage: $(basename "$0") [-h | --help] <field> <ID> <other bw options> <bw args>
 
-BW_CLI=${BW_CLI:-rbw}
-if [ "$BW_CLI" = "rbw" ]; then
+Uses \`rbw get\` to get the field from the ID. If the the environment variable
+USE_BW_CLI is set, the \`bw\` command is used instead of \`rbw\`.
+
+where:
+    -h --help           shows this help messages
+    <the field>         the argument for \`rbw -f\`
+    <the ID>            the argument for the id to get the field from
+    <other bw opts>     check \`bw -h\` 
+    <other bw args>     check \`bw -h\`     
+"
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+    -h | --help)
+        echo "$usage"
+        exit 0
+        ;;
+    *)
+        break
+        ;;
+    esac
+done
+
+if [[ -z $USE_BW_CLI ]]; then
     rbw_get $@
-elif [ "$BW_CLI" = "bw" ]; then
-    bw_get $@
 else
-    echo "Unknown BW_CLI: $BW_CLI"
-    exit 1
+    bw_get $@
 fi

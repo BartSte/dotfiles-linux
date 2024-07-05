@@ -1,0 +1,342 @@
+#!/usr/bin/env python
+
+"""
+Script to estimate the minimal number of calories burned while cycling. The
+assumptions are chosen such that the actual number of calories burned is
+greater than the estimate.
+
+Assumptions:
+    - Wind speed is 0 m/s, assuming we start and end at the same location thus
+        the netto wind speed is assumed to be 0 m/s.
+    - No drafting behind other cyclists.
+"""
+
+import logging
+from argparse import ArgumentParser, Namespace
+from dataclasses import dataclass
+
+
+@dataclass
+class CyclingStatistics:
+    """
+    Based on the attributes, a set of cycling statistics are calculated and
+    presented as properties.
+
+    The "conventional racing bike parameters" of the following study were used:
+        - https://www.sheldonbrown.com/rinard/aero/formulas.html
+
+    Attributes
+    ----------
+        ascend_m: the total ascent in meters
+        air_density_kgpm3: the air density in kg/m^3 (default: 1.225)
+        cross_sectional_area_m2: the frontal area of the cyclist + bike in m^2
+            (default: 0.509)
+        distance_m: the distance cycled in meters
+        drag_coefficient: the coefficient of drag (default: 0.88)
+        gravity: the acceleration due to gravity in m/s^2 (default: 9.81)
+        human_efficiency: the efficiency of the human body to convert calories
+            to on the pedals of the bike (default: 0.25)
+        roll_resistance: the coefficient of roll resistance (default: 0.005)
+        time_s: the time taken to cycle the distance in seconds
+        weight_kg: the weight of the cyclist + bike in kg
+
+    """
+
+    distance_m: float
+    time_s: float
+    weight_kg: float
+    ascend_m: float
+    descent_m: float
+
+    air_density_kgpm3: float = 1.293
+    drag_coefficient_times_area_m2: float = 0.39
+    drive_train_efficiency: float = 0.95
+    gravity: float = 9.81
+    human_efficiency: float = 0.25
+    roll_resistance: float = 0.003
+
+    @property
+    def summary(self) -> str:
+        """
+        Return the string representation of the result.
+
+        Returns
+        -------
+            the string representation of the result
+
+        """
+        return "\n".join(
+            [
+                "Inputs",
+                "------",
+                f"Time:             {self.time_formatted}",
+                f"Weight:           {self.weight_kg:.2f} kg",
+                f"Distance:         {self.distance_km:.2f} km",
+                f"Average speed:    {self.speed_kmph:.2f} km/h",
+                "\nResults",
+                "-------",
+                f"Work done:        {self.work_j:.0f} J",
+                f"Average power:    {self.avgerage_power_w:.0f} W",
+                f"Calories burned:  {self.kcal_burned:.0f} kcal",
+            ]
+        )
+
+    @property
+    def detailed(self) -> str:
+        """
+        Return the detailed string representation of the result.
+
+        Returns
+        -------
+            the detailed string representation of the result
+
+        """
+        return "\n".join(
+            [
+                "Inputs",
+                "------",
+                f"Time:             {self.time_formatted}",
+                f"Weight:           {self.weight_kg:.2f} kg",
+                f"Distance:         {self.distance_km:.2f} km",
+                f"Average speed:    {self.speed_kmph:.2f} km/h",
+                "\nResults",
+                "-------",
+                f"Work done:        {self.work_j:.0f} J",
+                f"Average power:    {self.avgerage_power_w:.0f} W",
+                f"Calories burned:  {self.kcal_burned:.0f} kcal",
+                "\nConstants",
+                "---------",
+                f"Air density:              {self.air_density_kgpm3} kg/m^3",
+                f"Roll resistance:          {self.roll_resistance}",
+                f"Gravity:                  {self.gravity} m/s^2",
+                f"Human efficiency:         {self.human_efficiency}",
+                f"Drive train efficiency:   {self.drive_train_efficiency}",
+                f"Drag coefficient x Area:  {self.drag_coefficient_times_area_m2}",
+            ]
+        )
+
+    @property
+    def json(self) -> str:
+        """
+        Return the result as a JSON string.
+
+        Returns
+        -------
+            the result as a JSON string
+
+        """
+        return (
+            "{"
+            f'"time": "{self.time_formatted}", '
+            f'"weight": {self.weight_kg:.2f}, '
+            f'"distance": {self.distance_km:.2f}, '
+            f'"average_speed": {self.speed_kmph:.2f}, '
+            f'"work_done": {self.work_j:.0f}, '
+            f'"power": {self.avgerage_power_w:.0f}, '
+            f'"calories_burned": {self.kcal_burned:.0f}, '
+            f'"air_density": {self.air_density_kgpm3}, '
+            f'"drag_coefficient_times_area": {self.drag_coefficient_times_area_m2}, '
+            f'"roll_resistance": {self.roll_resistance}, '
+            f'"gravity": {self.gravity}, '
+            f'"human_efficiency": {self.human_efficiency}'
+            "}"
+        )
+
+    @property
+    def time_formatted(self) -> str:
+        """
+        Return the time formatted as hours and minutes.
+
+        Returns
+        -------
+            the time formatted as hours and minutes
+
+        """
+        hours: int = int(self.time_s // 3600)
+        minutes: int = int((self.time_s % 3600) // 60)
+        return f"{hours} hours {minutes} minutes"
+
+    @property
+    def distance_km(self) -> float:
+        """
+        Return the distance cycled in kilometers.
+
+        Returns
+        -------
+            the distance cycled in kilometers
+
+        """
+        return self.distance_m / 1000
+
+    @property
+    def speed_kmph(self) -> float:
+        """
+        Return the average speed in km/h.
+
+        Returns
+        -------
+            the average speed in km/h
+
+        """
+        return self.distance_km / (self.time_s / 3600)
+
+    @property
+    def work_j(self) -> float:
+        """
+        Calculate the work done while cycling in joules.
+
+        3 forces are considered that the cyclist has to overcome:
+            - Rolling resistance, created by the tires on the road.
+            - Drag, created by the air resistance.
+            - Slope, created by the inclination of the road.
+
+        The latter is calculated by the netto elevation gain divided by the
+        distance cycled such that the average slope can be calculated. This slope
+        can then be used to calculate the resulting force on the cyclist.
+
+        Note that, when the netto elevation gain is 0, no work is done as the
+        energy used to ascend is returned when descending. Since the human is
+        not 100% efficient, the energy used to ascend is greater than the energy
+        returned when descending, resulting in an increase in calories burned,
+        but not in work done.
+
+        Instead of working with forces, kinetic and potential energy could also
+        have been used, resulting in the same work done.
+
+        Returns
+        -------
+            the work done in joules
+
+        """
+        slope: float = (self.ascend_m - self.descent_m) / self.distance_m
+        speed_ms: float = self.distance_m / self.time_s
+        force_gravity: float = self.weight_kg * self.gravity
+
+        force_roll: float = force_gravity * self.roll_resistance
+        force_drag: float = (
+            0.5
+            * self.drag_coefficient_times_area_m2
+            * self.air_density_kgpm3
+            * speed_ms**2
+        )
+        force_slope: float = force_gravity * slope
+
+        force_total = force_roll + force_drag + force_slope
+        return force_total * self.distance_m
+
+    @property
+    def avgerage_power_w(self) -> float:
+        """
+        Return the power output in watts.
+
+        Returns
+        -------
+            the power output in watts
+
+        """
+        return self.work_j / self.time_s
+
+    @property
+    def kcal_burned(self) -> float:
+        """
+        Return the number of calories burned in kcal.
+
+        Returns
+        -------
+            the number of calories burned in kcal
+
+        """
+        if self.ascend_m or self.descent_m:
+            logging.warning(
+                "The ascent and descent are not correct yet for the calculation"
+                " of the calories burned."
+            )
+
+        joules_to_kcal: float = 0.239005736 * 1e-3
+        kcal: float = self.work_j * joules_to_kcal
+        return kcal / self.human_efficiency
+
+
+def main() -> str:
+    """
+    Return cycling statistics based on the cli arguments.
+
+    Returns
+    -------
+        The cycling statistics based on the cli arguments
+
+    """
+    parser: ArgumentParser = make_parser()
+    args: Namespace = parser.parse_args()
+
+    result: CyclingStatistics = CyclingStatistics(
+        distance_m=args.distance_km * 1000,
+        time_s=args.time_h * 3600,
+        weight_kg=args.weight_kg,
+        ascend_m=args.ascend_m,
+        descent_m=args.descent_m,
+    )
+    return getattr(result, args.output)
+
+
+def make_parser() -> ArgumentParser:
+    """
+    Return the argument parser for the script.
+
+    Returns
+    -------
+        The argument parser for the script
+
+    """
+    parser: ArgumentParser = ArgumentParser(
+        description="Estimate the number of calories burned while cycling."
+    )
+    parser.add_argument(
+        "weight_kg",
+        action="store",
+        type=float,
+        help="Weight of the cyclist + bike in kg.",
+    )
+
+    parser.add_argument(
+        "distance_km", action="store", type=float, help="Distance cycled in km."
+    )
+
+    parser.add_argument(
+        "time_h",
+        action="store",
+        type=float,
+        help="Time taken to cycle the distance in hours.",
+    )
+
+    parser.add_argument(
+        "ascend_m",
+        action="store",
+        type=float,
+        default=0,
+        nargs="?",
+        help="Total ascent in meters.",
+    )
+
+    parser.add_argument(
+        "descent_m",
+        action="store",
+        type=float,
+        default=0,
+        nargs="?",
+        help="Total descent in meters.",
+    )
+
+    parser.add_argument(
+        "--output",
+        action="store",
+        type=str,
+        default="summary",
+        help="Output format (summary, detailed, json).",
+    )
+
+    return parser
+
+
+if __name__ == "__main__":
+    print(main())

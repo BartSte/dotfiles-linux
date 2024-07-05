@@ -34,6 +34,7 @@ reload-session() {
         fcbuild
         supervisor-software
         fc-data-client
+        fc-report
     )
     [[ " ${winpyprojects[@]} " =~ " $PROJECTRC " ]] && PROJECTRC="winpyproject"
 

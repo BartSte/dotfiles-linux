@@ -36,4 +36,5 @@ fi
 
 field=$1
 
+# FIXME: need to be a full match, instead of a partial match
 rbw get -f $@ | sed "s/$field: //i"
