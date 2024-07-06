@@ -1,13 +1,16 @@
 #!/usr/bin/env bats
 # vim: ft=bash
 
-matches=(
+MATCHES=(
     "File \"/home/barts/code/khalorg/src/khalorg/cli.py\", line 4, in <module>"
+    "File \"\\\\wsl.localhost\\home\\barts\\code\\khalorg\\src\\khalorg\\cli.py\", line 4, in <module>"
     "/home/barts/code/khalorg/src/khalorg/khal/args.py:6: in <module>"
+    "\\\\wsl.localhost\\home\\barts\\code\\khalorg\\src\\khalorg\\khal\\args.py:6: in <module>"
 )
 
 @test "valid_regexes" {
-    for match in "${matches[@]}"; do
-        echo "$match" | grep -oE "$(regex-extra)"
+    for match in "${MATCHES[@]}"; do
+        echo "Checking match: $match" >&3
+        grep -oE "$(regex-extra)" <<<"$match"
     done
 }
