@@ -3,11 +3,13 @@ set -euo pipefail
 
 this_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-sudo cp -u "$this_dir"/NetworkManager.conf /etc/NetworkManager/NetworkManager.conf
+sudo mkdir -p /etc/NetworkManager/conf.d
+sudo cp -u "$this_dir"/dns.conf /etc/NetworkManager/conf.d/dns.conf
 
-sudo systemctl restart NetworkManager
 sudo systemctl restart systemd-resolved
 sudo systemd-resolve --flush-caches
+
+sudo systemctl restart NetworkManager
 
 sleep 5
 echo "Setting DNS configuration"
