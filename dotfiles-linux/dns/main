@@ -1,25 +1,14 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
-# Define OpenDNS FamilyShield DNS servers
+this_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Cloudflare DNS servers
-# 1.1.1.3 and 1.0.0.3
+sudo cp -u "$this_dir"/NetworkManager.conf /etc/NetworkManager/NetworkManager.conf
 
-# OpenDNS FamilyShield DNS servers
-# DNS1="208.67.222.123"
-# DNS2="208.67.220.123"
-#
-# sudo mkdir -p /etc/NetworkManager/conf.d/
-# sudo tee /etc/NetworkManager/conf.d/dns.conf >/dev/null <<EOL
-# [main]
-# dns=systemd-resolved
-# EOL
-#
-# # sudo tee /etc/NetworkManager/conf.d/dns-servers.conf >/dev/null <<EOL
-# # [global-dns-domain-*]
-# # servers=$DNS1,$DNS2
-# # EOL
-#
-# sudo systemctl restart NetworkManager
-# sudo systemd-resolve --flush-caches
+sudo systemctl restart NetworkManager
+sudo systemctl restart systemd-resolved
+sudo systemd-resolve --flush-caches
+
+sleep 5
+echo "Setting DNS configuration"
+nmcli device show | grep IP4
