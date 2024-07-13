@@ -7,9 +7,11 @@ get_spell() {
 }
 
 symlink_config() {
-
     local directory_config=$1
-    dotfiles=~/dotfiles/nvim
+    dotfiles=~/dotfiles/nvim # ensure that root also uses the dotfiles of the user
+
+    echo "Symlinking nvim config as $(whoami)"
+    echo "Installing in $directory_config"
 
     rm "$directory_config" -rf
     mkdir "$directory_config" -p
@@ -25,7 +27,15 @@ symlink_config() {
 }
 
 echo "# nvim"
-symlink_config ~/.config/nvim
+nvim_config_dir=~/.config/nvim
+symlink_config $nvim_config_dir
 get_spell nl
 get_spell en
 sudo pacman -S python-pynvim --noconfirm
+
+if [ "$(whoami)" != "root" ]; then
+    root_config=/root/.config
+    echo "Linking nvim config to root: $nvim_config_dir -> $root_config"
+    sudo mkdir -p $root_config
+    sudo ln -sf "$nvim_config_dir" $root_config
+fi
