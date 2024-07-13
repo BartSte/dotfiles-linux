@@ -3,7 +3,7 @@
 get_spell() {
     lang=$1
     mkdir ~/.config/nvim/spell --parent
-    curl -o ~/.config/nvim/spell/$lang.utf-8.spl http://ftp.vim.org/pub/vim/runtime/spell/$lang.utf-8.spl
+    curl -o ~/.config/nvim/spell/"$lang".utf-8.spl http://ftp.vim.org/pub/vim/runtime/spell/"$lang".utf-8.spl
 }
 
 symlink_config() {
