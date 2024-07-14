@@ -5,7 +5,7 @@ this_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 sudo mkdir -p /etc/NetworkManager/conf.d
 sudo cp -u "$this_dir"/dns.conf /etc/NetworkManager/conf.d/dns.conf
-sudo cp -u "$this_dir"/dns-servers.conf /etc/NetworkManager/conf.d/dns-servers.conf
+# sudo cp -u "$this_dir"/dns-servers.conf /etc/NetworkManager/conf.d/dns-servers.conf
 
 sudo systemctl restart systemd-resolved
 sudo systemd-resolve --flush-caches
