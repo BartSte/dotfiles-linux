@@ -38,17 +38,17 @@ execute_exclude() {
     # prepend the `front` array to the `dirs` array. As a result, the `front`
     # array will be executed first, in the order they are listed.
     for item in "${front[@]}"; do
-        dirs=$(echo "$dirs" | sed "s/$item//")
+        dirs=$(lg "$dirs" | sed "s/$item//")
     done
-    dirs=$(echo "${front[@]}" $dirs)
+    dirs=$(lg "${front[@]}" $dirs)
 
     # Execute all other modules. Do not execute the modules in the `exclude`.
     for module in $dirs; do
         if [[ " ${exclude[@]} " =~ " ${module} " ]]; then
-            echo "Skip: $module"
+            lg "Skip: $module"
         elif [[ -f "$DIR/$module/main" ]]; then
-            echo "Execute: $module"
-            $DIR/$module/main
+            lg "Execute: $module"
+            $DIR/"$module"/main
         fi
     done
 }
@@ -75,28 +75,28 @@ while [[ $# -gt 0 ]]; do
             exit 0
             ;;
         *)
-            echo "Unknown option: $1"
+            lg "Unknown option: $1"
             exit 1
             ;;
     esac
 done
 
-echo "Installing BartSte/dotfiles-linux repository"
+lg "Installing BartSte/dotfiles-linux repository"
 source ~/.dotfiles_config.sh
 
 if running arch && running wsl; then
-    echo "Running on Arch Linux WSL"
+    lg "Running on Arch Linux WSL"
     main_arch_wsl
 elif running arch; then
-    echo "Running on Arch Linux"
+    lg "Running on Arch Linux"
     main_arch
 elif running wsl; then
-    echo "Running on Windows WSL"
-    echo "Unknown WSL system"
+    lg "Running on Windows WSL"
+    lg "Unknown WSL system"
 elif running raspberry; then
-    echo "Running on Raspberry Pi"
+    lg "Running on Raspberry Pi"
     main_raspberry
 else
-    echo "Unknown system"
+    lg "Unknown system"
     exit 1
 fi

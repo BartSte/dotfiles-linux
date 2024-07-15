@@ -1,19 +1,30 @@
 #!/usr/bin/env bash
-set -euo pipefail
 
+set -euo pipefail
 this_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-sudo mkdir -p /etc/NetworkManager/conf.d
-sudo cp -u "$this_dir"/dns.conf /etc/NetworkManager/conf.d/dns.conf
-# sudo cp -u "$this_dir"/dns-servers.conf /etc/NetworkManager/conf.d/dns-servers.conf
+function setup_network_manager() {
+    sudo mkdir -p /etc/NetworkManager/conf.d
+    sudo cp -u "$this_dir"/dns.conf /etc/NetworkManager/conf.d/dns.conf
+    sudo systemctl restart NetworkManager
+}
 
-sudo systemctl restart systemd-resolved
-sudo systemd-resolve --flush-caches
+function setup_resolvconf() {
+    if [ "$(systemctl is-enabled systemd-resolved)" != "enabled" ]; then
+        echo "Enabling systemd-resolved"
+        sudo systemctl enable systemd-resolved.service
+    fi
 
-sudo systemctl restart NetworkManager
+    if [ "$(systemctl is-active systemd-resolved)" == "active" ]; then
+        echo "Starting systemd-resolved"
+        sudo systemctl start systemd-resolved.service
+    fi
 
-sleep 5
-echo "Setting DNS configuration"
-nmcli device show | grep IP4
+    sudo cp -u "$this_dir"/resolved.conf /etc/systemd/resolved.conf
+    sudo systemctl restart systemd-resolved.service
+    resolvectl status
+}
 
-#TODO: read https://wiki.archlinux.org/title/systemd-resolved
+echo "Setting up DNS for blocking adult content"
+setup_network_manager
+setup_resolvconf
