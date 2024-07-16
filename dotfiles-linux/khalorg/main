@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-echo "Linking khalorg config"
+lg "Linking khalorg config"
 mkdir -p ~/.config/khalorg
 ln -sf ~/dotfiles-linux/khalorg/khalorg_format.txt ~/.config/khalorg/khalorg_format.txt
 

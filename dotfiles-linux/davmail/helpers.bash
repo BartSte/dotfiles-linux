@@ -10,7 +10,7 @@ copy_config() {
 
     rm $destination || mkdir $directory_config
     cp $source $destination
-    echo "Davmail: copied $source to $destination"
+    lg "Davmail: copied $source to $destination"
 }
 
 activate_as_service() {

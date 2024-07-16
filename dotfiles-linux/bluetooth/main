@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 
-echo "Enabling bluetooth"
+lg "Enabling bluetooth"
 sudo systemctl enable bluetooth.service
 sudo systemctl start bluetooth.service

@@ -2,18 +2,18 @@
 
 # Ensure rclone is installed
 if ! command -v rclone &>/dev/null; then
-    echo "rclone is not installed. Please install it and try again."
+    lg "rclone is not installed. Please install it and try again."
     exit 1
 else
-    echo "rclone is installed. Dropbox will be configured. You will need to authenticate your Dropbox account with the browser."
+    lg "rclone is installed. Dropbox will be configured. You will need to authenticate your Dropbox account with the browser."
 fi
 
-echo "Creating a new rclone configuration for Dropbox."
+lg "Creating a new rclone configuration for Dropbox."
 rclone config create dropbox dropbox config_is_local false
 
-echo "Reconnecting to Dropbox."
+lg "Reconnecting to Dropbox."
 rclone config reconnect dropbox:
 
-echo "Syncing Dropbox. This may take a while."
+lg "Syncing Dropbox. This may take a while."
 rclone sync dropbox: ~/dropbox
 rclone bisync dropbox: ~/dropbox --resync

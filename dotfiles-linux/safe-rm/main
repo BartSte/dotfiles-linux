@@ -3,9 +3,9 @@ set -eou pipefail
 
 # check if safe-rm is installed
 if ! command -v safe-rm &>/dev/null; then
-    echo "safe-rm could not be found"
+    lg "safe-rm could not be found"
     exit 1
 else
-    echo "Copying config file to /etc/safe-rm.conf" > /dev/stderr
+    lg "Copying config file to /etc/safe-rm.conf" > /dev/stderr
     sudo cp ~/dotfiles-linux/safe-rm/safe-rm.conf /etc/safe-rm.conf
 fi

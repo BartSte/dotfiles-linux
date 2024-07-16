@@ -1,8 +1,8 @@
 #!/bin/bash
 
 function init_git() {
-    echo "# Git"
-    echo "Setting config..."
+    lg "# Git"
+    lg "Setting config..."
 
     git config --global credential.helper store
     git config --global core.autocrlf input

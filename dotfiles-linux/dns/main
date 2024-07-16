@@ -11,12 +11,12 @@ function setup_network_manager() {
 
 function setup_resolvconf() {
     if [ "$(systemctl is-enabled systemd-resolved)" != "enabled" ]; then
-        echo "Enabling systemd-resolved"
+        lg "Enabling systemd-resolved"
         sudo systemctl enable systemd-resolved.service
     fi
 
     if [ "$(systemctl is-active systemd-resolved)" == "active" ]; then
-        echo "Starting systemd-resolved"
+        lg "Starting systemd-resolved"
         sudo systemctl start systemd-resolved.service
     fi
 
@@ -25,6 +25,6 @@ function setup_resolvconf() {
     resolvectl status
 }
 
-echo "Setting up DNS for blocking adult content"
+lg "Setting up DNS for blocking adult content"
 setup_network_manager
 setup_resolvconf

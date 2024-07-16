@@ -16,22 +16,22 @@ base_dir="$HOME/dotfiles.git"
 lin="$github/dotfiles-linux.git"
 lin_dir="$HOME/dotfiles-linux.git"
 
-echo "# Installing git"
+lg "# Installing git"
 sudo pacman -S git --noconfirm || sudo apt install git -y
 
-echo "# Clone BartSte/dotfiles.git as a bare repository"
+lg "# Clone BartSte/dotfiles.git as a bare repository"
 clone $base $base_dir
 checkout $base_dir
 
-echo "# Clone BartSte/dotfiles-linux.git as a bare repository"
+lg "# Clone BartSte/dotfiles-linux.git as a bare repository"
 clone $lin $lin_dir
 checkout $lin_dir
 
-echo "Setup the environment variables"
+lg "Setup the environment variables"
 source ~/.zshenv
 
 touch $HOME/.dotfiles_config.sh
-echo "export MICROSOFT_ACCOUNT=" >> $HOME/.dotfiles_config.sh
+lg "export MICROSOFT_ACCOUNT=" >> $HOME/.dotfiles_config.sh
 
 cat <<EOF
 Please complete the file '$HOME/.dotfiles_config.sh' by setting the one of the 

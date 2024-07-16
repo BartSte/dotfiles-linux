@@ -14,7 +14,7 @@ Name-Real: $MS_REALNAME
 Name-Email: $MS_EMAIL
 Expire-Date: 0"
 
-echo "$script" > /tmp/gen-key-script
+lg "$script" > /tmp/gen-key-script
 gpg --batch --gen-key /tmp/gen-key-script
 rm /tmp/gen-key-script
 

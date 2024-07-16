@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "# Neomutt"
+lg "# Neomutt"
 directory="$HOME/.config/neomutt"
 cache="$HOME/.cache/neomutt"
 
@@ -11,6 +11,6 @@ mkdir -p $HOME/.local/share/mail/INBOX
 mkdir -p $cache
 touch $cache/header_cache
 
-echo "# Downloading emails"
+lg "# Downloading emails"
 mbsync -a
 notmuch new

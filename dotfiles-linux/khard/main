@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-echo "Linking khard config"
+lg "Linking khard config"
 mkdir -p ~/.config/khard
 ln -sf ~/dotfiles-linux/khard/khard.conf ~/.config/khard/khard.conf
 

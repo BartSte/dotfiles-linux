@@ -2,6 +2,6 @@
 
 . "$HOME"/dotfiles-linux/qutebrowser/helpers.sh
 
-echo "Qutebrowser: link config files"
+lg "Qutebrowser: link config files"
 link_config
 link_bookmarks
