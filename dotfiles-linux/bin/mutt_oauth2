@@ -42,10 +42,10 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from subprocess import check_output
 
-client_id: str = check_output(['rbw_get', 'MuttClientId', os.environ['MICROSOFT_ACCOUNT'], ]).decode()
+client_id: str = check_output(['bw-cli-get', 'MuttClientId', os.environ['MICROSOFT_ACCOUNT'], ]).decode()
 client_id = re.sub(r'\n', '', client_id)
 
-gpg_user: str = check_output(['rbw_get', 'username', os.environ['MICROSOFT_ACCOUNT'], ]).decode()
+gpg_user: str = check_output(['bw-cli-get', 'username', os.environ['MICROSOFT_ACCOUNT'], ]).decode()
 gpg_user = re.sub(r'\n', '', gpg_user)
 
 # The token file must be encrypted because it contains multi-use bearer tokens

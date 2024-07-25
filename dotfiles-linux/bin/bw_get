@@ -1,0 +1,38 @@
+#!/usr/bin/bash
+set -euo pipefail
+
+usage="Usage: $(basename "$0") [-h | --help] <field> <ID> <other bw options> <bw args>
+
+This script wraps bw to filter the \"{field}: \" from stdout. Make sure the
+first argument is the field, the other args can be used as normally.
+
+where:
+    -h --help           shows this help messages
+    <the field>         the argument for \`bw -f\`
+    <other bw opts>    check \`bw -h\` 
+    <other bw args>    check \`bw -h\`     
+    "
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+    -h | --help)
+        echo "$usage"
+        exit 0
+        ;;
+    *)
+        break
+        ;;
+    esac
+done
+
+if [[ $# -lt 2 ]]; then
+    echo "Error: Missing arguments." >&2
+    exit 1
+fi
+
+field=$1
+id=$2
+shift
+shift
+
+bw get item "$id" $@ | jq -r ".fields[] | select(.name == \"$field\") | .value"

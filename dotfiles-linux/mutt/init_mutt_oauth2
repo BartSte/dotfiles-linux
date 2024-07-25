@@ -5,6 +5,6 @@ account=${MICROSOFT_ACCOUNT:-}
     echo "MICROSOFT_ACCOUNT not set"
     exit 1
 }
-username=$(rbw_get username $account)
+username=$(bw-cli-get username $account)
 
 mutt_oauth2 --verbose --authorize "~/.config/neomutt/$username.tokens"

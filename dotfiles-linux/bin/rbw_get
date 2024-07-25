@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-usage="Usage: $(basename "$0") [-h | --help] <field> <other rbw options> <rbw args>
+usage="Usage: $(basename "$0") [-h | --help] <field> <id> <other rbw options> <rbw args>
 
 This script wraps rbw to filter the \"{field}: \" from stdout. Make sure the
 first argument is the field, the other args can be used as normally.
@@ -8,6 +8,7 @@ first argument is the field, the other args can be used as normally.
 where:
     -h --help           shows this help messages
     <the field>         the argument for \`rbw -f\`
+    <the id>            the argument for the id to get the field from
     <other rbw opts>    check \`rbw -h\` 
     <other rbw args>    check \`rbw -h\`     
     "
