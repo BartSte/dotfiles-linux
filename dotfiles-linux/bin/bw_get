@@ -24,7 +24,17 @@ function find_value() {
     field_filer=".fields[] | select(.name == \"$key\") | .value"
     json=$(bw get item "$id" $args)
 
-    jq -r "$login_filter" <<<"$json" || jq -r "$field_filer" <<<"$json"
+    result=$(jq -r "$login_filter" <<<"$json")
+    if [[ $result == "null" ]]; then
+        result=$(jq -r "$field_filer" <<<"$json")
+    fi
+
+    if [[ $result == "null" ]]; then
+        echo "Error: Field not found: $key" >&2
+        exit 1
+    else
+        echo "$result"
+    fi
 }
 
 while [[ $# -gt 0 ]]; do
