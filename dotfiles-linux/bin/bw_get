@@ -12,6 +12,20 @@ where:
     <other bw opts>    check \`bw -h\` 
     <other bw args>    check \`bw -h\`     
     "
+function find_value() {
+    key=$1
+    id=$2
+    shift
+    shift
+    args=$@
+
+    lower_key=$(tr '[:upper:]' '[:lower:]' <<<"$key")
+    login_filter=".login.$lower_key" # key is always lower case
+    field_filer=".fields[] | select(.name == \"$key\") | .value"
+    json=$(bw get item "$id" $args)
+
+    jq -r "$login_filter" <<<"$json" || jq -r "$field_filer" <<<"$json"
+}
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -30,9 +44,4 @@ if [[ $# -lt 2 ]]; then
     exit 1
 fi
 
-field=$1
-id=$2
-shift
-shift
-
-bw get item "$id" $@ | jq -r ".fields[] | select(.name == \"$field\") | .value"
+find_value $@
