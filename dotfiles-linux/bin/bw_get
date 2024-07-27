@@ -1,0 +1,57 @@
+#!/usr/bin/bash
+set -euo pipefail
+
+usage="Usage: $(basename "$0") [-h | --help] <field> <ID> <other bw options> <bw args>
+
+This script wraps bw to filter the \"{field}: \" from stdout. Make sure the
+first argument is the field, the other args can be used as normally.
+
+where:
+    -h --help           shows this help messages
+    <the field>         the argument for \`bw -f\`
+    <other bw opts>    check \`bw -h\` 
+    <other bw args>    check \`bw -h\`     
+    "
+function find_value() {
+    key=$1
+    id=$2
+    shift
+    shift
+    args=$@
+
+    lower_key=$(tr '[:upper:]' '[:lower:]' <<<"$key")
+    login_filter=".login.$lower_key" # key is always lower case
+    field_filer=".fields[] | select(.name == \"$key\") | .value"
+    json=$(bw get item "$id" $args)
+
+    result=$(jq -r "$login_filter" <<<"$json")
+    if [[ $result == "null" ]]; then
+        result=$(jq -r "$field_filer" <<<"$json")
+    fi
+
+    if [[ $result == "null" ]]; then
+        echo "Error: Field not found: $key" >&2
+        exit 1
+    else
+        echo "$result"
+    fi
+}
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+    -h | --help)
+        echo "$usage"
+        exit 0
+        ;;
+    *)
+        break
+        ;;
+    esac
+done
+
+if [[ $# -lt 2 ]]; then
+    echo "Error: Missing arguments." >&2
+    exit 1
+fi
+
+find_value $@

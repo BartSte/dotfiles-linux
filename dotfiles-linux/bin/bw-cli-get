@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+BW_CLI=${BW_CLI:-rbw}
+if [ "$BW_CLI" = "rbw" ]; then
+    rbw_get $@
+elif [ "$BW_CLI" = "bw" ]; then
+    bw_get $@
+else
+    echo "Unknown BW_CLI: $BW_CLI"
+    exit 1
+fi

@@ -14,7 +14,7 @@ if [[ -z $account ]]; then
     exit 1
 fi
 
-email=$(rbw_get Username "$account")
+email=$(bw-cli-get Username "$account")
 tokens="$HOME/.config/neomutt/$email.tokens"
 if [[ ! -f $tokens ]]; then
     echo "Tokens file not found: $tokens"
@@ -23,7 +23,7 @@ fi
 
 # Without the decrypt function, the passphrase must be typed when the script is
 # executed.
-password="$(rbw get smtp)"
+password="$(bw-cli-get smtp "$account")"
 echo "$password" | decrypt "$tokens" >/dev/null
 
 # TODO: do we need this script below? Can we not just send the token to stdout

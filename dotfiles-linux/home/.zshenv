@@ -66,5 +66,14 @@ zshenv() {
 
     FZF_OPEN_REGEX_EXTRA=$(~/dotfiles-linux/tmux/tmux-fzf-open/regex-extra)
     export FZF_OPEN_REGEX_EXTRA
+
+    # Set the bitwarden session key if it exists
+    if [ -f ~/dropbox/Config/bwsession ]; then
+        BW_SESSION=$(cat ~/dropbox/Config/bwsession)
+        export BW_SESSION
+    fi
+
+    BW_CLI="bw" # set to rbw to use the unofficial implementation
+    export BW_CLI
 }
 zshenv

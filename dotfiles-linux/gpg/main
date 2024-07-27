@@ -1,7 +1,7 @@
 #!/bin/bash
 
-MS_EMAIL=$(rbw_get username "$MICROSOFT_ACCOUNT")
-MS_REALNAME=$(rbw_get name "$MICROSOFT_ACCOUNT")
+MS_EMAIL=$(bw-cli-get username "$MICROSOFT_ACCOUNT")
+MS_REALNAME=$(bw-cli-get name "$MICROSOFT_ACCOUNT")
 
 export MS_EMAIL
 export MS_REALNAME
