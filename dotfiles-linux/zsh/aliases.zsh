@@ -30,6 +30,7 @@ alias unl='rbw unlock'
 alias v='nvim'
 alias vims='nvim -S Session.vim'
 alias yay='export MAKEFLAGS="-j$(nproc)" && yay'
+alias chrome='google-chrome-stable --ozone-platform=wayland'
 
 qhash() {
     hash $1 2>/dev/null
