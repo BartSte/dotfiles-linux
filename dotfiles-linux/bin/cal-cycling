@@ -6,10 +6,10 @@ assumptions are chosen such that the actual number of calories burned is
 greater than the estimate.
 
 Assumptions:
-    - Wind speed is 0 m/s
-    - No elevation gain
-    - No loss of energy in the drivetrain
-    - Efficiency of human body is 25%
+    - Wind speed is 0 m/s, assuming we start and end at the same location thus
+        the netto wind speed is 0 m/s.
+    - No elevation gain. This is neglected since I live in the Netherlands.
+    - No drafting behind other cyclists.
 """
 
 from argparse import ArgumentParser, Namespace
@@ -17,28 +17,43 @@ from dataclasses import dataclass
 
 
 @dataclass
-class Result:
+class CyclingStatistics:
     """
-    Result of the calculation.
+    Based on the attributes, a set of cycling statistics are calculated and
+    presented as properties.
+
+    The "conventional racing bike parameters" of the following study were used:
+        - https://www.sheldonbrown.com/rinard/aero/formulas.html
 
     Attributes
     ----------
-        calories: the number of calories burned in kcal
-        distance:  the distance cycled in km
-        speed: the average speed in km/h
-        weight: the weight of the cyclist + bike in kg
-        work: the work done in kJ
+        distance_m: the distance cycled in meters
+        time_s: the time taken to cycle the distance in seconds
+        weight_kg: the weight of the cyclist + bike in kg
+        human_efficiency: the efficiency of the human body to convert calories
+            to on the pedals of the bike (default: 0.25)
+        roll_resistance: the coefficient of roll resistance (default: 0.005)
+        drag_coefficient: the coefficient of drag (default: 0.88)
+        cross_sectional_area_m2: the frontal area of the cyclist + bike in m^2
+            (default: 0.509)
+        air_density_kgpm3: the air density in kg/m^3 (default: 1.225)
+        gravity: the acceleration due to gravity in m/s^2 (default: 9.81)
 
     """
 
     distance_m: float
     time_s: float
     weight_kg: float
-    work_j: float
 
+    air_density_kgpm3: float = 1.293
+    drag_coefficient_times_area_m2: float = 0.39
+    gravity: float = 9.81
     human_efficiency: float = 0.25
+    roll_resistance: float = 0.003
+    drive_train_efficiency: float = 0.95
 
-    def __str__(self) -> str:
+    @property
+    def summary(self) -> str:
         """
         Return the string representation of the result.
 
@@ -47,20 +62,82 @@ class Result:
             the string representation of the result
 
         """
-        msg: list = [
-            "Inputs",
-            "------",
-            f"Time:             {self.time_formatted}",
-            f"Weight:           {self.weight_kg:.2f} kg",
-            f"Distance:         {self.distance_km:.2f} km",
-            f"Average speed:    {self.speed_kmph:.2f} km/h",
-            "\nResults",
-            "-------",
-            f"Work done:        {self.work_j:.0f} J",
-            f"Power:            {self.power_w:.0f} W",
-            f"Calories burned:  {self.kcal_burned:.0f} kcal",
-        ]
-        return "\n".join(msg)
+        return "\n".join(
+            [
+                "Inputs",
+                "------",
+                f"Time:             {self.time_formatted}",
+                f"Weight:           {self.weight_kg:.2f} kg",
+                f"Distance:         {self.distance_km:.2f} km",
+                f"Average speed:    {self.speed_kmph:.2f} km/h",
+                "\nResults",
+                "-------",
+                f"Work done:        {self.work_j:.0f} J",
+                f"Average power:    {self.avgerage_power_w:.0f} W",
+                f"Calories burned:  {self.kcal_burned:.0f} kcal",
+            ]
+        )
+
+    @property
+    def detailed(self) -> str:
+        """
+        Return the detailed string representation of the result.
+
+        Returns
+        -------
+            the detailed string representation of the result
+
+        """
+        return "\n".join(
+            [
+                "Inputs",
+                "------",
+                f"Time:             {self.time_formatted}",
+                f"Weight:           {self.weight_kg:.2f} kg",
+                f"Distance:         {self.distance_km:.2f} km",
+                f"Average speed:    {self.speed_kmph:.2f} km/h",
+                "\nResults",
+                "-------",
+                f"Work done:        {self.work_j:.0f} J",
+                f"Average power:    {self.avgerage_power_w:.0f} W",
+                f"Calories burned:  {self.kcal_burned:.0f} kcal",
+                "\nConstants",
+                "---------",
+                f"Air density:              {self.air_density_kgpm3} kg/m^3",
+                f"Roll resistance:          {self.roll_resistance}",
+                f"Gravity:                  {self.gravity} m/s^2",
+                f"Human efficiency:         {self.human_efficiency}",
+                f"Drive train efficiency:   {self.drive_train_efficiency}",
+                f"Drag coefficient x Area:  {self.drag_coefficient_times_area_m2}",
+            ]
+        )
+
+    @property
+    def json(self) -> str:
+        """
+        Return the result as a JSON string.
+
+        Returns
+        -------
+            the result as a JSON string
+
+        """
+        return (
+            "{"
+            f'"time": "{self.time_formatted}", '
+            f'"weight": {self.weight_kg:.2f}, '
+            f'"distance": {self.distance_km:.2f}, '
+            f'"average_speed": {self.speed_kmph:.2f}, '
+            f'"work_done": {self.work_j:.0f}, '
+            f'"power": {self.avgerage_power_w:.0f}, '
+            f'"calories_burned": {self.kcal_burned:.0f}, '
+            f'"air_density": {self.air_density_kgpm3}, '
+            f'"drag_coefficient_times_area": {self.drag_coefficient_times_area_m2}, '
+            f'"roll_resistance": {self.roll_resistance}, '
+            f'"gravity": {self.gravity}, '
+            f'"human_efficiency": {self.human_efficiency}'
+            "}"
+        )
 
     @property
     def time_formatted(self) -> str:
@@ -101,7 +178,29 @@ class Result:
         return self.distance_km / (self.time_s / 3600)
 
     @property
-    def power_w(self) -> float:
+    def work_j(self) -> float:
+        """
+        Calculate the work done while cycling in joules.
+
+        Returns
+        -------
+            the work done in joules
+
+        """
+        speed_ms: float = self.distance_m / self.time_s
+        force_roll: float = self.weight_kg * self.gravity * self.roll_resistance
+        force_drag: float = (
+            0.5
+            * self.drag_coefficient_times_area_m2
+            * self.air_density_kgpm3
+            * speed_ms**2
+        )
+        force_total: float = force_roll + force_drag
+
+        return (force_total * self.distance_m) / self.drive_train_efficiency
+
+    @property
+    def avgerage_power_w(self) -> float:
         """
         Return the power output in watts.
 
@@ -122,41 +221,29 @@ class Result:
             the number of calories burned in kcal
 
         """
-        kcal: float = self.work_j * 0.239005736 * 1e-3
+        joules_to_kcal: float = 0.239005736 * 1e-3
+        kcal: float = self.work_j * joules_to_kcal
         return kcal / self.human_efficiency
 
 
-def main() -> Result:
+def main() -> str:
     """
-    The main function of the script.
+    Return cycling statistics based on the cli arguments.
 
     Returns
     -------
-        the result of the calculation
+        The cycling statistics based on the cli arguments
 
     """
     parser: ArgumentParser = make_parser()
     args: Namespace = parser.parse_args()
-    
-    distance_m: float = args.distance_km * 1000
-    time_s: float = args.time_h * 3600
 
-    work: float = calculate_work(
+    result: CyclingStatistics = CyclingStatistics(
+        distance_m=args.distance_km * 1000,
+        time_s=args.time_h * 3600,
         weight_kg=args.weight_kg,
-        distance_m=distance_m,
-        time_s=time_s,
-        rolling_resistance=args.rolling_resistance,
-        drag_coefficient=args.drag_coefficient,
-        cross_sectional_area_m2=args.cross_sectional_area_m2,
-        air_density_kgpm3=args.air_density_kgpm3,
     )
-    result: Result = Result(
-        distance_m=distance_m,
-        time_s=time_s,
-        weight_kg=args.weight_kg,
-        work_j=work,
-    )
-    return result
+    return getattr(result, args.output)
 
 
 def make_parser() -> ArgumentParser:
@@ -190,83 +277,15 @@ def make_parser() -> ArgumentParser:
     )
 
     parser.add_argument(
-        "--rolling-resistance",
+        "--output",
         action="store",
-        type=float,
-        default=0.005,
-        help="Coefficient of rolling resistance.",
-    )
-
-    parser.add_argument(
-        "--drag-coefficient",
-        action="store",
-        type=float,
-        default=0.88,
-        help="Coefficient of drag.",
-    )
-
-    parser.add_argument(
-        "--cross-sectional-area-m2",
-        action="store",
-        type=float,
-        default=0.509,
-        help="Frontal area of the cyclist + bike in m^2.",
-    )
-
-    parser.add_argument(
-        "--air-density_kgpm3",
-        action="store",
-        type=float,
-        default=1.225,
-        help="Air density in kg/m^3.",
+        type=str,
+        default="summary",
+        help="Output format (summary, detailed, json).",
     )
 
     return parser
 
 
-def calculate_work(
-    weight_kg: float,
-    distance_m: float,
-    time_s: float,
-    rolling_resistance: float = 0.005,
-    drag_coefficient: float = 0.88,
-    cross_sectional_area_m2: float = 0.509,
-    air_density_kgpm3: float = 1.225,
-    gravity: float = 9.81,
-) -> float:
-    """
-    Calculate the work done while cycling in joules.
-
-    Arguments:
-    ---------
-        weight_kg: the weight of the cyclist + bike in kg
-        distance_m: the distance cycled in meters
-        time_s: the time taken to cycle the distance in seconds
-        rolling_resistance: the coefficient of rolling resistance
-        drag_coefficient: the coefficient of drag
-        cross_sectional_area_m2: the frontal area of the cyclist + bike in m^2
-        air_density_kgpm3: the air density in kg/m^3
-        gravity: the acceleration due to gravity in m/s^2
-
-    Returns:
-    -------
-        the work done in joules
-
-    """
-    speed_ms: float = distance_m / time_s
-    force_rolling: float = weight_kg * gravity * rolling_resistance
-    force_drag: float = (
-        0.5
-        * drag_coefficient
-        * air_density_kgpm3
-        * cross_sectional_area_m2
-        * speed_ms**2
-    )
-    force_total: float = force_rolling + force_drag
-
-    return force_total * distance_m
-
-
 if __name__ == "__main__":
-    result: Result = main()
-    print(result)
+    print(main())
