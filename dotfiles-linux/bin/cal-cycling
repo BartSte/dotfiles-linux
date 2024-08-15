@@ -75,9 +75,9 @@ class CyclingStatistics:
                 f"Average speed:    {self.speed_kmph:.2f} km/h",
                 "\nResults",
                 "-------",
-                f"Work done:        {self.work_j:.0f} J",
-                f"Average power:    {self.avgerage_power_w:.0f} W",
-                f"Calories burned:  {self.kcal_burned:.0f} kcal",
+                f"Average power:                {self.avgerage_power_w:.0f} W",
+                f"Work done:                    {self.work_j * 1e-3:.0f} kJ",
+                f"Energy consumption cyclist:   {self.kcal_burned:.0f} kcal",
             ]
         )
 
@@ -101,9 +101,11 @@ class CyclingStatistics:
                 f"Average speed:    {self.speed_kmph:.2f} km/h",
                 "\nResults",
                 "-------",
-                f"Work done:        {self.work_j:.0f} J",
-                f"Average power:    {self.avgerage_power_w:.0f} W",
-                f"Calories burned:  {self.kcal_burned:.0f} kcal",
+                f"Average power:                {self.avgerage_power_w:.0f} W",
+                f"Work done:                    {self.work_j * 1e-3:.0f} kJ",
+                f"Energy consumption cyclist:   {self.kcal_burned:.0f} kcal",
+                "Note that the the work done by the cyclist is smaller than the"
+                " energy consumption as the human body is not 100% efficient.",
                 "\nConstants",
                 "---------",
                 f"Air density:              {self.air_density_kgpm3} kg/m^3",
@@ -183,7 +185,7 @@ class CyclingStatistics:
     @property
     def work_j(self) -> float:
         """
-        Calculate the work done while cycling in joules.
+        Calculate the work that needs to be done in joules.
 
         3 forces are considered that the cyclist has to overcome:
             - Rolling resistance, created by the tires on the road.
@@ -198,14 +200,11 @@ class CyclingStatistics:
         energy used to ascend is returned when descending. Since the human is
         not 100% efficient, the energy used to ascend is greater than the energy
         returned when descending, resulting in an increase in calories burned,
-        but not in work done.
-
-        Instead of working with forces, kinetic and potential energy could also
-        have been used, resulting in the same work done.
+        but not in the work needed to complete the ride.
 
         Returns
         -------
-            the work done in joules
+            the work that needs to be done in joules
 
         """
         slope: float = (self.ascend_m - self.descent_m) / self.distance_m
