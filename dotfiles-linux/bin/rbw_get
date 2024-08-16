@@ -14,27 +14,31 @@ where:
     "
 
 function error_exit {
-  echo "$1" 1>&2
-  exit 1
+    echo "$1" 1>&2
+    exit 1
 }
 
 while [[ $# -gt 0 ]]; do
-  case $1 in
-    -h|--help)
-      echo "$usage"
-      exit 0
-      ;;
+    case $1 in
+    -h | --help)
+        echo "$usage"
+        exit 0
+        ;;
     *)
-      break
-      ;;
-  esac
+        break
+        ;;
+    esac
 done
 
 if [[ $# -lt 2 ]]; then
-  error_exit "Error: Missing arguments."
+    error_exit "Error: Missing arguments."
 fi
 
 field=$1
+cmd="rbw get -f $@"
 
-# FIXME: need to be a full match, instead of a partial match
-rbw get -f $@ | sed "s/$field: //i"
+if echo "$field" | grep -q -i "username\|password"; then
+    $cmd | sed "s/$field: //i"
+else
+    $cmd --raw | jq -r ".[\"fields\"].[] | select(.name == \"$field\").[\"value\"]"
+fi
