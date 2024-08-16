@@ -31,6 +31,8 @@ alias v='nvim'
 alias vims='nvim -S Session.vim'
 alias yay='export MAKEFLAGS="-j$(nproc)" && yay'
 alias chrome='google-chrome-stable --ozone-platform=wayland'
+alias gs='git switch'
+alias gp='git pull'
 
 qhash() {
     hash $1 2>/dev/null

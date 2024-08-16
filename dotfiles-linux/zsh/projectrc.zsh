@@ -22,19 +22,20 @@ reload-session() {
     # configurations.
     local winpyprojects=(
         automated-reporting
+        fc-data-client
         fc-deckcam-software
+        fc-report
+        fc-report
         fc-sonar-server
+        fcbuild
+        fcenums
+        fcisscore
+        fcissgui
+        fctools
+        fleet-inspector
         navigation
         quay-detector
-        fcissgui
-        fcisscore
-        fcenums
-        fc-report
-        fctools
-        fcbuild
         supervisor-software
-        fc-data-client
-        fc-report
     )
     [[ " ${winpyprojects[@]} " =~ " $PROJECTRC " ]] && PROJECTRC="winpyproject"
 
