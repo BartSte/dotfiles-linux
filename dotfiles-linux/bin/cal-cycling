@@ -8,6 +8,34 @@ greater than the estimate.
 Assumptions:
     - Wind speed is 0 m/s, assuming we start and end at the same location thus
     - No drafting behind other cyclists.
+
+A rough check to demonstrate the validity is by comparing it to the following
+site:
+    - https://www.gribble.org/cycling/power_v_speed.html
+If you fill in the values used in this script, you get the following results for
+a 70 kg cyclist that cycles 30 km in 1 hour:
+
+    To maintain groundspeed 30.06 km/h in these conditions, you must pedal with
+    175.44 watts of power.
+
+    Assistive forces
+    You must pedal with 175.44 watts of power; after drivetrain loss of 8.77
+    watts, you'll supply 166.67 watts to your wheel.
+
+    So, the amount of work done is 175.44 * 3600 = 631 kJ.
+
+If we run the following command:
+
+    cal-cycling 70 30 1
+
+results in:
+
+    - Average power:                163 W
+    - Work done:                    587 kJ
+    - Energy consumption cyclist:   561 kcal
+
+TODO: which is slightly lower. This is likely due to the fact that the
+drivetrain efficiency is not taken into account in this script yet...
 """
 
 from argparse import ArgumentParser, Namespace
@@ -342,7 +370,7 @@ def make_parser() -> ArgumentParser:
         type=float,
         default=0,
         nargs="?",
-        help="Total ascent in meters.",
+        help="Total ascent in meters (default: 0).",
     )
 
     parser.add_argument(
@@ -351,7 +379,7 @@ def make_parser() -> ArgumentParser:
         type=float,
         default=0,
         nargs="?",
-        help="Total descent in meters.",
+        help="Total descent in meters (default: 0).",
     )
 
     parser.add_argument(
