@@ -1,8 +1,8 @@
 #!/bin/bash
 
-. ~/dotfiles-linux/pacman/helpers.sh
+dir=~/dotfiles-linux/arch
 
-dir=~/dotfiles-linux/pacman
+. $dir/helpers.sh
 
 lg "# Installing dependencies pacman"
 sudo pacman -Syu --noconfirm
