@@ -117,6 +117,10 @@ try_file() {
         log "Opening pdf: $file" -v
         zathura "$file"
 
+    elif has_type "$file" html; then
+        log "Opening html: $file" -v
+        open_url "$file"
+
     elif has_type "$file" text; then
         log "Opening text: $file" -v
         open_text "$file" "$line"
