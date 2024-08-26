@@ -23,6 +23,10 @@ function setup_resolvconf() {
     sudo cp -u "$this_dir"/resolved.conf /etc/systemd/resolved.conf
     sudo systemctl restart systemd-resolved.service
     resolvectl status
+
+    lg "Make /etc/systemd/resolved.conf read-only for root"
+    sudo chown root:root /etc/systemd/resolved.conf
+    sudo chmod 444 /etc/systemd/resolved.conf
 }
 
 lg "Setting up DNS for blocking adult content"
