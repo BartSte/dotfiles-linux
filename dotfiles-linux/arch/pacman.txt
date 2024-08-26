@@ -1,4 +1,5 @@
 alacritty
+tree-sitter-cli
 antiword
 aspell
 aspell-en
@@ -15,6 +16,7 @@ fzf
 grim
 inetutils
 isync
+jq
 khard
 lldb
 lynx
@@ -39,6 +41,7 @@ python-icalendar
 python-ipdb
 python-markdown
 python-pip
+python-pip
 python-pipx
 python-pygments
 python-pynvim
@@ -48,13 +51,12 @@ python-tzlocal
 python-vobject
 qutebrowser
 rbw
+rclone
 redshift
 ripgrep
 ruby
 tar
 texlive-core
-texlive-latex 
-texlive-latexextra 
 texlive-plaingeneric
 the_silver_searcher
 tmux

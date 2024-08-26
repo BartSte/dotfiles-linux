@@ -1,7 +1,6 @@
 install_python_packages() {
     echo "Install python packages"
     local deps_file="$1"
-    pip install pipx
     xargs -n 1 pipx install <"$deps_file"
 }
 

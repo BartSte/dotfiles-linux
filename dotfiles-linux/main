@@ -38,9 +38,9 @@ execute_exclude() {
     # prepend the `front` array to the `dirs` array. As a result, the `front`
     # array will be executed first, in the order they are listed.
     for item in "${front[@]}"; do
-        dirs=$(lg "$dirs" | sed "s/$item//")
+        dirs=$(echo "$dirs" | sed "s/$item//")
     done
-    dirs=$(lg "${front[@]}" $dirs)
+    dirs=$(echo "${front[@]}" $dirs)
 
     # Execute all other modules. Do not execute the modules in the `exclude`.
     for module in $dirs; do
