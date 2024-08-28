@@ -194,7 +194,10 @@ Average power on the pedals:
             the result as a JSON string
 
         """
-        exclude: list[str] = ["distance_km", "speed_kmph", "time", "work_kj"]
+        exclude: list[str] = [
+            x for x in dir(self) if x.endswith(("_kj", "_kmph", "_km"))
+        ]
+        exclude.append("time")
         result: dict = self.as_dict(exclude)
         return json.dumps(result, indent=2)
 
