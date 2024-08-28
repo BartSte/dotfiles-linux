@@ -42,44 +42,141 @@ Which is close enough.
 
 import json
 from argparse import ArgumentParser, Namespace
+from contextlib import suppress
 from dataclasses import dataclass
 from datetime import time
 
 
-def j2kj(joules: float) -> float:
+def main() -> str:
     """
-    Return the energy in Joules as kilojoules.
+    Return cycling statistics based on the cli arguments.
+
+    Returns
+    -------
+        The cycling statistics based on the cli arguments
+
+    """
+    parser: ArgumentParser = make_parser()
+    args: Namespace = parser.parse_args()
+
+    result: CyclingStats = CyclingStats(
+        time=args.time,
+        distance_m=args.distance_km * 1000,
+        weight_kg=args.weight_kg,
+        ascend_m=args.ascend_m,
+        descent_m=args.descent_m,
+    )
+    command = "json" if args.json else "summary"
+    return getattr(result, command)
+
+
+def make_parser() -> ArgumentParser:
+    """
+    Return the argument parser for the script.
+
+    Returns
+    -------
+        The argument parser for the script
+
+    """
+    parser: ArgumentParser = ArgumentParser(
+        description="Estimate the number of calories burned while cycling."
+    )
+    parser.add_argument(
+        "weight_kg",
+        action="store",
+        type=float,
+        help="Weight of the cyclist + bike in kg.",
+    )
+
+    parser.add_argument(
+        "distance_km", action="store", type=float, help="Distance cycled in km."
+    )
+
+    parser.add_argument(
+        "time",
+        action="store",
+        type=parse_time,
+        help="Time taken to cycle the distance in iso format, e.g. 01:30:00 for"
+        " 1 hour and 30 minutes.",
+    )
+
+    parser.add_argument(
+        "ascend_m",
+        action="store",
+        type=float,
+        default=0,
+        nargs="?",
+        help="Total ascent in meters (default: 0).",
+    )
+
+    parser.add_argument(
+        "descent_m",
+        action="store",
+        type=float,
+        default=0,
+        nargs="?",
+        help="Total descent in meters (default: 0).",
+    )
+
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Send the output as a JSON string to stdout.",
+    )
+
+    return parser
+
+
+def parse_time(time_str: str) -> time:
+    """
+    Return the time as a time object.
 
     Arguments:
     ---------
-        joules: the energy in Joules
+        time_str: the time as a string
 
     Returns:
     -------
-        the energy in kilojoules
+        the time as a time object
 
     """
-    return joules / 1000
+    time_str = float_to_iso(time_str)
+    try:
+        return time.fromisoformat(time_str)
+    except ValueError as error:
+        msg: str = (
+            "Time must be in iso format. For example, 01:30:00 is 1 hour and 30"
+            " minutes."
+        )
+        raise ValueError(msg) from error
 
 
-def j2kcal(joules: float) -> float:
+def float_to_iso(time_str: str) -> str:
     """
-    Return the energy in Joules as kcal.
+    If `time_str` can be converted to a float, it is converted to an iso format
+    string. Otherwise, the original string is returned.
 
     Arguments:
     ---------
-        joules: the energy in Joules
+        time_str: the time as a string
 
     Returns:
     -------
-        the energy in kcal
+        the time as a time object
 
     """
-    return joules / 4184
+    with suppress(ValueError):
+        hours = float(time_str)
+        whole_hours = int(hours)
+        minutes = int((hours - whole_hours) * 60)
+        seconds = int((hours - whole_hours - (minutes / 60)) * 3600)
+        time_str = f"{whole_hours:02d}:{minutes:02d}:{seconds:02d}"
+    return time_str
 
 
 @dataclass
-class CyclingStatistics:
+class CyclingStats:
     """
     Based on the attributes, a set of cycling statistics are calculated and
     presented as properties.
@@ -145,7 +242,7 @@ Energy consumption human:
     - Drag:                 {energy_drag_kj:>5.0f} kJ
     - Gravity:              {energy_gravity_kj:>5.0f} kJ
     - Rolling resistance:   {energy_roll_kj:>5.0f} kJ
-    - Total:                {energy_kj:>5.0f} kJ / {energy_kcal:>5.0f} kcal
+    - Total:                {energy_kj:>5.0f} kJ / {energy_kcal:.0f} kcal
 Average power on the pedals:
     - Drag:                 {avg_power_drag_w:>5.0f} W
     - Gravity:              {avg_power_gravity_w:>5.0f} W
@@ -194,8 +291,9 @@ Average power on the pedals:
             the result as a JSON string
 
         """
+        non_si_units: tuple[str, ...] = "kj", "kmph", "km"
         exclude: list[str] = [
-            x for x in dir(self) if x.endswith(("_kj", "_kmph", "_km"))
+            x for x in dir(self) if x.endswith(non_si_units)
         ]
         exclude.append("time")
         result: dict = self.as_dict(exclude)
@@ -545,108 +643,36 @@ Average power on the pedals:
         return j2kj(self.energy_gravity_j)
 
 
-def main() -> str:
+def j2kj(joules: float) -> float:
     """
-    Return cycling statistics based on the cli arguments.
-
-    Returns
-    -------
-        The cycling statistics based on the cli arguments
-
-    """
-    parser: ArgumentParser = make_parser()
-    args: Namespace = parser.parse_args()
-
-    result: CyclingStatistics = CyclingStatistics(
-        time=args.time,
-        distance_m=args.distance_km * 1000,
-        weight_kg=args.weight_kg,
-        ascend_m=args.ascend_m,
-        descent_m=args.descent_m,
-    )
-    command = "json" if args.json else "summary"
-    return getattr(result, command)
-
-
-def make_parser() -> ArgumentParser:
-    """
-    Return the argument parser for the script.
-
-    Returns
-    -------
-        The argument parser for the script
-
-    """
-    parser: ArgumentParser = ArgumentParser(
-        description="Estimate the number of calories burned while cycling."
-    )
-    parser.add_argument(
-        "weight_kg",
-        action="store",
-        type=float,
-        help="Weight of the cyclist + bike in kg.",
-    )
-
-    parser.add_argument(
-        "distance_km", action="store", type=float, help="Distance cycled in km."
-    )
-
-    parser.add_argument(
-        "time",
-        action="store",
-        type=parse_time,
-        help="Time taken to cycle the distance in iso format, e.g. 01:30:00 for"
-        " 1 hour and 30 minutes.",
-    )
-
-    parser.add_argument(
-        "ascend_m",
-        action="store",
-        type=float,
-        default=0,
-        nargs="?",
-        help="Total ascent in meters (default: 0).",
-    )
-
-    parser.add_argument(
-        "descent_m",
-        action="store",
-        type=float,
-        default=0,
-        nargs="?",
-        help="Total descent in meters (default: 0).",
-    )
-
-    parser.add_argument(
-        "--json",
-        action="store_true",
-        help="Send the output as a JSON string to stdout.",
-    )
-
-    return parser
-
-
-def parse_time(time_str: str) -> time:
-    """
-    Return the time as a time object.
+    Return the energy in Joules as kilojoules.
 
     Arguments:
     ---------
-        time_str: the time as a string
+        joules: the energy in Joules
 
     Returns:
     -------
-        the time as a time object
+        the energy in kilojoules
 
     """
-    try:
-        return time.fromisoformat(time_str)
-    except ValueError as error:
-        msg: str = (
-            "Time must be in iso format. For example, 01:30:00 is 1 hour and 30"
-            " minutes."
-        )
-        raise ValueError(msg) from error
+    return joules / 1000
+
+
+def j2kcal(joules: float) -> float:
+    """
+    Return the energy in Joules as kcal.
+
+    Arguments:
+    ---------
+        joules: the energy in Joules
+
+    Returns:
+    -------
+        the energy in kcal
+
+    """
+    return joules / 4184
 
 
 if __name__ == "__main__":
