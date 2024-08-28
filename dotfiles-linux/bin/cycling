@@ -46,6 +46,38 @@ from dataclasses import dataclass
 from datetime import time
 
 
+def j2kj(joules: float) -> float:
+    """
+    Return the energy in Joules as kilojoules.
+
+    Arguments:
+    ---------
+        joules: the energy in Joules
+
+    Returns:
+    -------
+        the energy in kilojoules
+
+    """
+    return joules / 1000
+
+
+def j2kcal(joules: float) -> float:
+    """
+    Return the energy in Joules as kcal.
+
+    Arguments:
+    ---------
+        joules: the energy in Joules
+
+    Returns:
+    -------
+        the energy in kcal
+
+    """
+    return joules / 4184
+
+
 @dataclass
 class CyclingStatistics:
     """
@@ -109,22 +141,16 @@ Average speed:      {speed_kmph:.2f} km/h
 --------------------------------------------------------------------------------
 RESULTS
 --------------------------------------------------------------------------------
-Work done by human:             {work_kj:.0f} kJ / {work_kcal:.0f} kcal
-Average power on the pedals:    {avg_power_w:.0f} W
-"""
-
-    _DETAILS: str = """
---------------------------------------------------------------------------------
-Constants
-These values are based on the "conventional racing bike parameters" of the
-following study: https://www.sheldonbrown.com/rinard/aero/formulas.html
---------------------------------------------------------------------------------
-Air density:              {air_density_kgpm3} kg/m^3
-Drag coefficient x Area:  {drag_coefficient_times_area_m2}
-Efficiency Human:         {efficiency_human}
-Efficiency drive train:   {efficiency_drive_train}
-Gravity:                  {gravity} m/s^2
-Roll resistance:          {roll_resistance}
+Energy consumption human:
+    - Drag:                 {energy_drag_kj:>5.0f} kJ
+    - Gravity:              {energy_gravity_kj:>5.0f} kJ
+    - Rolling resistance:   {energy_roll_kj:>5.0f} kJ
+    - Total:                {energy_kj:>5.0f} kJ / {energy_kcal:>5.0f} kcal
+Average power on the pedals:
+    - Drag:                 {avg_power_drag_w:>5.0f} W
+    - Gravity:              {avg_power_gravity_w:>5.0f} W
+    - Rolling resistance:   {avg_power_roll_w:>5.0f} W
+    - Total:                {avg_power_w:>5.0f} W
 """
 
     @property
@@ -157,23 +183,6 @@ Roll resistance:          {roll_resistance}
             if not k.startswith("_") and k not in exclude
         }
         return kwargs
-
-    @property
-    def detailed(self) -> str:
-        """
-        Return the inputs, results, and constants as a string.
-
-        Returns
-        -------
-            the inputs, results, and constants as a string
-
-        """
-        kwargs: dict = self.as_dict()
-        return (
-            self._INPUTS.format(**kwargs)
-            + self._RESULTS.format(**kwargs)
-            + self._DETAILS.format(**kwargs)
-        )
 
     @property
     def json(self) -> str:
@@ -240,15 +249,14 @@ Roll resistance:          {roll_resistance}
     @property
     def work_j(self) -> float:
         """
-        Return the work done in joules by the cyclist.
+        Return the work done in joules without any efficiency losses.
 
         Returns
         -------
             the work that is done in joules
 
         """
-        efficiency: float = self.efficiency_human * self.efficiency_drive_train
-        return self._calc_work(efficiency)
+        return self._calc_work()
 
     def _calc_work(self, efficiency: float = 1.0) -> float:
         """
@@ -289,8 +297,8 @@ Roll resistance:          {roll_resistance}
             the work done in joules
 
         """
-        work_j = self.work_drag_j + self.work_gravity_j + self.work_roll_j
-        return work_j / efficiency
+        work_j = self.work_drag_j + self.work_ascend_j + self.work_roll_j
+        return (work_j / efficiency) + self.work_descend_j
 
     @property
     def work_drag_j(self) -> float:
@@ -326,27 +334,6 @@ Roll resistance:          {roll_resistance}
         )
 
     @property
-    def work_gravity_j(self) -> float:
-        """
-        Return the work done to overcome the gravity in joules.
-
-        Note that, for an efficiency of 1 and a netto elevation gain of 0, for
-        example 100 ascent and 100 descent, the work done for is 0. This is
-        because the energy used to ascend is returned when descending. However,
-        when an efficiency_human of 0.25 is used, the work done is greater than
-        0, since the energy used to ascend is greater than the energy returned
-        when descending.
-
-        Note that no efficiency is applied here.
-
-        Returns
-        -------
-            the work done to overcome the gravity in joules
-
-        """
-        return self.work_ascend_j + self.work_descend_j
-
-    @property
     def work_ascend_j(self) -> float:
         """
         Return the work done to ascend in joules.
@@ -364,6 +351,8 @@ Roll resistance:          {roll_resistance}
     def work_descend_j(self) -> float:
         """
         Return the work done to descend in joules.
+
+        This work is always negative, since the cyclist is descending.
 
         Returns
         -------
@@ -414,28 +403,64 @@ Roll resistance:          {roll_resistance}
         return self.force_gravity * self.roll_resistance
 
     @property
-    def work_kj(self) -> float:
+    def energy_j(self) -> float:
         """
-        Return the work done in kilojoules.
+        Return the energy consumption of the cyclist in kilojoules.
 
         Returns
         -------
-            the work done in kilojoules
+            the energy consumption of the cyclist in kilojoules
 
         """
-        return self.work_j / 1000
+        return self._calc_work(self.efficiency)
 
     @property
-    def work_kcal(self) -> float:
+    def efficiency(self) -> float:
         """
-        Return the number of calories burned in kcal.
+        Return the efficiency of the cyclist and drive train.
 
         Returns
         -------
-            the number of calories burned in kcal
+            the efficiency of the cyclist and drive train
 
         """
-        return self.work_j / 4184
+        return self.efficiency_human * self.efficiency_drive_train
+
+    @property
+    def energy_drag_j(self) -> float:
+        """
+        Return the energy consumption to overcome the drag in joules.
+
+        Returns
+        -------
+            the energy consumption to overcome the drag in joules
+
+        """
+        return self.work_drag_j / self.efficiency
+
+    @property
+    def energy_roll_j(self) -> float:
+        """
+        Return the energy consumption to overcome the rolling resistance in joules.
+
+        Returns
+        -------
+            the energy consumption to overcome the rolling resistance in joules
+
+        """
+        return self.work_roll_j / self.efficiency
+
+    @property
+    def energy_gravity_j(self) -> float:
+        """
+        Return the energy consumption to overcome the gravity in joules.
+
+        Returns
+        -------
+            the energy consumption to overcome the gravity in joules
+
+        """
+        return self.work_ascend_j / self.efficiency
 
     @property
     def avg_power_w(self) -> float:
@@ -452,6 +477,69 @@ Roll resistance:          {roll_resistance}
 
         """
         return self._calc_work(self.efficiency_drive_train) / self.time_s
+
+    @property
+    def avg_power_drag_w(self) -> float:
+        """
+        Return the average power that is applied to the pedals to overcome the
+        drag in watt.
+
+        Returns
+        -------
+            the average power to overcome the drag in watt
+
+        """
+        return (self.work_drag_j / self.efficiency_drive_train) / self.time_s
+
+    @property
+    def avg_power_gravity_w(self) -> float:
+        """
+        Return the average power that is applied to the pedals to overcome the
+        gravity in watt.
+
+        Returns
+        -------
+            the average power to overcome the gravity in watt
+
+        """
+        work_gravity_j = (
+            self.work_ascend_j / self.efficiency_drive_train
+        ) + self.work_descend_j
+
+        return work_gravity_j / self.time_s
+
+    @property
+    def avg_power_roll_w(self) -> float:
+        """
+        Return the average power that is applied to the pedals to overcome the
+        rolling resistance in watt.
+
+        Returns
+        -------
+            the average power to overcome the rolling resistance in watt
+
+        """
+        return (self.work_roll_j / self.efficiency_drive_train) / self.time_s
+
+    @property
+    def energy_kcal(self) -> float:
+        return j2kcal(self.energy_j)
+
+    @property
+    def energy_kj(self) -> float:
+        return j2kj(self.energy_j)
+
+    @property
+    def energy_drag_kj(self) -> float:
+        return j2kj(self.energy_drag_j)
+
+    @property
+    def energy_roll_kj(self) -> float:
+        return j2kj(self.energy_roll_j)
+
+    @property
+    def energy_gravity_kj(self) -> float:
+        return j2kj(self.energy_gravity_j)
 
 
 def main() -> str:
@@ -473,7 +561,8 @@ def main() -> str:
         ascend_m=args.ascend_m,
         descent_m=args.descent_m,
     )
-    return getattr(result, args.output)
+    command = "json" if args.json else "summary"
+    return getattr(result, command)
 
 
 def make_parser() -> ArgumentParser:
@@ -526,11 +615,9 @@ def make_parser() -> ArgumentParser:
     )
 
     parser.add_argument(
-        "--output",
-        action="store",
-        type=str,
-        default="summary",
-        help="Output format (summary, detailed, json).",
+        "--json",
+        action="store_true",
+        help="Send the output as a JSON string to stdout.",
     )
 
     return parser
@@ -540,11 +627,11 @@ def parse_time(time_str: str) -> time:
     """
     Return the time as a time object.
 
-    Parameters
-    ----------
+    Arguments:
+    ---------
         time_str: the time as a string
 
-    Returns
+    Returns:
     -------
         the time as a time object
 
