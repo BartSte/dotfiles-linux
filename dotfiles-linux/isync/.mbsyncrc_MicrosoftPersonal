@@ -1,8 +1,8 @@
 IMAPStore personal-remote
 Host outlook.office365.com
 Port 993
-UserCmd "rbw_get Username $MICROSOFT_ACCOUNT"
-PassCmd "rbw_get MuttPassword $MICROSOFT_ACCOUNT"
+UserCmd "bw-cli-get Username $MICROSOFT_ACCOUNT"
+PassCmd "bw-cli-get MuttPassword $MICROSOFT_ACCOUNT"
 AuthMechs LOGIN
 TLSType IMAPS
 CertificateFile /etc/ssl/certs/ca-certificates.crt
