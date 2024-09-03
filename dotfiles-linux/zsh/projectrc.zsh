@@ -36,6 +36,7 @@ reload-session() {
         navigation
         quay-detector
         supervisor-software
+        fr-pyqt
     )
     [[ " ${winpyprojects[@]} " =~ " $PROJECTRC " ]] && PROJECTRC="winpyproject"
 

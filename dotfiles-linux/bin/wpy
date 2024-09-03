@@ -21,6 +21,8 @@ Options:
   --wpy-help      Show this message. No arguments are passed to python anymore.
   --wpy-path      Print the path to the python executable, do not execute
                   any command. No arguments are passed to python anymore.
+  --wpy-dir       Print the path to the directory containing the python
+                  executable. No arguments are passed to python anymore.
   --wpy-debug     Enable debug output. No arguments are passed to python
                   anymore.
 
@@ -36,6 +38,9 @@ escape_backslashes() {
 parse_args() {
     while [[ $# -gt 0 ]]; do
         case $1 in
+        --wpy-dir)
+            dir=true
+            ;;
         --wpy-path)
             path=true
             ;;
@@ -65,6 +70,7 @@ get_exe() {
 }
 
 exe=""
+dir=false
 path=false
 debug=/dev/null
 wpy_ops_passed=false
@@ -95,6 +101,9 @@ if [[ -z $exe ]]; then
 elif [[ $path == true ]]; then
     echo "Printing path to executable" >$debug
     echo "$exe"
+elif [[ $dir == true ]]; then
+    echo "Printing directory containing executable" >$debug
+    dirname "$exe"
 elif [[ $wpy_ops_passed == false ]]; then
     echo "Executing $exe ${command[*]}" >$debug
     eval "$exe ${command[*]}"
