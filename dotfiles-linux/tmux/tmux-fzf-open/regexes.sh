@@ -12,7 +12,6 @@
 # converted to the following convetion:
 
 # - {file}:{line}:{column}
-
 RE_PYTEST_ERROR="[a-zA-Z0-9\\\/\_\.\-]*\.py:[0-9]+:"
 RE_PYTHON_ERROR="\"([a-zA-Z0-9\\\/\_\.]*\.py)\",\sline\s([0-9]+)"
 RE_PYTHON_ERROR_WIN="\"(\\\\wsl\.localhost.*\.py)\",\sline\s([0-9]+)"
