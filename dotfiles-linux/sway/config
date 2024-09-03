@@ -43,8 +43,6 @@ bindsym $mod+Shift+7 move container to workspace $ws7
 bindsym $mod+Shift+8 move container to workspace $ws8
 
 bindsym $mod+F11 fullscreen toggle
-bindsym $mod+shift+c reload
-bindsym $mod+shift+r restart
 bindsym $mod+shift+e exit
 bindsym $mod+r mode "resize"
 

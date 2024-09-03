@@ -3,7 +3,7 @@ Host 127.0.0.1
 Port 1143
 UserCmd "rbw_get Username $MICROSOFT_ACCOUNT"
 PassCmd "rbw get $MICROSOFT_ACCOUNT"
-SSLType None
+TLSType IMAPS
 AuthMechs LOGIN
 Timeout 0
 
