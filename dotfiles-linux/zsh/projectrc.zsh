@@ -40,7 +40,12 @@ reload-session() {
     )
     [[ " ${winpyprojects[@]} " =~ " $PROJECTRC " ]] && PROJECTRC="winpyproject"
 
+    # Try to activate a python virtual environment if it exists in a `.venv`
+    # directory.
+    [[ -f .venv/bin/activate ]] && source .venv/bin/activate 
+
     # Load the project specific zsh configuration file if it exists.
-    . "$dir/$PROJECTRC.zsh" 2>/dev/null || true
+    [[ -f "$dir/$PROJECTRC.zsh" ]] && source "$dir/$PROJECTRC.zsh"
 }
+
 reload-session "$@"

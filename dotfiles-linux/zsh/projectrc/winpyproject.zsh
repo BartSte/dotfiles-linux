@@ -13,4 +13,3 @@ if running wsl; then
     alias wpytest='wpy -m pytest'
 fi
 
-[[ -f .venv/bin/activate ]] && source .venv/bin/activate 
