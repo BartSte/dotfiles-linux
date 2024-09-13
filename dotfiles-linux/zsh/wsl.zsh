@@ -28,4 +28,6 @@ reload-wsl() {
     alias wjava="/mnt/c/Program\\ Files/Eclipse\\ Adoptium/jre-*-hotspot/bin/java.exe"
     alias plantuml='wjava -jar C:\\ProgramData\\chocolatey\\lib\\plantuml\\tools\\plantuml.jar'
 }
-running wsl && reload-wsl
+if running wsl; then
+    reload-wsl
+fi

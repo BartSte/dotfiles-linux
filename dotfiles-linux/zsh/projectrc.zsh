@@ -42,10 +42,14 @@ reload-session() {
 
     # Try to activate a python virtual environment if it exists in a `.venv`
     # directory.
-    [[ -f .venv/bin/activate ]] && source .venv/bin/activate 
+    if [[ -f .venv/bin/activate ]]; then
+        source .venv/bin/activate
+    fi
 
     # Load the project specific zsh configuration file if it exists.
-    [[ -f "$dir/$PROJECTRC.zsh" ]] && source "$dir/$PROJECTRC.zsh"
+    if [[ -f "$dir/$PROJECTRC.zsh" ]]; then
+       source "$dir/$PROJECTRC.zsh"
+    fi
 }
 
 reload-session "$@"
