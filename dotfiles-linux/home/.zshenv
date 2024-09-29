@@ -17,6 +17,7 @@ zshenv() {
     export IPDB_CONTEXT_SIZE=10
     export TMUX_PLUGIN_DIR="$HOME/.tmux/plugins"
     export VI_MODE_SET_CURSOR=true
+    export HELP_MESSAGE_RC="$HOME/dotfiles-linux/zsh/aliases.zsh"
     export FZF_HELP_SYNTAX='help'
     export CLI_OPTIONS_CMD='ag -o --numbers -- $RE'
 
