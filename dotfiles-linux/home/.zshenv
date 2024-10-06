@@ -17,9 +17,6 @@ zshenv() {
     export IPDB_CONTEXT_SIZE=10
     export TMUX_PLUGIN_DIR="$HOME/.tmux/plugins"
     export VI_MODE_SET_CURSOR=true
-    export HELP_MESSAGE_RC="$HOME/dotfiles-linux/zsh/aliases.zsh"
-    export FZF_HELP_SYNTAX='help'
-    export CLI_OPTIONS_CMD='ag -o --numbers -- $RE'
 
     export HISTFILE=$HOME/.histfile
     export HISTSIZE=1000000000
@@ -57,6 +54,10 @@ zshenv() {
     export FZF_ALT_C_OPTS
 
     export FZF_ALT_D_OPTS=$FZF_ALT_C_OPTS
+
+    export HELP_MESSAGE_RC="$HOME/dotfiles-linux/zsh/fzfhelprc.zsh"
+    export FZF_HELP_SYNTAX='help'
+    export CLI_OPTIONS_CMD="ag -o --numbers -- \$RE"
 
     _FZF_OPEN_SELECT="-w 100% -h 80% --multi --layout=reverse"
     _FZF_OPEN_WINDOW="--preview-window=hidden,right,75%"
