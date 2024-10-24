@@ -37,6 +37,7 @@ reload-session() {
         quay-detector
         supervisor-software
         fr-pyqt
+        isssdk
     )
     [[ " ${winpyprojects[@]} " =~ " $PROJECTRC " ]] && PROJECTRC="winpyproject"
 

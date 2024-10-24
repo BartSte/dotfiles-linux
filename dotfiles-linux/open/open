@@ -9,29 +9,38 @@ this_dir=$(dirname "$(readlink -f "$0")")
 usage="Usage: $0 <path>
 Opens a url or path in a preferred program.
 
-The option -w, --wslpath can be used to convert a windows paths to a wsl path.
-This is useful when you want to open a windows file in wsl. When you are not 
-running wsl, or the path is already a wsl path, this option has no effect.
+The option --linuxpath can be used to convert a windows paths to a linux path.
+This is useful when you want to open a windows file in linux. When you are not 
+running linux, or the path is already a linux path, this option has no effect.
 
 Options:
-    -h, --help      Show this message and exit.
-    -w, --wslpath   Tries to convert a windows path to a wsl path. Turned off by
-                    default. This option has no effect if: wsl is not running, 
-                    or the path is already a wsl path.
-    -l, --log       Send debug messages a file.
-    -q, --quiet     Suppress all output.
-    -v, --verbose   Show more output."
+    -h, --help              Show this message and exit.
+    -l, --log               Send debug messages a file.
+    -q, --quiet             Suppress all output.
+    -v, --verbose           Show more output.
+    --convert2linuxpath     Tries to convert a windows path to a linux path. 
+                            Turned off by default. This option has no effect if: 
+                            wsl is not running, or the path is already a linux 
+                            path.
+    --convert2windowspath   Tries to convert a linux path to a windows path. 
+                            Turned off by default. This option has no effect if:
+                            wsl is not running, or the path is already a windows
+                            path."
 
 input=""
-win=""
+convert2linuxpath=false
+convert2windowspath=false
 while [[ $# -gt 0 ]]; do
     case $1 in
     -h | --help)
         echo "$usage"
         exit 0
         ;;
-    -w | --win)
-        win=true
+    --convert2linuxpath)
+        convert2linuxpath=true
+        ;;
+    --convert2windowspath)
+        convert2windowspath=true
         ;;
     -l | --log)
         OPEN_LOG_FILE="$2"
@@ -77,9 +86,8 @@ try_url() {
 # is 1.
 ################################################################################
 try_file() {
-    local to_open file line column win file_wsl file_escaped file_wsl_escaped
+    local to_open file line column
     to_open=$1
-    win=$2
 
     # Split the `to_open` string by setting the word separator to a colon
     # temporarily.
@@ -87,28 +95,16 @@ try_file() {
     IFS=' ' # Reset IFS
     line=${line:-1}
     column=${column:-1}
-    if $win && running wsl; then
-        file_wsl=$(wslpath "$file")
-        log "file before escaping: $file, win: $win" -v
-        file_escaped=$(sed 's/\\/\\\\/g' <<<"$file")
-        log "file after escaping: $file_escaped" -v
-        file_wsl_escaped=$(wslpath "$file_escaped")
 
-        log "file after wslpath: $file_wsl_escaped" -v
-        if [[ -f "$file_wsl" ]]; then
-            log "The path can be resolved: $file_wsl" -v
-            file=$file_wsl
-        elif [[ -f "$file_wsl_escaped" ]]; then
-            log "The escaped path can be resolved: $file_wsl_escaped" -v
-            file=$file_wsl_escaped
-        else
-            log "The wsl path cannot be resolved: $file_wsl"
-            log "The escaped wsl paths cannot be resolved: $file_wsl_escaped"
-            abort "The wsl paths cannot be resolved: $file_escaped"
+    if running wsl; then
+        if $convert2linuxpath; then
+            file=$(wslpath -u "$file")
+        elif $convert2windowspath; then
+            file=$(wslpath -m "$file")
         fi
     fi
 
-    log "Try file: $file, line: $line, column: $column, win: $win" -v
+    log "Try file: $file, line: $line, column: $column" -v
     if has_type "$file" image; then
         log "Opening image: $file" -v
         open_img "$file"
@@ -147,7 +143,7 @@ abort() {
 ################################################################################
 main() {
     log_clear
-    try_url "$1" || try_file "$1" "$2" || abort "Could not open $1"
+    try_url "$1" || try_file "$1" || abort "Could not open $1"
 }
 
-main "$input" "$win"
+main "$input"
