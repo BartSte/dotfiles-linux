@@ -1,10 +1,19 @@
 link_config() {
-    target=~/dotfiles/qutebrowser/config.py
-    link=~/.config/qutebrowser/config.py
+    local source_dir destination_dir files file destination file files
+    source_dir=~/dotfiles/qutebrowser
+    destination_dir=~/.config/qutebrowser
 
-    echo "Create link from $target to $link"
-    mkdir -p "$(dirname $link)"
-    ln -sf $target $link
+    echo "Ensure $destination_dir exists"
+    mkdir -p "$(dirname $destination_dir)"
+
+    echo "Link all files from $source_dir to $destination_dir"
+    files=$(find $source_dir -maxdepth 1 -type f -exec basename {} \;)
+    for file in $files; do
+        source="$source_dir/$file"
+        destination="$destination_dir/$file"
+        lg "Link $source to $destination"
+        ln -sf "$source" "$destination"
+    done
 }
 
 link_bookmarks() {
