@@ -14,8 +14,8 @@ Name-Real: $MS_REALNAME
 Name-Email: $MS_EMAIL
 Expire-Date: 0"
 
-lg "$script" > /tmp/gen-key-script
-gpg --batch --gen-key /tmp/gen-key-script
+echo "$script" > /tmp/gen-key-script
+gpg --batch --gen-key /tmp/gen-key-script || lg "Failed to generate GPG key"
 rm /tmp/gen-key-script
 
 unset MS_EMAIL
