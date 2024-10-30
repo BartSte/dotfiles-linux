@@ -59,7 +59,7 @@ unset imap_idle # When set, NeoMutt will attempt to use the IMAP IDLE extension 
 # SMTP config
 set from = $my_email
 set hostname = `bw-cli-get Domain $MICROSOFT_ACCOUNT`
-set realname = "`bw-cli-get Name $MICROSOFT_ACCOUNT`"
+set realname = "`bw-cli-get name $MICROSOFT_ACCOUNT`"
 set smtp_authenticators=`bw-cli-get MuttSmtpAuth $MICROSOFT_ACCOUNT`
 set smtp_oauth_refresh_command="~/dotfiles-linux/mutt/mutt_oauth2_with_token"
 set smtp_pass = $my_password

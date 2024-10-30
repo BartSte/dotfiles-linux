@@ -1,4 +1,4 @@
-IMAPAccount work
+IMAPAccount personal
 Host outlook.office365.com
 Port 993
 UserCmd "bw-cli-get Username $MICROSOFT_ACCOUNT"
