@@ -63,6 +63,6 @@ log() {
 
 log_clear() {
     if [[ -n ${OPEN_LOG_FILE:-} ]]; then
-        echo -n "" >"$OPEN_LOG_FILE"
+        date >"$OPEN_LOG_FILE"
     fi
 }
