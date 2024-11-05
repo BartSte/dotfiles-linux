@@ -100,12 +100,16 @@ try_file() {
     column=${column:-1}
 
     if running wsl; then
+        log "Trying to open file $path" -v
         if $convert2linuxpath; then
-            path=$(wslpath -u "$path")
-            log "Converted to linux path: $path" -v
+            path=$(echo -E "$path" | sed 's/\\/\//g; s/\/\{2,\}/\//g')
+            log "Backward slashes replaced with forward slashes: $path" -v
+            path=$(wslpath -ua "$path")
+            log "Converted to linux path: $path" -v 
         elif $convert2windowspath; then
-            path=$(wslpath -m "$path")
-            log "Converted to windows path: $path" -v
+            log "Trying to convert $path to windows path"
+            path=$(wslpath -ma "$path")
+            log "Resulting windows path: $path" -v
         fi
     fi
 
