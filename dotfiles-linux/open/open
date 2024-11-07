@@ -105,7 +105,7 @@ try_file() {
             path=$(echo -E "$path" | sed 's/\\/\//g; s/\/\{2,\}/\//g')
             log "Backward slashes replaced with forward slashes: $path" -v
             path=$(wslpath -ua "$path")
-            log "Converted to linux path: $path" -v 
+            log "Converted to linux path: $path" -v
         elif $convert2windowspath; then
             log "Trying to convert $path to windows path"
             path=$(wslpath -ma "$path")
