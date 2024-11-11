@@ -38,6 +38,7 @@ reload-session() {
         supervisor-software
         fr-pyqt
         isssdk
+        navigation310
     )
     [[ " ${winpyprojects[@]} " =~ " $PROJECTRC " ]] && PROJECTRC="winpyproject"
 
