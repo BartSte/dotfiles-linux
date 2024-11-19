@@ -2,7 +2,7 @@
 # See hosts(5) for details.
 
 # Custom redirects 
-127.0.0.1   perchance.org
-127.0.0.1   www.perchance.org
-127.0.0.1   https://perchance.org
-127.0.0.1   https://www.perchance.org
+# 127.0.0.1   perchance.org
+# 127.0.0.1   www.perchance.org
+# 127.0.0.1   https://perchance.org
+# 127.0.0.1   https://www.perchance.org
