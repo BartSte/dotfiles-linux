@@ -40,6 +40,11 @@ enable_scripts_root() {
     done
 }
 
+enable_bluetooth() {
+    sudo systemctl enable bluetooth.service
+    sudo systemctl start bluetooth.service
+}
+
 user_systemd_dir=~/.config/systemd/user
 user_script_dir=~/dotfiles-linux/systemd/user
 
@@ -54,5 +59,8 @@ enable_scripts_user "$user_systemd_dir" "$user_script_dir"
 
 lg "Enabling root scripts from $root_script_dir"
 enable_scripts_root "$root_systemd_dir" "$root_script_dir"
+
+lg "Enabling bluetooth"
+enable_bluetooth
 
 sudo systemctl daemon-reload
