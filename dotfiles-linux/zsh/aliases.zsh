@@ -9,7 +9,6 @@ alias act='source .venv/bin/activate'
 alias bat='bat --theme gruvbox-dark'
 alias blueoff='bluetoothctl power off'
 alias blueon='bluetoothctl power on; bluetoothctl discoverable on; bluetoothctl pairable on;'
-alias c="calc "
 alias dact='deactivate'
 alias dropsync='rclone bisync dropbox: ~/dropbox --remove-empty-dirs -v --compare "size,checksum"'
 alias dsize='du -h -d1' # use the du command for further inspection
@@ -28,11 +27,8 @@ alias tm='tmux-session ~'
 alias ts='tmux-session'
 alias unl='rbw unlock'
 alias v='nvim'
-alias vims='nvim -S Session.vim'
 alias yay='export MAKEFLAGS="-j$(nproc)" && yay'
 alias chrome='google-chrome-stable --ozone-platform=wayland'
-alias gs='git switch'
-alias gp='git pull'
 
 qhash() {
     hash $1 2>/dev/null
