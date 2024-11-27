@@ -25,6 +25,8 @@ alias suspend="systemctl suspend"
 alias ta='tmux -u attach'
 alias tm='tmux-session ~'
 alias ts='tmux-session'
+alias tmks='tmux kill-session'
+alias tmke='tmux kill-server'
 alias unl='rbw unlock'
 alias v='nvim'
 alias yay='export MAKEFLAGS="-j$(nproc)" && yay'
