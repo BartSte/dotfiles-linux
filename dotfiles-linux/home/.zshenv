@@ -34,7 +34,7 @@ zshenv() {
     _FZF_CTRL_T_OPTS_FILES='bat --theme=gruvbox-dark --style=numbers --color=always --line-range :500 {}'
     _FZF_CTRL_T_OPTS_DIR='exa --color=always --icons -T -L 1 -a {} | head -200'
     _FZF_CTRL_T_OPTS_BIND="ctrl-d:reload($FZF_ALT_C_COMMAND)+change-preview($_FZF_CTRL_T_OPTS_DIR)+change-preview-window(hidden),"
-    _FZF_CTRL_T_OPTS_BIND+="ctrl-o:reload($FZF_CTRL_T_COMMAND)+change-preview($_FZF_CTRL_T_OPTS_FILES)+change-preview-window(hidden),"
+    _FZF_CTRL_T_OPTS_BIND+="ctrl-f:reload($FZF_CTRL_T_COMMAND)+change-preview($_FZF_CTRL_T_OPTS_FILES)+change-preview-window(hidden),"
     _FZF_CTRL_T_OPTS_BIND+="ctrl-p:toggle-preview"
     FZF_CTRL_T_OPTS="--bind '$_FZF_CTRL_T_OPTS_BIND' "
     FZF_CTRL_T_OPTS+="--preview '$_FZF_CTRL_T_OPTS_FILES' "
@@ -42,7 +42,7 @@ zshenv() {
     export FZF_CTRL_T_OPTS
 
     _FZF_ALT_H_OPTS_BIND="ctrl-d:reload($FZF_ALT_C_COMMAND . $HOME)+change-preview($_FZF_CTRL_T_OPTS_DIR)+change-preview-window(hidden),"
-    _FZF_ALT_H_OPTS_BIND+="ctrl-o:reload($FZF_CTRL_T_COMMAND . $HOME)+change-preview($_FZF_CTRL_T_OPTS_FILES)+change-preview-window(hidden),"
+    _FZF_ALT_H_OPTS_BIND+="ctrl-f:reload($FZF_CTRL_T_COMMAND . $HOME)+change-preview($_FZF_CTRL_T_OPTS_FILES)+change-preview-window(hidden),"
     _FZF_ALT_H_OPTS_BIND+="ctrl-p:toggle-preview"
     FZF_ALT_H_OPTS="--bind '$_FZF_ALT_H_OPTS_BIND' "
     FZF_ALT_H_OPTS+="--preview '$_FZF_CTRL_T_OPTS_FILES' "
