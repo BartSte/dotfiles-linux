@@ -17,7 +17,6 @@ bindkey -M vicmd "\eo" fzf-file-widget
 bindkey -M vicmd "^A" fzf-help-widget
 bindkey -M vicmd "^B" fzfrbw-widget
 bindkey -M vicmd "^R" fzf-history-widget
-bindkey -M vicmd "^T" vi-cmd-mode
 bindkey -M vicmd "^[[1;5C" forward-word
 
 bindkey -M vicmd -s "^[[1;5D" "^W"
@@ -31,7 +30,6 @@ bindkey -M viins "\eo" fzf-file-widget
 bindkey -M viins "^A" fzf-help-widget
 bindkey -M viins "^B" fzfrbw-widget
 bindkey -M viins "^R" fzf-history-widget
-bindkey -M viins "^T" vi-cmd-mode
 bindkey -M viins "^[[1;5C" forward-word
 
 bindkey -M viins -s "^[[1;5D" "^W"

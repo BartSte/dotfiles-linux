@@ -21,6 +21,7 @@ zshenv() {
     export HISTFILE=$HOME/.histfile
     export HISTSIZE=1000000000
     export SAVEHIST=100000
+    export KEYTIMEOUT=1
 
     export FZF_DEFAULT_COMMAND="fd --hidden --no-ignore-vcs --ignore-file $HOME/.ignore --type f"
     export FZF_ALT_C_COMMAND="fd --hidden --no-ignore-vcs --ignore-file $HOME/.ignore -t d"
