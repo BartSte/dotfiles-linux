@@ -39,6 +39,7 @@ reload-session() {
         fr-pyqt
         isssdk
         navigation310
+        fc-pipelines
     )
     [[ " ${winpyprojects[@]} " =~ " $PROJECTRC " ]] && PROJECTRC="winpyproject"
 
