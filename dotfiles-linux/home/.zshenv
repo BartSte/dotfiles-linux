@@ -23,38 +23,53 @@ zshenv() {
     export SAVEHIST=100000
     export KEYTIMEOUT=1
 
+    # TODO: I want alt-d to paste the directory in the command line. I want tc 
+    # alt-c to cd into the directory. 
     export FZF_DEFAULT_COMMAND="fd --hidden --no-ignore-vcs --ignore-file $HOME/.ignore --type f"
     export FZF_ALT_C_COMMAND="fd --hidden --no-ignore-vcs --ignore-file $HOME/.ignore -t d"
     export FZF_CTRL_T_COMMAND=$FZF_DEFAULT_COMMAND
     export FZF_ALT_H_COMMAND="$FZF_DEFAULT_COMMAND . $HOME"
     export FZF_ALT_D_COMMAND="$FZF_ALT_C_COMMAND . $HOME"
 
+    # TODO: currently, ctrl-g switches to unrestricted mode. I also want to be 
+    # able to switch to back from unrestricted mode to using the .ignore file.
+    export FZF_CTRL_T_UNRESTRICED_COMMAND="fd --unrestricted --type f"
+    export FZF_ALT_C_UNRESTRICTED_COMMAND="fd --unrestricted --type d"
+    export FZF_ALT_H_UNRESTRICTED_COMMAND="fd --unrestricted --type f . $HOME"
+    export FZF_ALT_D_UNRESTRICTED_COMMAND="fd --unrestricted --type d . $HOME"
+
     export FZF_DEFAULT_OPTS="--height 50% --layout=reverse --preview-window=right,65%"
 
-    _FZF_CTRL_T_OPTS_FILES='bat --theme=gruvbox-dark --style=numbers --color=always --line-range :500 {}'
-    _FZF_CTRL_T_OPTS_DIR='exa --color=always --icons -T -L 1 -a {} | head -200'
-    _FZF_CTRL_T_OPTS_BIND="ctrl-d:reload($FZF_ALT_C_COMMAND)+change-preview($_FZF_CTRL_T_OPTS_DIR)+change-preview-window(hidden),"
-    _FZF_CTRL_T_OPTS_BIND+="ctrl-f:reload($FZF_CTRL_T_COMMAND)+change-preview($_FZF_CTRL_T_OPTS_FILES)+change-preview-window(hidden),"
-    _FZF_CTRL_T_OPTS_BIND+="ctrl-p:toggle-preview"
+    _FZF_PREVIEW_OPTS_FILES='bat --theme=gruvbox-dark --style=numbers --color=always --line-range :500 {}'
+    _FZF_PREVIEW_OPTS_DIR='exa --color=always --icons -T -L 1 -a {} | head -200'
+
+    _FZF_CTRL_T_OPTS_BIND="ctrl-p:toggle-preview,"
+    _FZF_CTRL_T_OPTS_BIND+="ctrl-g:reload($FZF_CTRL_T_UNRESTRICED_COMMAND)"
     FZF_CTRL_T_OPTS="--bind '$_FZF_CTRL_T_OPTS_BIND' "
-    FZF_CTRL_T_OPTS+="--preview '$_FZF_CTRL_T_OPTS_FILES' "
+    FZF_CTRL_T_OPTS+="--preview '$_FZF_PREVIEW_OPTS_FILES' "
     FZF_CTRL_T_OPTS+="--preview-window 'hidden'"
     export FZF_CTRL_T_OPTS
 
-    _FZF_ALT_H_OPTS_BIND="ctrl-d:reload($FZF_ALT_C_COMMAND . $HOME)+change-preview($_FZF_CTRL_T_OPTS_DIR)+change-preview-window(hidden),"
-    _FZF_ALT_H_OPTS_BIND+="ctrl-f:reload($FZF_CTRL_T_COMMAND . $HOME)+change-preview($_FZF_CTRL_T_OPTS_FILES)+change-preview-window(hidden),"
-    _FZF_ALT_H_OPTS_BIND+="ctrl-p:toggle-preview"
+    _FZF_ALT_H_OPTS_BIND="ctrl-p:toggle-preview,"
+    _FZF_ALT_H_OPTS_BIND+="ctrl-g:reload($FZF_ALT_H_UNRESTRICTED_COMMAND)"
     FZF_ALT_H_OPTS="--bind '$_FZF_ALT_H_OPTS_BIND' "
-    FZF_ALT_H_OPTS+="--preview '$_FZF_CTRL_T_OPTS_FILES' "
+    FZF_ALT_H_OPTS+="--preview '$_FZF_PREVIEW_OPTS_FILES' "
     FZF_ALT_H_OPTS+="--preview-window 'hidden'"
     export FZF_ALT_H_OPTS
 
-    FZF_ALT_C_OPTS="--preview '$_FZF_CTRL_T_OPTS_DIR' "
-    FZF_ALT_C_OPTS+="--bind 'ctrl-p:toggle-preview' "
+    _FZF_ALT_C_BIND+="ctrl-p:toggle-preview,"
+    _FZF_ALT_C_BIND+="ctrl-g:reload($FZF_ALT_C_UNRESTRICTED_COMMAND)"
+    FZF_ALT_C_OPTS="--bind '$_FZF_ALT_C_BIND' "
+    FZF_ALT_C_OPTS="--preview '$_FZF_PREVIEW_OPTS_DIR' "
     FZF_ALT_C_OPTS+="--preview-window hidden"
     export FZF_ALT_C_OPTS
 
-    export FZF_ALT_D_OPTS=$FZF_ALT_C_OPTS
+    _FZF_ALT_D_OPTS_BIND="ctrl-p:toggle-preview,"
+    _FZF_ALT_D_OPTS_BIND+="ctrl-g:reload($FZF_ALT_D_UNRESTRICTED_COMMAND)"
+    _FZF_ALT_D_OPTS="--bind '$_FZF_ALT_D_OPTS_BIND' "
+    _FZF_ALT_D_OPTS+="--preview '$_FZF_PREVIEW_OPTS_FILES"
+    _FZF_ALT_D_OPTS_+="--preview-window hidden"
+    export FZF_ALT_D_OPTS=$FZF_ALT_D_OPTS
 
     export HELP_MESSAGE_RC="$HOME/dotfiles-linux/zsh/fzfhelprc.zsh"
     export FZF_HELP_SYNTAX='help'
