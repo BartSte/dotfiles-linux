@@ -40,6 +40,11 @@ fzf-cd-widget-home() {
     FZF_ALT_C_OPTS=$_OLD_FZF_ALT_C_OPTS
 }
 
+fzf-file-widget-open() {
+    BUFFER="open \$(fzf)"
+    zle accept-line
+}
+
 fzfrbw-widget() {
     $HOME/dotfiles-linux/scripts/fzfrbw
     zle reset-prompt
@@ -50,23 +55,6 @@ man-widget() {
     zle reset-prompt
 }
 
-fzf-file-widget-no-ignore() {
-    _OLD_FZF_CTRL_T_COMMAND=$FZF_CTRL_T_COMMAND
-    FZF_CTRL_T_COMMAND="fd --hidden --no-ignore --type f"
-
-    fzf-file-widget
-
-    FZF_CTRL_T_COMMAND=$_OLD_FZF_CTRL_T_COMMAND
-}
-
-fzf-cd-widget-no-ignore() {
-    _OLD_FZF_ALT_C_COMMAND=$FZF_ALT_C_COMMAND
-    FZF_ALT_C_COMMAND="fd --hidden --no-ignore --type d"
-
-    fzf-cd-widget
-
-    FZF_ALT_C_COMMAND=$_OLD_FZF_ALT_C_COMMAND
-}
 
 fullsync() {
     echo "### Syncing rbw"
