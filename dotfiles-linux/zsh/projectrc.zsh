@@ -40,6 +40,7 @@ reload-session() {
         isssdk
         navigation310
         fc-pipelines
+        software-engineering-general
     )
     [[ " ${winpyprojects[@]} " =~ " $PROJECTRC " ]] && PROJECTRC="winpyproject"
 
