@@ -14,6 +14,19 @@ fkill() {
     kill -"${1:-9}" "$pid"
 }
 
+fzf-dir-widget() {
+    _OLD_FZF_CTRL_T_COMMAND=$FZF_CTRL_T_COMMAND
+    _OLD_FZF_CTRL_T_OPTS=$FZF_CTRL_T_OPTS
+
+    FZF_CTRL_T_COMMAND=$FZF_ALT_D_COMMAND
+    FZF_CTRL_T_OPTS=$FZF_ALT_D_OPTS
+
+    fzf-file-widget
+
+    FZF_CTRL_T_COMMAND=$_OLD_FZF_CTRL_T_COMMAND
+    FZF_CTRL_T_OPTS=$_OLD_FZF_CTRL_T_OPTS
+}
+
 fzf-file-widget-home() {
     _OLD_FZF_CTRL_T_COMMAND=$FZF_CTRL_T_COMMAND
     _OLD_FZF_CTRL_T_OPTS=$FZF_CTRL_T_OPTS
@@ -41,7 +54,7 @@ fzf-cd-widget-home() {
 }
 
 fzf-file-widget-open() {
-    BUFFER="open \$(fzf)"
+    BUFFER="$EDITOR \$(fzf)"
     zle accept-line
 }
 
@@ -49,12 +62,6 @@ fzfrbw-widget() {
     $HOME/dotfiles-linux/scripts/fzfrbw
     zle reset-prompt
 }
-
-man-widget() {
-    [[ -z $BUFFER ]] || eval "man $BUFFER"
-    zle reset-prompt
-}
-
 
 fullsync() {
     echo "### Syncing rbw"

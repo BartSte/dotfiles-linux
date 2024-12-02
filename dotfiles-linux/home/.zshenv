@@ -29,11 +29,11 @@ load_fzf() {
         --color=always \
         --line-range :500 {}'
 
-    _FZF_PREVIEW_OPTS_DIR='
+    _FZF_PREVIEW_OPTS_DIR="
         exa \
-        -color=always \
-        -icons \
-        T -L 1 -a {} | head -200'
+        --color=always \
+        --icons \
+        -T -L 1 -a {} | head -200"
 
     export FZF_CTRL_T_OPTS="
         --bind 'ctrl-p:toggle-preview' \
@@ -57,7 +57,7 @@ load_fzf() {
         $FZF_ALT_D_OPTS \
         --bind 'ctrl-p:toggle-preview' \
         --bind 'ctrl-g:reload($FZF_ALT_D_UNRESTRICTED_COMMAND)' \
-        --preview '$_FZF_PREVIEW_OPTS_FILES' \
+        --preview '$_FZF_PREVIEW_OPTS_DIR' \
         --preview-window 'hidden'"
 
     export HELP_MESSAGE_RC="$HOME/dotfiles-linux/zsh/fzfhelprc.zsh"

@@ -1,6 +1,7 @@
 bindkey -v
 
 zle -N fzf-cd-widget
+zle -N fzf-dir-widget
 zle -N fzf-file-widget-home
 zle -N fzf-file-widget-open
 zle -N fzf-help-widget
@@ -17,6 +18,9 @@ bindkey -M viins "\eh" fzf-file-widget-home
 
 bindkey -M vicmd "\eo" fzf-file-widget-open
 bindkey -M viins "\eo" fzf-file-widget-open
+
+bindkey -M vicmd "\ed" fzf-dir-widget
+bindkey -M viins "\ed" fzf-dir-widget
 
 bindkey -M vicmd "^A" fzf-help-widget
 bindkey -M viins "^A" fzf-help-widget
