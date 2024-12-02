@@ -7,15 +7,11 @@ zle -N fzf-file-widget-no-ignore
 zle -N fzf-help-widget
 zle -N fzfrbw-widget
 
-bindkey -M vicmd "\ed" fzf-cd-widget
-bindkey -M viins "\ed" fzf-cd-widget
-bindkey -M vicmd "\eD" fzf-cd-widget-no-ignore
-bindkey -M viins "\eD" fzf-cd-widget-no-ignore
+bindkey -M vicmd "\ec" fzf-cd-widget
+bindkey -M viins "\ec" fzf-cd-widget
 
 bindkey -M vicmd "\ef" fzf-file-widget
 bindkey -M viins "\ef" fzf-file-widget
-bindkey -M vicmd "\eF" fzf-file-widget-no-ignore
-bindkey -M viins "\eF" fzf-file-widget-no-ignore
 
 bindkey -M vicmd "\eh" fzf-file-widget-home
 bindkey -M viins "\eh" fzf-file-widget-home
