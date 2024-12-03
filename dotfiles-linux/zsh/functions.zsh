@@ -54,7 +54,7 @@ fzf-cd-widget-home() {
 }
 
 fzf-file-widget-open() {
-    BUFFER="$EDITOR \$(fzf)"
+    BUFFER="file=\$(fzf) && $EDITOR \$file" || return
     zle accept-line
 }
 
