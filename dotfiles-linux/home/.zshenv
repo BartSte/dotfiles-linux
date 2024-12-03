@@ -35,9 +35,10 @@ load_fzf() {
         --icons \
         -T -L 1 -a {} | head -200"
 
+
     export FZF_CTRL_T_OPTS="
         --bind 'ctrl-p:toggle-preview' \
-        --bind 'ctrl-g:reload($FZF_CTRL_T_UNRESTRICED_COMMAND)' \
+        --bind 'ctrl-g:reload()' \
         --preview '$_FZF_PREVIEW_OPTS_FILES' \
         --preview-window 'hidden'"
 
