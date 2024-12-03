@@ -1,82 +1,9 @@
 #!/usr/bin/env zsh
 
-toggle-unrestricted() {
-    if [ -f /tmp/fzf-unrestricted ]; then
-        rm /tmp/fzf-unrestricted
-        echo $1
-    else
-        touch /tmp/fzf-unrestricted
-        echo $2
-    fi
-}
-
-load_fzf() {
-    _BASE_COMMAND="fd --hidden --no-ignore-vcs --ignore-file $HOME/.ignore"
-    _BASE_UNRESTRICTED_COMMAND="fd --unrestricted" 
-    export FZF_ALT_C_COMMAND="$_BASE_COMMAND --type d"
-    export FZF_ALT_C_UNRESTRICTED_COMMAND="$_BASE_UNRESTRICTED_COMMAND --type d"
-    export FZF_ALT_D_COMMAND="$FZF_ALT_C_COMMAND"
-    export FZF_ALT_D_UNRESTRICTED_COMMAND="$_BASE_UNRESTRICTED_COMMAND . $HOME"
-    export FZF_ALT_H_COMMAND="$FZF_DEFAULT_COMMAND . $HOME"
-    export FZF_ALT_H_UNRESTRICTED_COMMAND="$_BASE_COMMAND . $HOME"
-    export FZF_CTRL_T_COMMAND=$FZF_DEFAULT_COMMAND
-    export FZF_CTRL_T_UNRESTRICED_COMMAND="$_BASE_UNRESTRICTED_COMMAND --type f"
-    export FZF_DEFAULT_COMMAND="$_BASE_COMMAND --type f"
-
-    export FZF_DEFAULT_OPTS="
-        --height 49% \
-        --layout=reverse \
-        --preview-window=right,65%"
-
-    _FZF_PREVIEW_OPTS_FILES='
-        bat --theme=gruvbox-dark \
-        --style=numbers \
-        --color=always \
-        --line-range :500 {}'
-
-    _FZF_PREVIEW_OPTS_DIR="
-        exa \
-        --color=always \
-        --icons \
-        -T -L 1 -a {} | head -200"
-
-    export FZF_CTRL_T_OPTS="
-        --bind 'ctrl-p:toggle-preview' \
-        --bind 'ctrl-g:reload(eval \$(toggle-unrestricted \"$FZF_CTRL_T_COMMAND\" \"$FZF_CTRL_T_UNRESTRICED_COMMAND\"))' \
-        --preview '$_FZF_PREVIEW_OPTS_FILES' \
-        --preview-window 'hidden'"
-
-    export FZF_ALT_H_OPTS="
-        --bind 'ctrl-p:toggle-preview' \
-        --bind 'ctrl-g:reload(eval \$(toggle-unrestricted \"$FZF_ALT_H_COMMAND\" \"$FZF_ALT_H_UNRESTRICTED_COMMAND\"))' \
-        --preview '$_FZF_PREVIEW_OPTS_FILES' \
-        --preview-window 'hidden'"
-
-    export FZF_ALT_C_OPTS="
-        --bind 'ctrl-p:toggle-preview' \
-        --bind 'ctrl-g:reload(eval \$(toggle-unrestricted \"$FZF_ALT_C_COMMAND\" \"$FZF_ALT_C_UNRESTRICTED_COMMAND\"))' \
-        --preview '$_FZF_PREVIEW_OPTS_DIR' \
-        --preview-window 'hidden'"
-
-    export FZF_ALT_D_OPTS="
-        $FZF_ALT_D_OPTS \
-        --bind 'ctrl-p:toggle-preview' \
-        --bind 'ctrl-g:reload(eval \$(toggle-unrestricted \"$FZF_ALT_D_COMMAND\" \"$FZF_ALT_D_UNRESTRICTED_COMMAND\"))' \
-        --preview '$_FZF_PREVIEW_OPTS_DIR' \
-        --preview-window 'hidden'"
-
-    export HELP_MESSAGE_RC="$HOME/dotfiles-linux/zsh/fzfhelprc.zsh"
-    export FZF_HELP_SYNTAX='help'
-    export CLI_OPTIONS_CMD="ag -o --numbers -- \$RE"
-
-    export FZF_OPEN_OPTS="--preview 'bat --theme=gruvbox-dark --color=always --line-range :500 {}' --preview-window 'hidden'"
-
-    export FZF_OPEN_REGEX_EXTRA=$(~/dotfiles-linux/tmux/tmux-fzf-open/regex-extra)
-
-}
 
 zshenv() {
     source "$HOME/dotfiles-linux/zsh/bootstrap.zsh"
+    source "$HOME/dotfiles-linux/zsh/fzf.zsh"
 
     add_to_path "$HOME/dotfiles-linux/bin" "$HOME/.local/bin" "$HOME/.cargo/bin" "$HOME/go/bin" /usr/bin/vendor_perl
 
@@ -100,7 +27,6 @@ zshenv() {
     export SAVEHIST=100000
     export KEYTIMEOUT=1
 
-    load_fzf
-
+    _load_fzf
 }
 zshenv
