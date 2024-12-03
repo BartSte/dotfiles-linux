@@ -1,11 +1,16 @@
 #!/usr/bin/env zsh
 
-load_fzf() {
-    # TODO: I want alt-d to paste the directory in the command line. I want tc 
-    # alt-c to cd into the directory. 
-    # TODO: currently, ctrl-g switches to unrestricted mode. I also want to be 
-    # able to switch to back from unrestricted mode to using the .ignore file.
+toggle-unrestricted() {
+    if [ -f /tmp/fzf-unrestricted ]; then
+        rm /tmp/fzf-unrestricted
+        echo $1
+    else
+        touch /tmp/fzf-unrestricted
+        echo $2
+    fi
+}
 
+load_fzf() {
     _BASE_COMMAND="fd --hidden --no-ignore-vcs --ignore-file $HOME/.ignore"
     _BASE_UNRESTRICTED_COMMAND="fd --unrestricted" 
     export FZF_ALT_C_COMMAND="$_BASE_COMMAND --type d"
@@ -35,29 +40,28 @@ load_fzf() {
         --icons \
         -T -L 1 -a {} | head -200"
 
-
     export FZF_CTRL_T_OPTS="
         --bind 'ctrl-p:toggle-preview' \
-        --bind 'ctrl-g:reload()' \
+        --bind 'ctrl-g:reload(eval \$(toggle-unrestricted \"$FZF_CTRL_T_COMMAND\" \"$FZF_CTRL_T_UNRESTRICED_COMMAND\"))' \
         --preview '$_FZF_PREVIEW_OPTS_FILES' \
         --preview-window 'hidden'"
 
     export FZF_ALT_H_OPTS="
         --bind 'ctrl-p:toggle-preview' \
-        --bind 'ctrl-g:reload($FZF_ALT_H_UNRESTRICTED_COMMAND)' \
+        --bind 'ctrl-g:reload(eval \$(toggle-unrestricted \"$FZF_ALT_H_COMMAND\" \"$FZF_ALT_H_UNRESTRICTED_COMMAND\"))' \
         --preview '$_FZF_PREVIEW_OPTS_FILES' \
         --preview-window 'hidden'"
 
     export FZF_ALT_C_OPTS="
         --bind 'ctrl-p:toggle-preview' \
-        --bind 'ctrl-g:reload($FZF_ALT_C_UNRESTRICTED_COMMAND)' \
+        --bind 'ctrl-g:reload(eval \$(toggle-unrestricted \"$FZF_ALT_C_COMMAND\" \"$FZF_ALT_C_UNRESTRICTED_COMMAND\"))' \
         --preview '$_FZF_PREVIEW_OPTS_DIR' \
         --preview-window 'hidden'"
 
     export FZF_ALT_D_OPTS="
         $FZF_ALT_D_OPTS \
         --bind 'ctrl-p:toggle-preview' \
-        --bind 'ctrl-g:reload($FZF_ALT_D_UNRESTRICTED_COMMAND)' \
+        --bind 'ctrl-g:reload(eval \$(toggle-unrestricted \"$FZF_ALT_D_COMMAND\" \"$FZF_ALT_D_UNRESTRICTED_COMMAND\"))' \
         --preview '$_FZF_PREVIEW_OPTS_DIR' \
         --preview-window 'hidden'"
 
