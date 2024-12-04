@@ -4,6 +4,9 @@
 
 rbw_to_clipboard() {
     id=$(rbw list | fzf)
+    if [[ -z $id ]]; then
+        return 1
+    fi
     rbw_get "$cmd" "$id" | clipboard
 }
 

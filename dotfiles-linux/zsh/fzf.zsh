@@ -90,24 +90,37 @@ _fzf-dir-widget-home() {
     return $ret
 }
 
+# Open file in editor
 _fzf-file-widget-open() {
     _reset_unrestricted
-    LBUFFER="${LBUFFER}$(eval "$FZF_CTRL_T_COMMAND | fzf $FZF_CTRL_T_OPTS")"
+    LBUFFER="$(eval "$FZF_CTRL_T_COMMAND | fzf $FZF_CTRL_T_OPTS")"
     local ret=$?
-    zle reset-prompt
+    if [ $ret -eq 0 ]; then
+        LBUFFER="${EDITOR} ${LBUFFER}"
+        zle accept-line
+    else
+        zle reset-prompt
+    fi
     return $ret
 }
 
 _fzf-file-widget-open-home() {
     _reset_unrestricted
-    LBUFFER="${LBUFFER}$(eval "$FZF_CTRL_T_COMMAND . $HOME | fzf $FZF_CTRL_T_HOME_OPTS")"
+    LBUFFER="$(eval "$FZF_CTRL_T_COMMAND . $HOME | fzf $FZF_CTRL_T_HOME_OPTS")"
     local ret=$?
-    zle reset-prompt
+    if [ $ret -eq 0 ]; then
+        LBUFFER="${EDITOR} ${LBUFFER}"
+        zle accept-line
+    else
+        zle reset-prompt
+    fi
     return $ret
 }
 
 _fzf-rbw-widget() {
     _reset_unrestricted
     $HOME/dotfiles-linux/scripts/fzfrbw
+    local ret=$?
     zle reset-prompt
+    return $ret
 }
