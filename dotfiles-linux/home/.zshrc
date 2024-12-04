@@ -11,6 +11,7 @@ _zshrc_config() {
         "p10k_init.zsh" # must be first
         "git.zsh"
         "wsl.zsh"
+        "fzf.zsh"
         "settings.zsh"
         "aliases.zsh"
         "functions.zsh"
