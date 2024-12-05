@@ -90,13 +90,12 @@ _fzf-dir-widget-home() {
     return $ret
 }
 
-# Open file in editor
 _fzf-file-widget-open() {
     _reset_unrestricted
     LBUFFER="$(eval "$FZF_CTRL_T_COMMAND | fzf $FZF_CTRL_T_OPTS")"
     local ret=$?
     if [ $ret -eq 0 ]; then
-        LBUFFER="${EDITOR} ${LBUFFER}"
+        LBUFFER="open ${LBUFFER}"
         zle accept-line
     else
         zle reset-prompt
@@ -109,7 +108,7 @@ _fzf-file-widget-open-home() {
     LBUFFER="$(eval "$FZF_CTRL_T_COMMAND . $HOME | fzf $FZF_CTRL_T_HOME_OPTS")"
     local ret=$?
     if [ $ret -eq 0 ]; then
-        LBUFFER="${EDITOR} ${LBUFFER}"
+        LBUFFER="open ${LBUFFER}"
         zle accept-line
     else
         zle reset-prompt
