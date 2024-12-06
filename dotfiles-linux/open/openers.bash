@@ -34,7 +34,7 @@ open_text() {
     local line=$2
     log "Opening text file: $file at line $line" -v
     if running tmux; then
-        key2pane --loglevel INFO "$file" "$line" 2>&1 | log -v
+        key2pane --loglevel INFO "$file" "$line" 2>&1 | log
     else
         nvim -c ":e $file | $line"
     fi
