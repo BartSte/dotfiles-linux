@@ -107,30 +107,9 @@ function zle-line-finish() {
 zle -N zle-line-finish
 
 
-bindkey -v
-
 # allow vv to edit the command line (standard behaviour)
 autoload -Uz edit-command-line
 zle -N edit-command-line
-bindkey -M vicmd '^F' edit-command-line
-bindkey -M viins '^F' edit-command-line
-
-# allow ctrl-p, ctrl-n for navigate history (standard behaviour)
-bindkey '^P' up-history
-bindkey '^N' down-history
-
-# allow ctrl-h, ctrl-w, ctrl-? for char and word deletion (standard behaviour)
-bindkey '^?' backward-delete-char
-bindkey '^h' backward-delete-char
-bindkey '^w' backward-kill-word
-
-# allow ctrl-r and ctrl-s to search the history
-bindkey '^r' history-incremental-search-backward
-bindkey '^s' history-incremental-search-forward
-
-# allow ctrl-a and ctrl-e to move to beginning/end of line
-bindkey '^a' beginning-of-line
-bindkey '^e' end-of-line
 
 function wrap_clipboard_widgets() {
   # NB: Assume we are the first wrapper and that we only wrap native widgets

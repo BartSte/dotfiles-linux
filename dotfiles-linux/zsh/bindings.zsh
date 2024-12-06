@@ -28,10 +28,18 @@ bindkey -M viins "\eo" _fzf-file-widget-open
 bindkey -M vicmd "\eO" _fzf-file-widget-open-home
 bindkey -M viins "\eO" _fzf-file-widget-open-home
 
+bindkey "^H" backward-kill-word
+bindkey '^?' backward-delete-char
+bindkey '^A' beginning-of-line
+bindkey '^E' end-of-line
+bindkey '^W' backward-kill-word
 bindkey -M vicmd "^A" _fzf-help-widget
 bindkey -M vicmd "^B" _fzf-rbw-widget
 bindkey -M vicmd "^R" fzf-history-widget
+bindkey -M vicmd '^F' edit-command-line
 bindkey -M viins "^A" _fzf-help-widget
 bindkey -M viins "^B" _fzf-rbw-widget
 bindkey -M viins "^R" fzf-history-widget
 bindkey -M viins "^[[1;5C" forward-word
+bindkey -M viins '^F' edit-command-line
+
