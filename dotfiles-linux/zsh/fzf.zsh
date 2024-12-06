@@ -9,7 +9,6 @@ _fzfenv() {
     _FZF_BASE_OPTS="\
         --header '<ctrl-p> toggle preview | <ctrl-g> toggle (un)restricted' \
         --height 49% \
-        --layout=reverse \
         --preview-window=right,65% \
         --preview-window 'hidden'"
 
@@ -23,7 +22,7 @@ _fzfenv() {
     _FZF_PREVIEW_OPTS_DIR="\
         exa --color=always --icons -T -L 1 -a {} | head -200"
 
-    export FZF_DEFAULT_OPTS="--bind 'ctrl-p:toggle-preview'"
+    export FZF_DEFAULT_OPTS="--bind 'ctrl-p:toggle-preview' --layout=reverse"
 
     export FZF_CTRL_T_COMMAND="$_BASE_COMMAND --type f"
     export FZF_CTRL_T_U_COMMAND="$_BASE_U_COMMAND --type f"

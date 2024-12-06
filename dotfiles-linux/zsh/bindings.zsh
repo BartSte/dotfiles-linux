@@ -32,6 +32,6 @@ bindkey -M vicmd "^A" _fzf-help-widget
 bindkey -M viins "^A" _fzf-help-widget
 bindkey -M vicmd "^B" _fzf-rbw-widget
 bindkey -M viins "^B" _fzf-rbw-widget
-bindkey -M vicmd "^R" _fzf-history-widget
-bindkey -M viins "^R" _fzf-history-widget
+bindkey -M vicmd "^R" fzf-history-widget
+bindkey -M viins "^R" fzf-history-widget
 bindkey -M viins "^[[1;5C" forward-word
