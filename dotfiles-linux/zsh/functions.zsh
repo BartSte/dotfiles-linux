@@ -1,14 +1,10 @@
+################################################################################
+# Use fzf to select multiple processes to kill
+################################################################################
 fkill() {
     local pid
-
-    pid="$(
-        ps -ef |
-            sed 1d |
-            fzf -m |
-            awk '{print $2}'
-    )" || return
-
-    kill -"${1:-9}" "$pid"
+    pid=$(ps -ef | sed 1d | fzf -m | awk '{print $2}') || return
+    xargs kill -"${1:-9}" <<<"$pid"
 }
 
 fullsync() {
