@@ -5,7 +5,7 @@ zle -N _fzf-dir-widget-home
 zle -N _fzf-file-widget-home
 zle -N _fzf-file-widget-open
 zle -N _fzf-file-widget-open-home
-zle -N _fzf-help-widget
+zle -N fzf-help-widget
 zle -N _fzf-rbw-widget
 
 bindkey -M vicmd "\ef" fzf-file-widget
@@ -33,11 +33,11 @@ bindkey '^?' backward-delete-char
 bindkey '^A' beginning-of-line
 bindkey '^E' end-of-line
 bindkey '^W' backward-kill-word
-bindkey -M vicmd "^A" _fzf-help-widget
+bindkey -M vicmd "^A" fzf-help-widget
 bindkey -M vicmd "^B" _fzf-rbw-widget
 bindkey -M vicmd "^R" fzf-history-widget
 bindkey -M vicmd '^F' edit-command-line
-bindkey -M viins "^A" _fzf-help-widget
+bindkey -M viins "^A" fzf-help-widget
 bindkey -M viins "^B" _fzf-rbw-widget
 bindkey -M viins "^R" fzf-history-widget
 bindkey -M viins "^[[1;5C" forward-word
