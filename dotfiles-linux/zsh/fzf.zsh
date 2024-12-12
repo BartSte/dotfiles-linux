@@ -73,6 +73,18 @@ _fzf-file-widget-home() {
     return $ret
 }
 
+_fzf-cd-widget-home() {
+    _reset_unrestricted
+    LBUFFER="${LBUFFER}$(eval "$FZF_ALT_C_COMMAND . $HOME | fzf $FZF_ALT_C_HOME_OPTS")"
+    local ret=$?
+    if [ $ret -eq 0 ]; then
+        LBUFFER="builtin cd -- ${LBUFFER}"
+        zle accept-line
+    else
+        zle reset-prompt
+    fi
+}
+
 _fzf-dir-widget() {
     _reset_unrestricted
     LBUFFER="${LBUFFER}$(eval "$FZF_ALT_D_COMMAND | fzf $FZF_ALT_D_OPTS")"

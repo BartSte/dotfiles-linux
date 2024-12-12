@@ -1,12 +1,13 @@
 bindkey -v
 
+zle -N _fzf-cd-widget-home
 zle -N _fzf-dir-widget
 zle -N _fzf-dir-widget-home
 zle -N _fzf-file-widget-home
 zle -N _fzf-file-widget-open
 zle -N _fzf-file-widget-open-home
-zle -N fzf-help-widget
 zle -N _fzf-rbw-widget
+zle -N fzf-help-widget
 
 bindkey -M vicmd "\ef" fzf-file-widget
 bindkey -M viins "\ef" fzf-file-widget
