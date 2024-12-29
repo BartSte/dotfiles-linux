@@ -1,0 +1,37 @@
+#!/bin/bash
+
+################################################################################
+# Reset DNS settings of systemd-resolved and NetworkManager to their defaults.
+################################################################################
+reset_dns() {
+    _reset_systemd_resolved
+    _reset_network_manager
+}
+
+_reset_systemd_resolved() {
+    lg "Resetting systemd-resolved"
+    sudo rm -f /etc/systemd/resolved.conf
+    sudo touch /etc/systemd/resolved.conf
+    sudo ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+    sudo systemctl restart systemd-resolved
+    lg "systemd-resolved reset completed."
+}
+
+_reset_network_manager() {
+    lg "Resetting NetworkManager"
+    sudo rm -f /etc/NetworkManager/NetworkManager.conf
+    sudo touch /etc/NetworkManager/NetworkManager.conf
+    echo -e "[main]\nplugins=keyfile" | sudo tee /etc/NetworkManager/NetworkManager.conf >/dev/null
+
+    lg "Clearing per-connection DNS settings"
+    nmcli -t -f NAME connection show | while IFS= read -r conn; do
+        nmcli connection modify "$conn" ipv4.dns ""
+        nmcli connection modify "$conn" ipv4.ignore-auto-dns no
+    done
+
+    sudo systemctl restart NetworkManager
+    sudo systemd-resolve --flush-caches
+    lg "NetworkManager reset completed."
+
+    sudo systemctl disable --now systemd-resolved
+}

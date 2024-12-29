@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+this_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+lg "Setting up DNS using NetworkManager"
+sudo cp -f "$this_dir/NetworkManager.conf" /etc/NetworkManager/NetworkManager.conf
+sudo cp -f "$this_dir/resolv.conf" /etc/resolv.conf
+sudo ln -sf /etc/resolv.conf /run/NetworkManager/resolv.conf
+
+lg "Restarting NetworkManager"
+sudo systemctl restart NetworkManager
