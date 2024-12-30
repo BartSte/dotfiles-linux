@@ -7,3 +7,7 @@ this_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 reset_dns
 lg "Configuring DNS using NetworkManager to block adult content"
 "$this_dir/using_nm/main"
+
+# TODO: not working yet
+# protect_dns_settings
+# lg "The DNS settings are made immutable. To make them mutable again, the root password is required."
