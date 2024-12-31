@@ -1,11 +1,37 @@
 #!/bin/bash
 
 ################################################################################
-# Reset DNS settings of systemd-resolved and NetworkManager to their defaults.
+# Same as reset_dns, but without the chattr_decorator
 ################################################################################
 reset_dns() {
-    _reset_systemd_resolved
     _reset_network_manager
+    _reset_systemd_resolved
+}
+
+_reset_network_manager() {
+    if [ "$(systemctl is-enabled NetworkManager)" != "enabled" ]; then
+        lg "NetworkManager is not enabled. Exiting."
+        exit 1
+    fi
+
+    lg "Resetting NetworkManager"
+    sudo rm -f /etc/NetworkManager/NetworkManager.conf
+    sudo touch /etc/NetworkManager/NetworkManager.conf
+    echo -e "[main]\nplugins=keyfile" | sudo tee /etc/NetworkManager/NetworkManager.conf >/dev/null
+
+    sudo systemctl start NetworkManager
+    while [ "$(systemctl is-active NetworkManager)" != "active" ]; do
+        lg "Waiting for NetworkManager to start"
+        sleep 1
+    done
+
+    lg "Clearing per-connection DNS settings"
+    nmcli -t -f NAME connection show | while IFS= read -r conn; do
+        nmcli connection modify "$conn" ipv4.dns ""
+        nmcli connection modify "$conn" ipv4.ignore-auto-dns no
+    done
+
+    lg "NetworkManager reset completed."
 }
 
 _reset_systemd_resolved() {
@@ -14,49 +40,9 @@ _reset_systemd_resolved() {
     sudo touch /etc/systemd/resolved.conf
     sudo ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
     sudo systemctl restart systemd-resolved
-    lg "systemd-resolved reset completed."
-}
-
-_reset_network_manager() {
-    lg "Resetting NetworkManager"
-    sudo rm -f /etc/NetworkManager/NetworkManager.conf
-    sudo touch /etc/NetworkManager/NetworkManager.conf
-    echo -e "[main]\nplugins=keyfile" | sudo tee /etc/NetworkManager/NetworkManager.conf >/dev/null
-
-    lg "Clearing per-connection DNS settings"
-    nmcli -t -f NAME connection show | while IFS= read -r conn; do
-        nmcli connection modify "$conn" ipv4.dns ""
-        nmcli connection modify "$conn" ipv4.ignore-auto-dns no
-    done
-
-    sudo systemctl restart NetworkManager
     sudo systemd-resolve --flush-caches
-    lg "NetworkManager reset completed."
-
     sudo systemctl disable --now systemd-resolved
-}
-
-################################################################################
-# Protect the DNS settings by making the configuration files, and the sudoers
-# file immutable. To make them mutable again, the root password is required,
-# which can be set to a long and complex password.
-################################################################################
-protect_dns_settings() {
-    sudo systemctl stop NetworkManager
-    _protect_files
-    _update_sudoers
-    sudo systemctl start NetworkManager
-}
-
-################################################################################
-# Protect the DNS configuration files by making them immutable.
-################################################################################
-_protect_files() {
-    lg "Protecting DNS configuration files"
-    sudo chattr +i /etc/resolv.conf
-    sudo chattr +i /etc/NetworkManager/NetworkManager.conf
-    sudo chattr +i /etc/sudoers
-    lg "DNS configuration files protected."
+    lg "systemd-resolved reset completed."
 }
 
 ################################################################################
@@ -65,7 +51,7 @@ _protect_files() {
 # way, the DNS settings are immutable unless the user has the root password,
 # which can be set to a long and complex password.
 ################################################################################
-_update_sudoers() {
+update_sudoers() {
     # Define the lines to append
     lines="
 # Protect DNS settings by requiring the root password
@@ -91,4 +77,29 @@ Defaults!DNS_PROTECTED rootpw"
     else
         lg "Error in the sudoers file. Please check it."
     fi
+}
+
+################################################################################
+# Make a list of files mutable, runs a command, and makes them immutable again.
+################################################################################
+chattr_decorator() {
+    local cmd
+    cmd=$1
+    shift
+    _chattr_multiple -i "$@"
+    eval "$cmd"
+    _chattr_multiple +i "$@"
+}
+
+################################################################################
+# Run the chattr command on multiple files.
+################################################################################
+_chattr_multiple() {
+    local operation=$1
+    shift
+    for file in "$@"; do
+        file=$(readlink -f "$file")
+        lg "Running chattr $operation on $file"
+        sudo chattr "$operation" "$file"
+    done
 }

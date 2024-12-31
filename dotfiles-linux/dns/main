@@ -4,10 +4,25 @@ set -euo pipefail
 this_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$this_dir/helpers"
 
-reset_dns
-lg "Configuring DNS using NetworkManager to block adult content"
-"$this_dir/using_nm/main"
+main() {
+    sudo systemctl enable NetworkManager
+    lg "Configuring DNS using NetworkManager to block adult content"
+    reset_dns
 
-# TODO: not working yet
-# protect_dns_settings
-# lg "The DNS settings are made immutable. To make them mutable again, the root password is required."
+    lg "Setting up DNS using NetworkManager"
+    sudo cp -f "$this_dir/NetworkManager.conf" /etc/NetworkManager/NetworkManager.conf
+    sudo cp -f "$this_dir/resolv.conf" /etc/resolv.conf
+
+    lg "The DNS settings are made immutable. To make them mutable again, the root password is required."
+    update_sudoers
+
+    lg "Restarting NetworkManager"
+    sudo systemctl restart NetworkManager
+}
+
+# TODO: make sure the files are made immutable 
+chattr_decorator \
+    "main" \
+    "/etc/resolv.conf" \
+    "/etc/NetworkManager/NetworkManager.conf" \
+    "/etc/sudoers"
