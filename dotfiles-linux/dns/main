@@ -26,3 +26,7 @@ chattr_decorator \
     "/etc/resolv.conf" \
     "/etc/NetworkManager/NetworkManager.conf" \
     "/etc/sudoers"
+
+sudo chattr +i "$(readlink -f /etc/resolv.conf)"
+sudo chattr +i /etc/NetworkManager/NetworkManager.conf
+sudo chattr +i /etc/sudoers
