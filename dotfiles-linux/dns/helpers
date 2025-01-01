@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ################################################################################
-# Same as reset_dns, but without the chattr_decorator
+# Reset NetworkManager and
 ################################################################################
 reset_dns() {
     _reset_network_manager
@@ -55,7 +55,7 @@ update_sudoers() {
     # Define the lines to append
     lines="
 # Protect DNS settings by requiring the root password
-Cmnd_Alias DNS_PROTECTED = /bin/chattr -i /etc/resolv.conf, /bin/chattr -i /etc/NetworkManager/NetworkManager.conf
+Cmnd_Alias DNS_PROTECTED = /usr/bin/chattr -i /etc/resolv.conf, /usr/bin/chattr -i /etc/NetworkManager/NetworkManager.conf, /usr/bin/chattr -i /etc/sudoers
 Defaults!DNS_PROTECTED rootpw"
 
     # File to modify
