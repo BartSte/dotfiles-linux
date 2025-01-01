@@ -20,6 +20,7 @@ main() {
     sudo systemctl restart NetworkManager
 }
 
+# TODO: rootpw is not asked when running chattr -i
 chattr_decorator \
     "main" \
     "/etc/resolv.conf" \
