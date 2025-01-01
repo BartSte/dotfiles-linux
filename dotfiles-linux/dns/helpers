@@ -1,5 +1,7 @@
 #!/bin/bash
 
+this_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 ################################################################################
 # Reset NetworkManager and
 ################################################################################
@@ -46,60 +48,28 @@ _reset_systemd_resolved() {
 }
 
 ################################################################################
-# A Cmnd_Alias is defined that requires the root password to execute the chattr
-# command on /etc/resolv.conf and /etc/NetworkManager/NetworkManager.conf. This
-# way, the DNS settings are immutable unless the user has the root password,
-# which can be set to a long and complex password.
+# Replace the /etc/sudoers file with the one at $this_dir/sudoers
 ################################################################################
 update_sudoers() {
-    # Define the lines to append
-    lines="
-# Protect DNS settings by requiring the root password
-Cmnd_Alias DNS_PROTECTED = /usr/bin/chattr -i /etc/resolv.conf, /usr/bin/chattr -i /etc/NetworkManager/NetworkManager.conf, /usr/bin/chattr -i /etc/sudoers
-Defaults!DNS_PROTECTED rootpw"
+    local target backup source
+    target="/etc/sudoers"
+    backup="/etc/sudoers.bak"
+    source="$this_dir/sudoers"
 
-    # File to modify
-    sudoers_file="/etc/sudoers"
-
-    # Check if the lines already exist
-    if ! sudo grep -q "Cmnd_Alias DNS_PROTECTED" "$sudoers_file"; then
-        # Append the lines if not found
-        echo "$lines" | sudo tee -a "$sudoers_file" >/dev/null
-        lg "Lines successfully added to sudoers file."
-    else
-        lg "Lines already exist in the sudoers file. No changes made."
+    if [ ! -f "$source" ]; then
+        lg "The sudoers file $source does not exist. Exiting."
+        exit 1
     fi
 
-    # Validate the sudoers file
-    sudo visudo -c
-    if [ $? -eq 0 ]; then
-        lg "Sudoers file validated successfully."
-    else
-        lg "Error in the sudoers file. Please check it."
+    lg "Updating sudoers"
+    sudo cp -f "$target" "$backup"
+    sudo cp -f "$source" "$target"
+    sudo chown root:root "$target"
+    sudo chmod 440 "$target"
+
+    if ! sudo visudo -c; then
+        lg "The sudoers file is not valid. Restoring the backup."
+        sudo cp -f "$backup" "$target"
+        exit 1
     fi
-}
-
-################################################################################
-# Make a list of files mutable, runs a command, and makes them immutable again.
-################################################################################
-chattr_decorator() {
-    local cmd
-    cmd=$1
-    shift
-    _chattr_multiple -i "$@"
-    eval "$cmd"
-    _chattr_multiple +i "$@"
-}
-
-################################################################################
-# Run the chattr command on multiple files.
-################################################################################
-_chattr_multiple() {
-    local operation=$1
-    shift
-    for file in "$@"; do
-        file=$(readlink -f "$file")
-        lg "Running chattr $operation on $file"
-        sudo chattr "$operation" "$file"
-    done
 }

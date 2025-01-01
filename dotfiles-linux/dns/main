@@ -4,25 +4,13 @@ set -euo pipefail
 this_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$this_dir/helpers"
 
-main() {
-    sudo systemctl enable NetworkManager
-    lg "Configuring DNS using NetworkManager to block adult content"
-    reset_dns
+sudo systemctl enable NetworkManager
+lg "Configuring DNS using NetworkManager to block adult content"
+reset_dns
 
-    lg "Setting up DNS using NetworkManager"
-    sudo cp -f "$this_dir/NetworkManager.conf" /etc/NetworkManager/NetworkManager.conf
-    sudo cp -f "$this_dir/resolv.conf" /etc/resolv.conf
+lg "Setting up DNS using NetworkManager"
+sudo cp -f "$this_dir/NetworkManager.conf" /etc/NetworkManager/NetworkManager.conf
+sudo cp -f "$this_dir/resolv.conf" /etc/resolv.conf
 
-    lg "The DNS settings are made immutable. To make them mutable again, the root password is required."
-    update_sudoers
-
-    lg "Restarting NetworkManager"
-    sudo systemctl restart NetworkManager
-}
-
-# TODO: rootpw is not asked when running chattr -i
-chattr_decorator \
-    "main" \
-    "/etc/resolv.conf" \
-    "/etc/NetworkManager/NetworkManager.conf" \
-    "/etc/sudoers"
+lg "Restarting NetworkManager"
+sudo systemctl restart NetworkManager
