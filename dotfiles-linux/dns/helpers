@@ -1,11 +1,39 @@
 #!/bin/bash
 
+this_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 ################################################################################
-# Reset DNS settings of systemd-resolved and NetworkManager to their defaults.
+# Reset NetworkManager and
 ################################################################################
 reset_dns() {
-    _reset_systemd_resolved
     _reset_network_manager
+    _reset_systemd_resolved
+}
+
+_reset_network_manager() {
+    if [ "$(systemctl is-enabled NetworkManager)" != "enabled" ]; then
+        lg "NetworkManager is not enabled. Exiting."
+        exit 1
+    fi
+
+    lg "Resetting NetworkManager"
+    sudo rm -f /etc/NetworkManager/NetworkManager.conf
+    sudo touch /etc/NetworkManager/NetworkManager.conf
+    echo -e "[main]\nplugins=keyfile" | sudo tee /etc/NetworkManager/NetworkManager.conf >/dev/null
+
+    sudo systemctl start NetworkManager
+    while [ "$(systemctl is-active NetworkManager)" != "active" ]; do
+        lg "Waiting for NetworkManager to start"
+        sleep 1
+    done
+
+    lg "Clearing per-connection DNS settings"
+    nmcli -t -f NAME connection show | while IFS= read -r conn; do
+        nmcli connection modify "$conn" ipv4.dns ""
+        nmcli connection modify "$conn" ipv4.ignore-auto-dns no
+    done
+
+    lg "NetworkManager reset completed."
 }
 
 _reset_systemd_resolved() {
@@ -14,24 +42,57 @@ _reset_systemd_resolved() {
     sudo touch /etc/systemd/resolved.conf
     sudo ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
     sudo systemctl restart systemd-resolved
+    sudo systemd-resolve --flush-caches
+    sudo systemctl disable --now systemd-resolved
     lg "systemd-resolved reset completed."
 }
 
-_reset_network_manager() {
-    lg "Resetting NetworkManager"
-    sudo rm -f /etc/NetworkManager/NetworkManager.conf
-    sudo touch /etc/NetworkManager/NetworkManager.conf
-    echo -e "[main]\nplugins=keyfile" | sudo tee /etc/NetworkManager/NetworkManager.conf >/dev/null
+################################################################################
+# Replace the /etc/sudoers file with the one at $this_dir/sudoers
+################################################################################
+update_sudoers() {
+    local target backup source
+    target="/etc/sudoers"
+    backup="/etc/sudoers.bak"
+    source="$this_dir/sudoers"
 
-    lg "Clearing per-connection DNS settings"
-    nmcli -t -f NAME connection show | while IFS= read -r conn; do
-        nmcli connection modify "$conn" ipv4.dns ""
-        nmcli connection modify "$conn" ipv4.ignore-auto-dns no
+    if [ ! -f "$source" ]; then
+        lg "The sudoers file $source does not exist. Exiting."
+        exit 1
+    elif ! is_muttable "$target"; then
+        lg "The sudoers file is not mutable. Exiting."
+        exit 1
+    fi
+
+    lg "Updating sudoers"
+    cp -f "$target" "$backup"
+    cp -f "$source" "$target"
+    chown root:root "$target"
+    chmod 440 "$target"
+
+    if ! visudo -c; then
+        lg "The sudoers file is not valid. Restoring the backup."
+        cp -f "$backup" "$target"
+        exit 1
+    fi
+}
+
+################################################################################
+# Return true if `files` passed as arguments are mutable. False otherwise. If 1
+# file is not mutable, the function returns false. If all files are mutable, the
+# function returns true.
+################################################################################
+is_mutable() {
+    local file
+    for file in "$@"; do
+        if [ ! -f "$file" ]; then
+            lg "The file $file does not exist. Exiting."
+            exit 1
+        elif [ "$(stat -c %A "$file")" != "-rw-r--r--" ]; then
+            lg "The file $file is not mutable"
+            return 1
+        fi
     done
 
-    sudo systemctl restart NetworkManager
-    sudo systemd-resolve --flush-caches
-    lg "NetworkManager reset completed."
-
-    sudo systemctl disable --now systemd-resolved
+    return 0
 }
