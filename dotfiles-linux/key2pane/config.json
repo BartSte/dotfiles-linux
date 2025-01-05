@@ -19,13 +19,6 @@
                 ":e {0} | {1}",
                 "Enter"
             ]
-        },
-        {
-            "regex": "python[0-9]*",
-            "keys": [
-                "print('{0}')",
-                "Enter"
-            ]
         }
     ]
 }
