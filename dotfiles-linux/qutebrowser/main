@@ -5,3 +5,4 @@
 lg "Qutebrowser: link config files"
 link_config
 link_bookmarks
+link_userscripts

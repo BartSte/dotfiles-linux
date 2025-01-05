@@ -35,3 +35,20 @@ link_bookmarks() {
     ln -sf "$target_urls" "$link_urls"
     ln -sf "$target_quickmarks" "$link_quickmarks"
 }
+
+link_userscripts() {
+    source_dir="$HOME/dropbox/Config/tampermonkey"
+    destination_dir="$HOME/.config/qutebrowser/greasemonkey"
+
+    echo "Ensure $destination_dir exists"
+    mkdir -p "$(dirname $destination_dir)"
+
+    echo "Link all files from $source_dir to $destination_dir"
+    files=$(find $source_dir -maxdepth 1 -type f -exec basename {} \;)
+    for file in $files; do
+        source="$source_dir/$file"
+        destination="$destination_dir/$file"
+        lg "Link $source to $destination"
+        ln -sf "$source" "$destination"
+    done
+}
