@@ -26,16 +26,21 @@ open_img() {
 # Opens <path> in vim at line number that may be appended to the path using a :
 # separator. For example: /path/to/file:10
 #
+# The window 0 and pane 0 are used to open the file in tmux. If tmux is running
+# and we are opening the file in another pane, the key2pane command is used.
+#
 # If the -w or --win option is used, the path is converted to a wsl path if wsl
 # is running.
 ################################################################################
 open_text() {
-    local file=$1
-    local line=$2
+    local file line
+    file=$1
+    line=$2
     log "Opening text file: $file at line $line" -v
-    if running tmux; then
+
+    if running tmux && [[ $(tmux display-message -p '#I:#P') != "0:0" ]]; then
         log "Opening text file via key2pane" -v
-        key2pane --loglevel INFO "$file" "$line"
+        key2pane --loglevel INFO -w 0 -i 0 "$file" "$line"
     else
         log "Opening text file in nvim" -v
         nvim -c ":e $file | $line"
