@@ -11,6 +11,7 @@ alias blueoff='bluetoothctl power off'
 alias blueon='bluetoothctl power on; bluetoothctl discoverable on; bluetoothctl pairable on;'
 alias dact='deactivate'
 alias dropsync='rclone bisync dropbox: ~/dropbox --remove-empty-dirs -v'
+alias dropresync='dropsync --resync --interactive'
 alias dsize='du -h -d1' # use the du command for further inspection
 alias earbuds='bluetoothctl connect $EARBUDS'
 alias fps="ps aux | fzf"
