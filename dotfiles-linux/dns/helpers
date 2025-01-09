@@ -59,9 +59,6 @@ update_sudoers() {
     if [ ! -f "$source" ]; then
         lg "The sudoers file $source does not exist. Exiting."
         exit 1
-    elif ! is_muttable "$target"; then
-        lg "The sudoers file is not mutable. Exiting."
-        exit 1
     fi
 
     lg "Updating sudoers"
@@ -75,24 +72,4 @@ update_sudoers() {
         cp -f "$backup" "$target"
         exit 1
     fi
-}
-
-################################################################################
-# Return true if `files` passed as arguments are mutable. False otherwise. If 1
-# file is not mutable, the function returns false. If all files are mutable, the
-# function returns true.
-################################################################################
-is_mutable() {
-    local file
-    for file in "$@"; do
-        if [ ! -f "$file" ]; then
-            lg "The file $file does not exist. Exiting."
-            exit 1
-        elif [ "$(stat -c %A "$file")" != "-rw-r--r--" ]; then
-            lg "The file $file is not mutable"
-            return 1
-        fi
-    done
-
-    return 0
 }
