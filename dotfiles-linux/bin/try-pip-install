@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+usage="Usage: try-pip-install [options] -- [<package> ...]
+
+Run pip install for the given packages. If installation fails, do not exit with
+an error code. Instead, continue with the next package.
+
+All option except -h or --help are passed to the pip install command.
+
+Options:
+    -h, --help      Show this message and exit.
+    Rest is is passed to pip install."""
+
+if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    echo "$usage"
+    exit 0
+fi
+
+# Collect all arguments before the -- as "options"
+options=()
+while [[ "$1" != "--" ]]; do
+    options+=("$1")
+    shift
+done
+
+# If no -- is given, show error
+if [[ "$1" != "--" ]]; then
+    echo "Error: -- is missing."
+    exit 1
+else
+    shift
+fi
+
+# Collect all arguments after the -- as "packages"
+while [[ "$1" ]]; do
+    packages+=("$1")
+    shift
+done
+
+for package in "${packages[@]}"; do
+    echo "Installing $package"
+    pip install "${options[@]}" "$package"
+    if [[ $? -ne 0 ]]; then
+        echo "Failed to install $package."
+    fi
+done
