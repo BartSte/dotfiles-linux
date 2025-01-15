@@ -10,7 +10,7 @@ reset_dns
 
 lg "Setting up DNS using NetworkManager"
 sudo cp -f "$this_dir/NetworkManager.conf" /etc/NetworkManager/NetworkManager.conf
-sudo ln -sf "$this_dir/resolv.conf" /run/systemd/resolve/stub-resolv.conf
+sudo cp -f "$this_dir/resolv.conf" /run/systemd/resolve/stub-resolv.conf
 sudo cp -f "$this_dir/hosts" /etc/hosts
 
 lg "Restarting NetworkManager"
