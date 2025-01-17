@@ -41,6 +41,8 @@ reload-session() {
         navigation310
         fc-pipelines
         software-engineering-general
+        orders-operations-reports-database
+        fr_camera_module
     )
     [[ " ${winpyprojects[@]} " =~ " $PROJECTRC " ]] && PROJECTRC="winpyproject"
 
