@@ -5,12 +5,7 @@ this_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ################################################################################
 # Reset NetworkManager and
 ################################################################################
-reset_dns() {
-    _reset_network_manager
-    _reset_systemd_resolved
-}
-
-_reset_network_manager() {
+reset_network_manager() {
     if [ "$(systemctl is-enabled NetworkManager)" != "enabled" ]; then
         lg "NetworkManager is not enabled. Exiting."
         exit 1
@@ -34,17 +29,6 @@ _reset_network_manager() {
     done
 
     lg "NetworkManager reset completed."
-}
-
-_reset_systemd_resolved() {
-    lg "Resetting systemd-resolved"
-    sudo rm -f /etc/systemd/resolved.conf
-    sudo touch /etc/systemd/resolved.conf
-    sudo ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
-    sudo systemctl restart systemd-resolved
-    sudo systemd-resolve --flush-caches
-    sudo systemctl disable --now systemd-resolved
-    lg "systemd-resolved reset completed."
 }
 
 ################################################################################

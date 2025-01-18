@@ -4,13 +4,14 @@ set -euo pipefail
 this_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$this_dir/helpers"
 
-sudo systemctl enable NetworkManager
 lg "Configuring DNS using NetworkManager to block adult content"
-reset_dns
+lg "Enabling NetworkManager and systemd-resolved"
+sudo systemctl enable NetworkManager
+reset_network_manager
 
 lg "Setting up DNS using NetworkManager"
 sudo cp -f "$this_dir/NetworkManager.conf" /etc/NetworkManager/NetworkManager.conf
-sudo cp -f "$this_dir/resolv.conf" /run/systemd/resolve/stub-resolv.conf
+sudo cp -f "$this_dir/resolv.conf" /etc/resolv.conf
 sudo cp -f "$this_dir/hosts" /etc/hosts
 
 lg "Restarting NetworkManager"
