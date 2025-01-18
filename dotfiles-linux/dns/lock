@@ -14,5 +14,5 @@ update_sudoers
 
 echo "Locking DNS settings"
 chattr +i /etc/NetworkManager/NetworkManager.conf
-chattr +i "$(readlink -f /etc/resolv.conf)"
+chattr +i /etc/resolv.conf
 chattr +i /etc/sudoers

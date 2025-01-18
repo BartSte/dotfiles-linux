@@ -5,13 +5,19 @@ this_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$this_dir/helpers"
 
 lg "Configuring DNS using NetworkManager to block adult content"
-lg "Enabling NetworkManager and systemd-resolved"
+
+lg "Disabling systemd-resolved. Only NetworkManager will be used to manage DNS."
+sudo systemctl disable systemd-resolved
+sudo systemctl stop systemd-resolved --now
+
+lg "Enabling NetworkManager"
 sudo systemctl enable NetworkManager
 reset_network_manager
 
 lg "Setting up DNS using NetworkManager"
+rm -f /etc/resolv.conf || true
+sudo cp "$this_dir/resolv.conf" /etc/resolv.conf
 sudo cp -f "$this_dir/NetworkManager.conf" /etc/NetworkManager/NetworkManager.conf
-sudo cp -f "$this_dir/resolv.conf" /etc/resolv.conf
 sudo cp -f "$this_dir/hosts" /etc/hosts
 
 lg "Restarting NetworkManager"
