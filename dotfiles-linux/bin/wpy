@@ -84,7 +84,7 @@ elif [[ -n $WINPY ]]; then
     exe=$WINPY
 fi
 
-if ! running wsl; then
+if ! is_running wsl; then
     echo "Not running WSL" >$debug
     exit 0
 fi

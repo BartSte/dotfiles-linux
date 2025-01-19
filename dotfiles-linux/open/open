@@ -99,7 +99,7 @@ try_file() {
     line=${line:-1}
     column=${column:-1}
 
-    if running wsl; then
+    if is_running wsl; then
         log "Trying to open file $path" -v
         if $convert2linuxpath; then
             path=$(echo -E "$path" | sed 's/\\/\//g; s/\/\{2,\}/\//g')
@@ -140,7 +140,7 @@ try_file() {
 ################################################################################
 abort() {
     log "$1"
-    if running tmux; then
+    if is_running tmux; then
         tmux display-message -d 2000 "$1"
     fi
     exit 1

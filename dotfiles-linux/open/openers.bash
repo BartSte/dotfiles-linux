@@ -7,7 +7,7 @@ this_dir=$(dirname "$(readlink -f "$0")")
 
 open_url() {
     log "Url detected, opening in browser." -v
-    if running wsl; then
+    if is_running wsl; then
         log "Opening url with WSLBROWSER: $WSLBROWSER" -v
         "$WSLBROWSER" "$1" 2>&1 | log -v &
     else
@@ -38,7 +38,7 @@ open_text() {
     line=$2
     log "Opening text file: $file at line $line" -v
 
-    if running tmux && [[ $(tmux display-message -p '#I:#P') != "0:0" ]]; then
+    if is_running tmux && [[ $(tmux display-message -p '#I:#P') != "0:0" ]]; then
         log "Opening text file via key2pane" -v
         key2pane --loglevel INFO -w 0 -i 0 "$file" "$line"
     else

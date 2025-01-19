@@ -1,7 +1,7 @@
 [[ -f ~/.zshenv ]] && . "$HOME"/.zshenv
 [[ -f ~/.zshrc ]] && . "$HOME"/.zshrc
 
-if ! running wsl && ! running raspberry; then
+if ! is_running wsl && ! is_running raspberry; then
     if [[ $(tty) = /dev/tty1 ]]; then
         exec sway -c ~/dotfiles-linux/sway/wayland
     elif [[ $(tty) = /dev/tty2 ]]; then

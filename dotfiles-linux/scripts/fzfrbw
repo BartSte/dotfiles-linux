@@ -11,7 +11,7 @@ rbw_to_clipboard() {
 }
 
 clipboard() {
-    if running wsl; then
+    if is_running wsl; then
         clip.exe
     else
         wl-copy
