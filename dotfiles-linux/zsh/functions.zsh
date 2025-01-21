@@ -14,12 +14,12 @@ fullsync() {
     echo "\n### Syncing dotfiles"
     dotu
 
-    echo "\n### Syncing dropbox"
-    rclone bisync dropbox: ~/dropbox
-
     echo "\n### Syncing calendar"
     mycalsync
 
     echo "\n### Syncing mail"
     mailsync
+
+    echo "\n### Syncing dropbox"
+    rclone bisync dropbox: ~/dropbox
 }
