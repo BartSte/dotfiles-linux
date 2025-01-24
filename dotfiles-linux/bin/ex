@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Open Windows Explorer in the supplied path.
 
-running wsl || exit 1;
+is_running wsl || exit 1;
 [[ -z $1 ]] && path="." || path="$1"
 winpath=$(wslpath -w "$path")
 /mnt/c/Windows/explorer.exe $winpath 
