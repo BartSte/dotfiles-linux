@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+this_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+
+download() {
+    local url output_dir wgetd part part_url all_parts_downloaded
+    url=$1
+    output_dir=$2
+    mkdir -p "$output_dir"
+    cd "$output_dir" || exit
+
+    # Download
+    wgetd="wget -q -c --timestamping --no-check-certificate --retry-connrefused --timeout=10 --tries=4 --show-progress"
+    if $wgetd "$url"; then
+        echo "File downloaded: $(basename "$url")"
+    else
+        echo "Main file not found. Searching for multiparts..."
+
+        # Multiparts from a to z
+        all_parts_downloaded=true
+        for part in {a..z}{a..z}; do
+            part_url="${url%.*}.$part"
+            if $wgetd "$part_url"; then
+                echo "Part downloaded: $(basename "$part_url")"
+            else
+                echo "Part not found: $part"
+                all_parts_downloaded=false
+                break
+            fi
+        done
+
+        if $all_parts_downloaded; then
+            # Rebuild the original file in the current directory
+            cat blackweb.tar.gz.* >blackweb.tar.gz
+            echo "Multipart file rebuilt"
+        else
+            echo "Multipart process cannot be completed"
+            exit 1
+        fi
+    fi
+
+    # Unzip the file to the output folder
+    tar -xzf blackweb.tar.gz -C "$output_dir"
+
+    echo "Done"
+}
+
+do_checksum() {
+    local url
+    url="$1"
+    tmp_dir="$2"
+    mkdir -p "$tmp_dir"
+    cd "$tmp_dir" || exit
+
+    wget -q -c -N "$url"
+    md5sum blackweb.txt | awk '{print $1}' && cat checksum.md5 | awk '{print $1}'
+}
+
+url="https://raw.githubusercontent.com/maravento/blackweb/master/blackweb.tar.gz"
+checksum_url="https://raw.githubusercontent.com/maravento/blackweb/master/checksum.md5"
+tmp_dir="/tmp/bwtmp"
+
+rm -rf "$tmp_dir" || true
+download $url $tmp_dir
+
+if do_checksum $checksum_url $tmp_dir; then
+    echo "Checksums match"
+else
+    echo "Checksums do not match"
+    exit 1
+fi
+
+sudo cp -f "$tmp_dir/blackweb.txt" "/etc/squid/blackweb.txt"
+sudo cp -f "$this_dir/squid.conf" "/etc/squid/squid.conf"
+
+sudo chown proxy:proxy /etc/squid/blackweb.txt
+sudo chmod 644 /etc/squid/blackweb.txt
+
+squid -z
+sudo systemctl enable squid
+sudo systemctl restart squid
+squid -k reconfigure
+
+# TODO: currently, the browser need to be configured to use the proxy. What I 
+# want is to make the proxy transparent, so the browser doesn't need to be
+# configured. I will need to setup a firewall first.

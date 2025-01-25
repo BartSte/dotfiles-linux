@@ -65,7 +65,7 @@ main_raspberry() {
 # - sway: using the windows gui instead
 # - kmonad: using the windows kmonad instead
 main_arch_wsl() {
-    execute_exclude apt sway kmonad dns
+    execute_exclude apt sway kmonad dns proxy
 }
 
 while [[ $# -gt 0 ]]; do
