@@ -1,0 +1,98 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+usage="Usage: download_blackweb [OPTION] [output_dir]
+
+Download the blackweb.tar.gz file and extract it to the output directory.
+
+options:
+    -h, --help      Show this help message."
+
+URL="https://raw.githubusercontent.com/maravento/blackweb/master/blackweb.tar.gz"
+CHECKSUM_URL="https://raw.githubusercontent.com/maravento/blackweb/master/checksum.md5"
+
+main() {
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+        -h | --help)
+            echo "$usage"
+            exit 0
+            ;;
+        *)
+            output_dir="$1"
+            shift
+            ;;
+        esac
+    done
+
+    if [ -z "$output_dir" ]; then
+        echo "$usage"
+        exit 1
+    fi
+
+    download $URL "$output_dir"
+
+    if do_checksum $CHECKSUM_URL "$output_dir"; then
+        echo "Checksums match" >&2
+    else
+        echo "Checksums do not match" >&2
+        exit 1
+    fi
+}
+
+download() {
+    local url output_dir wgetd part part_url all_parts_downloaded
+    url=$1
+    output_dir=$2
+    mkdir -p "$output_dir"
+    cd "$output_dir" || exit
+
+    # Download
+    wgetd="wget -q -c --timestamping --no-check-certificate --retry-connrefused --timeout=10 --tries=4 --show-progress"
+    if $wgetd "$url"; then
+        echo "File downloaded: $(basename "$url")" >&2
+    else
+        echo "Main file not found. Searching for multiparts..." >&2
+
+        # Multiparts from a to z
+        all_parts_downloaded=true
+        for part in {a..z}{a..z}; do
+            part_url="${url%.*}.$part"
+            if $wgetd "$part_url"; then
+                echo "Part downloaded: $(basename "$part_url")" >&2
+            else
+                echo "Part not found: $part" >&2
+                all_parts_downloaded=false
+                break
+            fi
+        done
+
+        if $all_parts_downloaded; then
+            # Rebuild the original file in the current directory
+            cat blackweb.tar.gz.* >blackweb.tar.gz
+            echo "Multipart file rebuilt" >&2
+        else
+            echo "Multipart process cannot be completed" >&2
+            exit 1
+        fi
+    fi
+
+    # Unzip the file to the output folder
+    tar -xzf blackweb.tar.gz -C "$output_dir"
+
+    echo "Done" >&2
+}
+
+do_checksum() {
+    local url
+    url="$1"
+    output_dir="$2"
+    mkdir -p "$output_dir"
+    cd "$output_dir" || exit
+
+    wget -q -c -N "$url"
+    md5sum blackweb.txt | awk '{print $1}' && cat checksum.md5 | awk '{print $1}'
+}
+
+main "$@"

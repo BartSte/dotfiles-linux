@@ -3,86 +3,63 @@
 set -euo pipefail
 
 this_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+tmp_dir="/tmp/blackweb"
 
-download() {
-    local url output_dir wgetd part part_url all_parts_downloaded
-    url=$1
-    output_dir=$2
-    mkdir -p "$output_dir"
-    cd "$output_dir" || exit
+enable_squid() {
+    if ! sudo systemctl is-enabled --quiet squid; then
+        echo "Squid is not enabled. Enabling it..." >&2
+        sudo systemctl enable squid
+    fi
+}
 
-    # Download
-    wgetd="wget -q -c --timestamping --no-check-certificate --retry-connrefused --timeout=10 --tries=4 --show-progress"
-    if $wgetd "$url"; then
-        echo "File downloaded: $(basename "$url")"
-    else
-        echo "Main file not found. Searching for multiparts..."
-
-        # Multiparts from a to z
-        all_parts_downloaded=true
-        for part in {a..z}{a..z}; do
-            part_url="${url%.*}.$part"
-            if $wgetd "$part_url"; then
-                echo "Part downloaded: $(basename "$part_url")"
-            else
-                echo "Part not found: $part"
-                all_parts_downloaded=false
-                break
-            fi
-        done
-
-        if $all_parts_downloaded; then
-            # Rebuild the original file in the current directory
-            cat blackweb.tar.gz.* >blackweb.tar.gz
-            echo "Multipart file rebuilt"
-        else
-            echo "Multipart process cannot be completed"
-            exit 1
-        fi
+stop_squid() {
+    if sudo systemctl is-active --quiet squid; then
+        echo "Squid is running. Stopping it..." >&2
+        sudo systemctl stop squid
+        echo "Waiting for Squid to fully stop..."
+        sleep 3
     fi
 
-    # Unzip the file to the output folder
-    tar -xzf blackweb.tar.gz -C "$output_dir"
+    # Verify Squid is stopped before proceeding
+    if pgrep -f squid >/dev/null; then
+        echo "Squid process is still running. Terminating forcefully..." >&2
+        sudo pkill -9 squid
+        sleep 2
+    fi
 
-    echo "Done"
+    # Remove stale PID file if it exists
+    if [ -f /run/squid.pid ]; then
+        echo "Removing stale PID file..." >&2
+        sudo rm -f /run/squid.pid
+    fi
 }
 
-do_checksum() {
-    local url
-    url="$1"
-    tmp_dir="$2"
-    mkdir -p "$tmp_dir"
-    cd "$tmp_dir" || exit
-
-    wget -q -c -N "$url"
-    md5sum blackweb.txt | awk '{print $1}' && cat checksum.md5 | awk '{print $1}'
+copy_override() {
+    echo "Copying override.conf..." >&2
+    sudo mkdir -p /etc/systemd/system/squid.service.d
+    sudo cp -f "$this_dir/override.conf" "/etc/systemd/system/squid.service.d/override.conf"
+    sudo systemctl daemon-reload
 }
 
-url="https://raw.githubusercontent.com/maravento/blackweb/master/blackweb.tar.gz"
-checksum_url="https://raw.githubusercontent.com/maravento/blackweb/master/checksum.md5"
-tmp_dir="/tmp/bwtmp"
+copy_blackweb() {
+    rm -rf "$tmp_dir" || true
+    "$this_dir"/download_blackweb "$tmp_dir"
+    sudo cp -f "$tmp_dir/blackweb.txt" "/etc/squid/blackweb.txt"
+    sudo chown proxy:proxy /etc/squid/blackweb.txt
+    sudo chmod 644 /etc/squid/blackweb.txt
+}
 
-rm -rf "$tmp_dir" || true
-download $url $tmp_dir
-
-if do_checksum $checksum_url $tmp_dir; then
-    echo "Checksums match"
-else
-    echo "Checksums do not match"
-    exit 1
-fi
-
-sudo cp -f "$tmp_dir/blackweb.txt" "/etc/squid/blackweb.txt"
+enable_squid
+stop_squid
+copy_override
+copy_blackweb
 sudo cp -f "$this_dir/squid.conf" "/etc/squid/squid.conf"
+"$this_dir"/make_proxy_transparent -p 3128 -i wlp1s0
 
-sudo chown proxy:proxy /etc/squid/blackweb.txt
-sudo chmod 644 /etc/squid/blackweb.txt
-
-squid -z
-sudo systemctl enable squid
+echo "Restarting Squid..." >&2
+sudo squid -z
 sudo systemctl restart squid
-squid -k reconfigure
 
-# TODO: currently, the browser need to be configured to use the proxy. What I 
-# want is to make the proxy transparent, so the browser doesn't need to be
-# configured. I will need to setup a firewall first.
+echo "Done. Disabling iptables service..." >&2
+sudo iptables -L -t nat
+sudo ss -antpl | grep squid
