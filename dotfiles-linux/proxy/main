@@ -55,6 +55,3 @@ echo "Restarting Squid..." >&2
 sudo squid -z
 sudo systemctl restart squid
 
-echo "Done. Disabling iptables service..." >&2
-sudo iptables -L -t nat
-sudo ss -antpl | grep squid

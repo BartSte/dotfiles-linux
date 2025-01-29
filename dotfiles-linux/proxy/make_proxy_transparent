@@ -2,8 +2,6 @@
 
 set -euo pipefail
 
-this_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-
 usage="Usage: make_proxy_transparent
 
 Make the proxy transparent by redirecting the traffic from <interface> at port
@@ -72,3 +70,5 @@ reset
 enable_forwarding
 redirect
 save
+sudo systemctl enable iptables
+sudo systemctl restart iptables
