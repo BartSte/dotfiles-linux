@@ -60,6 +60,7 @@ enable_forwarding() {
 
 redirect() {
     sudo iptables -t nat -A PREROUTING -i "$interface" -p tcp --dport 80 -j REDIRECT --to-port "$port"
+    sudo iptables --t nat -A POSTROUTING --out-interface "$interface" -j MASQUERADE
 }
 
 save() {

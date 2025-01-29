@@ -15,7 +15,7 @@ sudo systemctl enable NetworkManager
 reset_network_manager
 
 lg "Setting up DNS using NetworkManager"
-rm -f /etc/resolv.conf || true
+sudo rm -f /etc/resolv.conf || true
 sudo cp "$this_dir/resolv.conf" /etc/resolv.conf
 sudo cp -f "$this_dir/NetworkManager.conf" /etc/NetworkManager/NetworkManager.conf
 sudo cp -f "$this_dir/hosts" /etc/hosts
