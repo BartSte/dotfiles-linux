@@ -20,13 +20,6 @@ stop_squid() {
         sleep 3
     fi
 
-    # Verify Squid is stopped before proceeding
-    if pgrep -f squid >/dev/null; then
-        echo "Squid process is still running. Terminating forcefully..." >&2
-        sudo pkill -9 squid
-        sleep 2
-    fi
-
     # Remove stale PID file if it exists
     if [ -f /run/squid.pid ]; then
         echo "Removing stale PID file..." >&2
@@ -54,7 +47,7 @@ stop_squid
 copy_override
 copy_blackweb
 sudo cp -f "$this_dir/squid.conf" "/etc/squid/squid.conf"
-"$this_dir"/make_proxy_transparent -p 3128 -i wlp1s0
+"$this_dir"/make_proxy_transparent -p 3126 -i wlp1s0
 
 echo "Restarting Squid..." >&2
 sudo squid -z
