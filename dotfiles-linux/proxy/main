@@ -16,14 +16,6 @@ stop_squid() {
     if sudo systemctl is-active --quiet squid; then
         echo "Squid is running. Stopping it..." >&2
         sudo systemctl stop squid
-        echo "Waiting for Squid to fully stop..."
-        sleep 3
-    fi
-
-    # Remove stale PID file if it exists
-    if [ -f /run/squid.pid ]; then
-        echo "Removing stale PID file..." >&2
-        sudo rm -f /run/squid.pid
     fi
 }
 
@@ -54,4 +46,3 @@ sudo cp -f "$this_dir/squid.conf" "/etc/squid/squid.conf"
 echo "Restarting Squid..." >&2
 sudo squid -z
 sudo systemctl restart squid
-
