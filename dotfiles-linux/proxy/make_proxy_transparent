@@ -4,13 +4,12 @@ set -euo pipefail
 
 usage="Usage: make_proxy_transparent
 
-Make the proxy transparent by redirecting the traffic from <interface> at port
-80 (the default HTTP port) to the proxy port (default 3128 of Squid). Requires
-iptables and Squid to be installed.
+Make the proxy transparent by redirecting the traffic from port 80 (the default
+HTTP port) to the proxy port (default 3128 of Squid). Requires iptables and
+Squid to be installed.
 
 options:
     -p, --port      The port of the proxy. Default is 3128 (Squid).
-    -i, --interface The interface to redirect the traffic from. Default is eth0.
     -s, --save      File to save the iptables rules to. Default is /etc/iptables/iptables.rules.
     -h, --help      Show this help message."
 
@@ -18,11 +17,6 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
     -p | --port)
         port="$2"
-        shift
-        shift
-        ;;
-    -i | --interface)
-        interface="$2"
         shift
         shift
         ;;
@@ -42,14 +36,11 @@ while [[ $# -gt 0 ]]; do
 done
 
 port=${port:-3128}
-interface=${interface:-eth0}
 save=${save:-/etc/iptables/iptables.rules}
 
 reset() {
     sudo iptables -t nat -F
     sudo iptables -t nat -X
-    sudo iptables -F
-    sudo iptables -X
 }
 
 enable_forwarding() {
@@ -59,9 +50,10 @@ enable_forwarding() {
 }
 
 redirect() {
-    sudo iptables -t nat -A OUTPUT -o lo -p tcp --dport 80 -j REDIRECT --to-ports "$port"
-    sudo iptables -t nat -A PREROUTING -i "$interface" -p tcp --dport 80 -j REDIRECT --to-ports "$port"
-    sudo iptables -t nat -A POSTROUTING -o "$interface" -j MASQUERADE
+    sudo iptables -t nat -A OUTPUT \
+        -p tcp --dport 80 \
+        -m owner \! --uid-owner proxy \
+        -j REDIRECT --to-port "$port"
 }
 
 save() {

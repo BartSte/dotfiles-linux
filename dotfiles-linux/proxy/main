@@ -9,6 +9,7 @@ enable_squid() {
     if ! sudo systemctl is-enabled --quiet squid; then
         echo "Squid is not enabled. Enabling it..." >&2
         sudo systemctl enable squid
+        sudo squid -z
     fi
 }
 
@@ -39,10 +40,7 @@ stop_squid
 copy_override
 copy_blackweb
 sudo cp -f "$this_dir/squid.conf" "/etc/squid/squid.conf"
-"$this_dir"/make_proxy_transparent -p 3128 -i wlp1s0
-
-# TODO: try https://dev.to/suntong/squid-proxy-and-ssl-interception-1oa4
+"$this_dir"/make_proxy_transparent -p 3129
 
 echo "Restarting Squid..." >&2
-sudo squid -z
 sudo systemctl restart squid
