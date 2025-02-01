@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+BLOCKLIST="/etc/blocked-domains.txt"
+IPSET_NAME="blocked"
+
+echo "Creating/flushing the ipset..." >&2
+ipset -q flush "$IPSET_NAME" 2>/dev/null || ipset create "$IPSET_NAME" hash:ip
+
+echo "Resolving domains and adding IPs to the ipset..." >&2
+total=$(grep -vE '^#|^$' "$BLOCKLIST" | wc -l)
+grep -vE '^#|^$' "$BLOCKLIST" |
+    parallel --jobs 8 --bar --eta --no-notice --total "$total" '
+      for ip in $(dig +short A {} 2>/dev/null); do
+        ipset add "'$IPSET_NAME'" "$ip" -exist
+      done
+    '
+
+echo "Adding iptables rule..." >&2
+iptables -C OUTPUT -m set --match-set "$IPSET_NAME" dst -j DROP 2>/dev/null ||
+    iptables -A OUTPUT -m set --match-set "$IPSET_NAME" dst -j DROP
+
+echo "Done." >&2

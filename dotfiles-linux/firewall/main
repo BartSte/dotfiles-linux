@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+sudo cp -f ~/dotfiles-linux/firewall/update-blocklist /usr/local/bin
+sudo /usr/local/bin/update-blocklist

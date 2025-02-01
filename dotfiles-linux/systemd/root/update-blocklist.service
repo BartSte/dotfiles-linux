@@ -1,0 +1,7 @@
+[Unit]
+Description=Update IP blocklists
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/update-blocklist
+
