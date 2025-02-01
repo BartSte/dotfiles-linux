@@ -11,6 +11,10 @@ destined for the IPs in the ipset.
 options:
     -h, --help      Show this help message."
 
+# TODO: whhat is a cool idea is to cache my domain-to-ip mappings using dnsmasq.
+# Then repeated DNS lookups will be faster. Only the ones that cannot be
+# resolved from the cache will be resolved from the internet.
+
 while [[ $# -gt 0 ]]; do
     case "$1" in
     -h | --help)
@@ -24,22 +28,34 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+URL="https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/porn-only/hosts"
 BLOCKLIST="/etc/blocked-domains.txt"
+TMP_IPS="/tmp/blocked-ips.txt"
 IPSET_NAME="blocked"
 
-echo "Creating/flushing the ipset..." >&2
-ipset -q flush "$IPSET_NAME" 2>/dev/null || ipset create "$IPSET_NAME" hash:ip
+echo "Downloading the blocklist..." >&2
+curl -sSL "$URL" |
+    awk '/^0\.0\.0\.0/ {print $2}' >"$BLOCKLIST"
 
-echo "Resolving domains and adding IPs to the ipset..." >&2
-total=$(grep -vE '^#|^$' "$BLOCKLIST" | wc -l)
+echo "Resolving domains (parallel)..." >&2
+rm -f "$TMP_IPS"
+touch "$TMP_IPS"
 grep -vE '^#|^$' "$BLOCKLIST" |
-    parallel --jobs 8 --bar --eta --no-notice --total "$total" '
-      for ip in $(dig +short A {} 2>/dev/null); do
-        ipset add "'$IPSET_NAME'" "$ip" -exist
-      done
-    '
+    parallel --jobs 8 --bar --eta --no-notice 'dig +short A {} 2>/dev/null' \
+        >>"$TMP_IPS"
 
-echo "Adding iptables rule..." >&2
+echo "Removing duplicates and sorting..." >&2
+sort -u -o "$TMP_IPS" "$TMP_IPS"
+
+echo "Creating/flushing the ipset..." >&2
+ipset destroy "$IPSET_NAME" 2>/dev/null || true
+ipset create "$IPSET_NAME" hash:ip family inet hashsize 1048576 maxelem 2000000
+
+echo "Adding IPs to ipset..." >&2
+# Parallel add to speed up insertion
+cat "$TMP_IPS" | parallel --jobs 8 --bar --eta --no-notice "ipset add $IPSET_NAME {} -exist"
+
+echo "Adding iptables rule if missing..." >&2
 iptables -C OUTPUT -m set --match-set "$IPSET_NAME" dst -j DROP 2>/dev/null ||
     iptables -A OUTPUT -m set --match-set "$IPSET_NAME" dst -j DROP
 

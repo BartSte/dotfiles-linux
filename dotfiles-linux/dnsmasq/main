@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+this_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+sudo cp -f "$this_dir/dnsmasq.conf" /etc/dnsmasq.conf
+
+sudo systemctl enable dnsmasq --now
