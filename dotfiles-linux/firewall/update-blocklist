@@ -2,6 +2,28 @@
 
 set -euo pipefail
 
+usage="Usage: update-blocklist
+
+Update the IP blocklist by resolving the domains in /etc/blocked-domains.txt and
+adding the IPs to an ipset. Then add an iptables rule to drop all packets
+destined for the IPs in the ipset.
+
+options:
+    -h, --help      Show this help message."
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+    -h | --help)
+        echo "$usage"
+        exit 0
+        ;;
+    *)
+        echo "Unknown option: $1"
+        exit 1
+        ;;
+    esac
+done
+
 BLOCKLIST="/etc/blocked-domains.txt"
 IPSET_NAME="blocked"
 
