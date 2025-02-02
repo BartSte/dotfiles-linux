@@ -13,6 +13,14 @@ lg "Only the root user can use the chattr command from now on"
 update_sudoers
 
 echo "Locking DNS settings"
-chattr +i /etc/NetworkManager/NetworkManager.conf
-chattr +i /etc/resolv.conf
-chattr +i /etc/sudoers
+files=(
+    /etc/resolv.conf
+    /etc/NetworkManager/dnsmasq.conf
+    /etc/NetworkManager/conf.d/dns.conf
+    /etc/NetworkManager/dnsmasq.d/blocked.txt
+    /etc/sudoers
+)
+for file in "${files[@]}"; do
+    lg "Locking $file"
+    chattr +i "$file"
+done

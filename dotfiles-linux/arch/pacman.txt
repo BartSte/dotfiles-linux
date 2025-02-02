@@ -1,15 +1,14 @@
 alacritty
-tree-sitter-cli
 antiword
 aspell
 aspell-en
 aspell-nl
 base-devel
 bat
-bluez
-bluez-utils
+bind-tools
 btop
 cmake
+dnsmasq
 exa
 fd
 fzf
@@ -18,6 +17,7 @@ inetutils
 isync
 jq
 khard
+ldns
 lldb
 lynx
 make
