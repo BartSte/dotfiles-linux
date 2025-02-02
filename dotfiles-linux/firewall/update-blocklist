@@ -2,61 +2,219 @@
 
 set -euo pipefail
 
-usage="Usage: update-blocklist
+usage="Usage: update-blocklist  
 
-Update the IP blocklist by resolving the domains in /etc/blocked-domains.txt and
-adding the IPs to an ipset. Then add an iptables rule to drop all packets
-destined for the IPs in the ipset.
+Download the URL blocklist into the BLOCKLIST file. Resolve the IPs of the
+domains in the blocklist and add them to an ipset named IPSET_NAME. Then add
+an iptables rule to drop packets to those IPs.
+
+To avoid rate limiting, the blocklist is resolved in parallel with a number of
+jobs (-j). The blocklist may be processed in parts (-p), meaning only that
+percentage of *existing mappings* will be re-resolved each run.
+
+By storing domain→IP mappings in a file (-m), we can skip re-resolving domains
+unnecessarily:
+
+- New domains (in blocklist, but not in mappings) are always resolved.
+- Domains no longer in the blocklist are removed from ipset.
+- A random N% of *existing* domains are re-resolved on each run.
 
 options:
-    -h, --help      Show this help message."
+    -u, --url URL      (Default: https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/porn-only/hosts)
+    -o, --output FILE  (Default: /etc/blocked-domains.txt)
+    -n, --name NAME    (Default: blocked)
+    -j, --jobs N       (Default: 8)
+    -p, --part N%      (Default: 100)
+    -m, --mappings FILE (Default: /var/cache/blocked-mappings.txt)
+    -h, --help         Show this help message."
 
-# TODO: whhat is a cool idea is to cache my domain-to-ip mappings using dnsmasq.
-# Then repeated DNS lookups will be faster. Only the ones that cannot be
-# resolved from the cache will be resolved from the internet.
+URL="https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/porn-only/hosts"
+BLOCKLIST="/etc/blocked-domains.txt"
+MAPPINGS="/var/cache/blocked-mappings.txt"
+IPSET_NAME="blocked"
+JOBS=8
+PART=100
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
+    -u | --url)
+        URL="$2"
+        shift 2
+        ;;
+    -o | --output)
+        BLOCKLIST="$2"
+        shift 2
+        ;;
+    -n | --name)
+        IPSET_NAME="$2"
+        shift 2
+        ;;
+    -j | --jobs)
+        JOBS="$2"
+        shift 2
+        ;;
+    -p | --part)
+        PART="$2"
+        shift 2
+        ;;
+    -m | --mappings)
+        MAPPINGS="$2"
+        shift 2
+        ;;
     -h | --help)
         echo "$usage"
         exit 0
         ;;
     *)
-        echo "Unknown option: $1"
+        echo "Unknown option: $1" >&2
+        echo "$usage" >&2
         exit 1
         ;;
     esac
 done
 
-URL="https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/porn-only/hosts"
-BLOCKLIST="/etc/blocked-domains.txt"
-TMP_IPS="/tmp/blocked-ips.txt"
-IPSET_NAME="blocked"
+mkdir -p "$(dirname "$MAPPINGS")"
+touch "$MAPPINGS"
+
+mkdir -p "$(dirname "$BLOCKLIST")"
+touch "$BLOCKLIST"
 
 echo "Downloading the blocklist..." >&2
 curl -sSL "$URL" |
-    awk '/^0\.0\.0\.0/ {print $2}' >"$BLOCKLIST"
+    awk '/^0\.0\.0\.0/ {print $2}' |
+    sort -u >"$BLOCKLIST"
 
-echo "Resolving domains (parallel)..." >&2
-rm -f "$TMP_IPS"
-touch "$TMP_IPS"
-grep -vE '^#|^$' "$BLOCKLIST" |
-    parallel --jobs 8 --bar --eta --no-notice 'dig +short A {} 2>/dev/null' \
-        >>"$TMP_IPS"
+# ------------------------------------------------------------------------------
+# 1. Load existing domain→IP mappings into an associative array
+#    Format in $MAPPINGS file: each line "domain ip1 ip2 ..."
+# ------------------------------------------------------------------------------
+declare -A old_map
+if [[ -f "$MAPPINGS" ]]; then
+    while IFS= read -r line; do
+        domain=$(awk '{print $1}' <<<"$line")
+        ips=$(awk '{for(i=2;i<=NF;i++) printf $i" "; print ""}' <<<"$line")
+        old_map["$domain"]="$ips"
+    done <"$MAPPINGS"
+fi
 
-echo "Removing duplicates and sorting..." >&2
-sort -u -o "$TMP_IPS" "$TMP_IPS"
-
-echo "Creating/flushing the ipset..." >&2
+# ------------------------------------------------------------------------------
+# 2. Create or flush the ipset
+#    Increase hashsize/maxelem if needed for large lists.
+# ------------------------------------------------------------------------------
 ipset destroy "$IPSET_NAME" 2>/dev/null || true
-ipset create "$IPSET_NAME" hash:ip family inet hashsize 1048576 maxelem 2000000
+ipset create "$IPSET_NAME" hash:ip family inet hashsize 262144 maxelem 2000000
+ipset flush "$IPSET_NAME"
 
+# ------------------------------------------------------------------------------
+# 3. Remove any domain from old_map not in the new blocklist
+#    That domain’s IPs are also removed from the ipset.
+# ------------------------------------------------------------------------------
+while IFS= read -r domain ips; do
+    # If domain not in blocklist, remove from old_map & ipset
+    if ! grep -qx "$domain" "$BLOCKLIST"; then
+        for ip in $ips; do
+            ipset del "$IPSET_NAME" "$ip" 2>/dev/null || true
+        done
+        unset "old_map[$domain]"
+    fi
+done <"$MAPPINGS"
+
+# ------------------------------------------------------------------------------
+# 4. Build a list of domains that:
+#      - Are brand new (in blocklist but not in old_map),
+#      - Or are selected for partial re-check.
+# ------------------------------------------------------------------------------
+mapfile -t all_domains <"$BLOCKLIST"
+
+# Separate new domains from existing
+declare -a new_domains=()
+declare -a existing_domains=()
+
+for domain in "${all_domains[@]}"; do
+    if [[ -v old_map["$domain"] ]]; then
+        existing_domains+=("$domain")
+    else
+        new_domains+=("$domain")
+    fi
+done
+
+# Calculate how many existing domains to re-check (PART%).
+if [[ "${#existing_domains[@]}" -gt 0 ]]; then
+    recheck_count=$((${#existing_domains[@]} * PART / 100))
+else
+    recheck_count=0
+fi
+
+# Shuffle existing, take random subset
+shuf_existing=($(printf "%s\n" "${existing_domains[@]}" | shuf))
+recheck_domains=("${shuf_existing[@]:0:$recheck_count}")
+
+# Domains to actually resolve:
+resolve_domains=("${new_domains[@]}" "${recheck_domains[@]}")
+
+# ------------------------------------------------------------------------------
+# 5. Resolve domains in parallel, store new IPs in a temp file
+# ------------------------------------------------------------------------------
+TMP_RESOLVED="/tmp/blocked-domains-resolved.txt"
+rm -f "$TMP_RESOLVED"
+touch "$TMP_RESOLVED"
+
+echo "Resolving ${#resolve_domains[@]} domains in parallel..." >&2
+
+printf "%s\n" "${resolve_domains[@]}" |
+    parallel --jobs "$JOBS" --bar --eta --no-notice ' \
+       ips=$(dig +short A {} 2>/dev/null); \
+       echo "{} $ips" \
+    ' >>"$TMP_RESOLVED"
+
+# ------------------------------------------------------------------------------
+# 6. Update old_map:
+#    - For each newly resolved domain, replace or add its IP set
+#    - Add those IPs to the ipset
+# ------------------------------------------------------------------------------
+declare -A new_map
+# Start new_map from old_map to keep old data for domains not rechecked
+for d in "${!old_map[@]}"; do
+    new_map["$d"]="${old_map[$d]}"
+done
+
+# Process newly resolved lines
+while IFS= read -r line; do
+    domain=$(awk '{print $1}' <<<"$line")
+    ips=$(awk '{for(i=2;i<=NF;i++) printf $i" "; print ""}' <<<"$line")
+
+    # If no IP found, skip
+    [[ -z "$ips" ]] && continue
+
+    # Overwrite in new_map
+    new_map["$domain"]="$ips"
+done <"$TMP_RESOLVED"
+
+# ------------------------------------------------------------------------------
+# 7. Load all IPs from new_map into the ipset
+#    (We do this for *all* domains in new_map for a consistent final set.)
+# ------------------------------------------------------------------------------
 echo "Adding IPs to ipset..." >&2
-# Parallel add to speed up insertion
-cat "$TMP_IPS" | parallel --jobs 8 --bar --eta --no-notice "ipset add $IPSET_NAME {} -exist"
+for domain in "${!new_map[@]}"; do
+    for ip in ${new_map[$domain]}; do
+        ipset add "$IPSET_NAME" "$ip" -exist
+    done
+done
 
+# ------------------------------------------------------------------------------
+# 8. Save new_map back to $MAPPINGS
+# ------------------------------------------------------------------------------
+echo "Writing updated domain→IP mappings..." >&2
+rm -f "$MAPPINGS"
+for domain in "${!new_map[@]}"; do
+    echo "$domain ${new_map[$domain]}" >>"$MAPPINGS"
+done
+
+# ------------------------------------------------------------------------------
+# 9. Ensure iptables rule
+# ------------------------------------------------------------------------------
 echo "Adding iptables rule if missing..." >&2
 iptables -C OUTPUT -m set --match-set "$IPSET_NAME" dst -j DROP 2>/dev/null ||
     iptables -A OUTPUT -m set --match-set "$IPSET_NAME" dst -j DROP
 
-echo "Done." >&2
+echo "Done. Total domains in blocklist: ${#all_domains[@]}, new domains: ${#new_domains[@]}, re-checked: $recheck_count" >&2
