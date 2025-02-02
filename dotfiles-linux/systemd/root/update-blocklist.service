@@ -3,5 +3,5 @@ Description=Update IP blocklists
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/bin/update-blocklist
+ExecStart=/usr/local/bin/update-blocklist -j 2 -p 10
 
