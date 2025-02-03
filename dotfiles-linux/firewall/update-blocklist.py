@@ -104,9 +104,9 @@ def main():
     makedirs(dirname(settings.mappings), exist_ok=True)
     makedirs(dirname(settings.domains), exist_ok=True)
 
-    download_blocklist(settings.url, settings.domains)
+    domains: set[str] = download_blocklist(settings.url, settings.domains)
 
-    print(settings)
+    print(domains)
 
 
 def download_blocklist(url: str, output: str) -> set[str]:
@@ -132,7 +132,7 @@ def download_blocklist(url: str, output: str) -> set[str]:
             if line.startswith("0.0.0.0")
         }
         for line in set(lines):
-            f.write(line.split()[1] + "\n")
+            f.write(line + "\n")
 
     return lines
 
