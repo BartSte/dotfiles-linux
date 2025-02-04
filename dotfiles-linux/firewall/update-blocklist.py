@@ -5,8 +5,9 @@ import sys
 from argparse import ArgumentParser, Namespace
 from contextlib import suppress
 from dataclasses import dataclass
+from datetime import datetime
 from os import makedirs, remove
-from os.path import dirname
+from os.path import dirname, join
 from typing import Generator, override
 from unittest import TestCase
 
@@ -34,11 +35,20 @@ def main():
     parser = Parser()
     args: Namespace = parser.parse_args()
     settings = Settings(**vars(args))
+
     make_directories(settings)
+    logging.basicConfig(
+        level=settings.loglevel,
+        filename=settings.logfile,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+    )
+    logging.info("Logger initialized")
+
     domains: set[str] = download_blocklist(settings.url)
     mappings: dict[str, str | list[str]] = load_mappings(settings.mappings)
 
     print(domains)
+    print(mappings)
 
 
 @dataclass
@@ -46,12 +56,16 @@ class Settings:
     debug: bool = False
     jobs: int = 0
     loglevel: str = "INFO"
-    logs: str = "/var/log/update-blocklist.log"
+    logs: str = "/var/log/update-blocklist"
     ipset: str = "blocked-ips"
     part: int = 100
     domains: str = "/var/cache/update-blocklist/domains"
     mappings: str = "/var/cache/update-blocklist/mappings"
     url: str = "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/porn-only/hosts"
+
+    @property
+    def logfile(self) -> str:
+        return join(self.logs, f"{datetime.now():%Y-%m-%d}.log")
 
 
 class Parser(ArgumentParser):
