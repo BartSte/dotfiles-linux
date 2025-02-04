@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-
+import logging
+import pickle
 import sys
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
+from contextlib import suppress
 from dataclasses import dataclass
-from os import makedirs
+from os import makedirs, remove
 from os.path import dirname
-from typing import Generator
+from typing import Generator, override
 from unittest import TestCase
 
 import requests
@@ -28,15 +30,27 @@ unnecessarily:
 """
 
 
+def main():
+    parser = Parser()
+    args: Namespace = parser.parse_args()
+    settings = Settings(**vars(args))
+    make_directories(settings)
+    domains: set[str] = download_blocklist(settings.url)
+    mappings: dict[str, str | list[str]] = load_mappings(settings.mappings)
+
+    print(domains)
+
+
 @dataclass
 class Settings:
     debug: bool = False
     jobs: int = 0
     loglevel: str = "INFO"
+    logs: str = "/var/log/update-blocklist.log"
     ipset: str = "blocked-ips"
     part: int = 100
-    domains: str = "/etc/blocked-domains.txt"
-    mappings: str = "/var/cache/blocked-domains-with-ips.txt"
+    domains: str = "/var/cache/update-blocklist/domains"
+    mappings: str = "/var/cache/update-blocklist/mappings"
     url: str = "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/porn-only/hosts"
 
 
@@ -89,6 +103,9 @@ class Parser(ArgumentParser):
             default=Settings.domains,
         )
         self.add_argument(
+            "--logs", help="Path to the logs.", default=Settings.logs
+        )
+        self.add_argument(
             "--debug",
             action="store_true",
             help="Enable debug mode.",
@@ -96,20 +113,23 @@ class Parser(ArgumentParser):
         )
 
 
-def main():
-    parser = Parser()
-    args = parser.parse_args()
-    settings = Settings(**vars(args))
+def make_directories(settings: Settings):
+    """Create the directories from the settings.
 
-    makedirs(dirname(settings.mappings), exist_ok=True)
-    makedirs(dirname(settings.domains), exist_ok=True)
+    Args:
+        settings: Settings object with the directories to create.
 
-    domains: set[str] = download_blocklist(settings.url, settings.domains)
+    """
+    dirs: list[str] = [
+        settings.logs,
+        dirname(settings.domains),
+        dirname(settings.mappings),
+    ]
+    for d in dirs:
+        makedirs(d, exist_ok=True)
 
-    print(domains)
 
-
-def download_blocklist(url: str, output: str) -> set[str]:
+def download_blocklist(url: str) -> set[str]:
     """Download the blocklist from the URL and parse it into a file.
 
     The blocklist is a list of domains that should be blocked. The file is
@@ -117,7 +137,6 @@ def download_blocklist(url: str, output: str) -> set[str]:
 
     Args:
         url: URL to download the blocklist from.
-        output: Path to the file to write the domains to.
 
     Returns:
         A set with the domains in the blocklist.
@@ -125,16 +144,42 @@ def download_blocklist(url: str, output: str) -> set[str]:
     """
     response: requests.Response = requests.get(url)
     response.raise_for_status()
-    with open(output, "w") as f:
-        lines: set[str] = {
-            line.split()[1]
-            for line in response.text.splitlines()
-            if line.startswith("0.0.0.0")
-        }
-        for line in set(lines):
-            f.write(line + "\n")
+    return {
+        line.split()[1]
+        for line in response.text.splitlines()
+        if line.startswith("0.0.0.0")
+    }
 
-    return lines
+
+def load_mappings(path: str) -> dict[str, str | list[str]]:
+    """Load a dictionary with that maps domains to IPs from a file.
+
+    Here the `path` must contain a python pickled dictionary. If no file is
+    found, an empty dictionary is returned.
+
+    Args:
+        path: Path to the file with the mappings.
+
+    Returns:
+        A dictionary with domains as keys and IPs as values.
+
+    """
+    try:
+        with open(path, "rb") as f:
+            result = pickle.load(f)
+    except FileNotFoundError:
+        logging.info("No mappings file found at %s", path)
+        return {}
+    except pickle.UnpicklingError as e:
+        raise InvalidCacheError(f"Invalid mappings file at {path}") from e
+    else:
+        if not isinstance(result, dict):
+            raise InvalidCacheError("The mappings file at %s is not a dict")
+        return result
+
+
+class InvalidCacheError(Exception):
+    """Raised when the cache file is invalid."""
 
 
 if __name__ == "__main__":
@@ -171,3 +216,54 @@ class TestParser(TestCase):
         settings = Settings(**vars(args))
         for key, value in argv.items():
             self.assertEqual(getattr(settings, key), value)
+
+
+class TestDownloadBlocklist(TestCase):
+    def test_valid(self):
+        domains = download_blocklist(Settings.url)
+        self.assertIsInstance(domains, set)
+        assert len(domains) > 10
+
+    def test_invalid(self):
+        with self.assertRaises(requests.exceptions.ConnectionError):
+            download_blocklist("https://notexisting_123abc.com")
+
+    def test_not_domains_file(self):
+        x = download_blocklist("https://google.com")
+        assert x == set()
+
+
+class TestLoadMappings(TestCase):
+    settings: Settings
+    mappings: dict[str, str | list[str]]
+
+    def setUp(self) -> None:
+        self.settings = Settings(mappings="/tmp/mappings")
+        self.mappings = {
+            "example.com": "1.2.3.4",
+            "example.org": ["5.6.7.8", "9.10.11.12"],
+        }
+
+    def tearDown(self) -> None:
+        with suppress(FileNotFoundError):
+            remove(self.settings.mappings)
+
+    def test_valid(self):
+        with open(self.settings.mappings, "wb") as f:
+            pickle.dump(self.mappings, f)
+
+        result = load_mappings(self.settings.mappings)
+        self.assertIsInstance(result, dict)
+        self.assertEqual(result, self.mappings)
+
+    def test_empty(self):
+        result = load_mappings(self.settings.mappings)
+        self.assertIsInstance(result, dict)
+        self.assertEqual(result, {})
+
+    def test_invalid(self):
+        with open(self.settings.mappings, "wb") as f:
+            pickle.dump({"invalid", "object"}, f)
+
+        with self.assertRaises(InvalidCacheError):
+            load_mappings(self.settings.mappings)
