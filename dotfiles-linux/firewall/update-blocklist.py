@@ -60,7 +60,7 @@ def main():
     resolve: Domains = retained.make_random_subset(settings.part) | diff
     logging.info("%s domains to resolve", len(resolve))
 
-    mappings.update_by_resolving(resolve)
+    mappings.update_by_resolving(resolve, settings.jobs)
     mappings.save()
 
 
@@ -262,11 +262,9 @@ class Mappings(dict[str, list[str]]):
     _sem: asyncio.Semaphore
     _resolver: aiodns.DNSResolver
 
-    def __init__(self, path: str, max_concurrent: int = 1000):
+    def __init__(self, path: str):
         super().__init__()
         self.path = path
-        self._sem = asyncio.Semaphore(max_concurrent)
-        self._resolver = aiodns.DNSResolver()
 
     @property
     def domains(self) -> Domains:
@@ -308,6 +306,7 @@ class Mappings(dict[str, list[str]]):
     def save(self):
         """Save the mappings to `Mappings.path`."""
         makedirs(dirname(self.path), exist_ok=True)
+        logging.info("Saving %s mappings to %s", len(self), self.path)
         try:
             with open(self.path, "wb") as f:
                 pickle.dump(dict(self), f)
@@ -315,15 +314,24 @@ class Mappings(dict[str, list[str]]):
             raise InvalidCacheError(
                 f"Error saving mappings file at {self.path}"
             ) from e
-        else:
-            logging.info("Saved %s mappings to %s", len(self), self.path)
 
-    async def update_by_resolving(self, domains: Domains):
+    def update_by_resolving(self, domains: Domains, jobs: int = 10000):
+        logging.info("Asyncio event loop starting with %s workers", jobs)
+        asyncio.run(self._resolve_multiple(domains, jobs))
+        logging.info("Asyncio event loop finished")
+
+    async def _resolve_multiple(self, domains: Domains, jobs: int = 10000):
+        self._sem = asyncio.Semaphore(jobs)
+        self._resolver = aiodns.DNSResolver()
         tasks: list[Coroutine[None, None, tuple[str, list[str]]]] = [
             self._resolve(domain) for domain in domains
         ]
-        results = await asyncio.gather(*tasks)
-        self.update({domain: ips for domain, ips in results})
+        logging.info("Resolving %s domains async", len(tasks))
+        for i, future in enumerate(asyncio.as_completed(tasks)):
+            domain, ips = await future
+            self[domain] = ips
+            if i % 1000 == 0:
+                logging.info("Resolved %s domains", i)
 
     async def _resolve(self, domain: str) -> tuple[str, list[str]]:
         async with self._sem:
@@ -337,7 +345,6 @@ class Mappings(dict[str, list[str]]):
                 assert len(ips) == 0 or isinstance(ips[0], str)
                 return domain, ips
             except Exception as e:
-                logging.error("Error resolving %s: %s", domain, e)
                 return domain, []
 
 
@@ -453,9 +460,9 @@ class TestMappings(TestCase):
 
     def test_update_by_resolving(self):
         domains = Domains({"example.net", "example.nl"})
-        # TODO: we need an asycion event loop to run this
         self.mappings.update_by_resolving(domains)
         self.assertEqual(len(self.mappings), 4)
+        print(self.mappings)
 
 
 class TestGetSubset(TestCase):
