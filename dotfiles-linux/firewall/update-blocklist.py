@@ -60,7 +60,7 @@ def main():
     resolve: Domains = retained.make_random_subset(settings.part) | diff
     logging.info("%s domains to resolve", len(resolve))
 
-    mappings.update_by_resolving(resolve, settings.jobs)
+    mappings.update_by_resolving(resolve, settings.jobs, settings.timeout)
     mappings.save()
 
 
@@ -82,12 +82,13 @@ def excepthook(type_: type[BaseException], value: BaseException, traceback):
 @dataclass
 class Settings:
     debug: bool = False
-    jobs: int = 0
-    loglevel: str = "INFO"
-    log: str = "/var/log/update-blocklist.log"
     ipset: str = "blocked-ips"
-    part: int = 100
+    jobs: int = 10000
+    log: str = "/var/log/update-blocklist.log"
+    loglevel: str = "INFO"
     mappings: str = "/var/cache/update-blocklist/mappings"
+    part: int = 100
+    timeout: int = 5
     url: str = "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/porn-only/hosts"
 
     def makedirs(self):
@@ -158,6 +159,12 @@ class Parser(ArgumentParser):
             action="store_true",
             help="Enable debug mode.",
             default=Settings.debug,
+        )
+        self.add_argument(
+            "--timeout",
+            type=int,
+            help="Timeout for resolving a domain.",
+            default=Settings.timeout,
         )
 
     def check_part(self, value: int | str) -> int:
@@ -315,17 +322,21 @@ class Mappings(dict[str, list[str]]):
                 f"Error saving mappings file at {self.path}"
             ) from e
 
-    def update_by_resolving(self, domains: Domains, jobs: int = 10000):
+    def update_by_resolving(
+        self, domains: Domains, jobs: int = 10000, timeout: int = 5
+    ):
         logging.info("Asyncio event loop starting with %s workers", jobs)
         # TODO add a timeout to the resolver for requestst that take too long.
-        asyncio.run(self._resolve_multiple(domains, jobs))
+        asyncio.run(self._resolve_multiple(domains, jobs, timeout))
         logging.info("Asyncio event loop finished")
 
-    async def _resolve_multiple(self, domains: Domains, jobs: int = 10000):
+    async def _resolve_multiple(
+        self, domains: Domains, jobs: int = 10000, timeout: int = 5
+    ):
         self._sem = asyncio.Semaphore(jobs)
         self._resolver = aiodns.DNSResolver()
         tasks: list[Coroutine[None, None, tuple[str, list[str]]]] = [
-            self._resolve(domain) for domain in domains
+            self._resolve(domain, timeout) for domain in domains
         ]
         logging.info("Resolving %s domains async", len(tasks))
         for i, future in enumerate(asyncio.as_completed(tasks)):
@@ -334,18 +345,22 @@ class Mappings(dict[str, list[str]]):
             if i % 1000 == 0:
                 logging.info("Resolved %s domains", i)
 
-    async def _resolve(self, domain: str) -> tuple[str, list[str]]:
+    async def _resolve(
+        self, domain: str, timeout: int = 5
+    ) -> tuple[str, list[str]]:
         async with self._sem:
             try:
                 # gethostbyname resolves the domain to IPv4 addresses.
-                result = await self._resolver.gethostbyname(
-                    domain, socket.AF_INET
+                result = await asyncio.wait_for(
+                    self._resolver.gethostbyname(domain, socket.AF_INET),
+                    timeout=timeout,
                 )
-                ips: list[str] = result.addresses
-                assert isinstance(ips, list)
-                assert len(ips) == 0 or isinstance(ips[0], str)
-                return domain, ips
-            except Exception as e:
+                return domain, result.addresses
+            except asyncio.TimeoutError:
+                logging.debug("Timeout resolving %s", domain)
+                return domain, []
+            except aiodns.error.DNSError as e:
+                logging.debug("Error resolving %s: %s", domain, e.args[1])
                 return domain, []
 
 
