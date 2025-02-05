@@ -317,6 +317,7 @@ class Mappings(dict[str, list[str]]):
 
     def update_by_resolving(self, domains: Domains, jobs: int = 10000):
         logging.info("Asyncio event loop starting with %s workers", jobs)
+        # TODO add a timeout to the resolver for requestst that take too long.
         asyncio.run(self._resolve_multiple(domains, jobs))
         logging.info("Asyncio event loop finished")
 
