@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
+
 import logging
 import pickle
 import sys
 from argparse import ArgumentParser, Namespace
 from contextlib import suppress
 from dataclasses import dataclass
-from datetime import datetime
+from logging.handlers import RotatingFileHandler
 from os import makedirs, remove
-from os.path import dirname, join
-from typing import Generator, override
+from os.path import dirname
 from unittest import TestCase
 
 import requests
@@ -36,19 +36,22 @@ def main():
     args: Namespace = parser.parse_args()
     settings = Settings(**vars(args))
 
+    init_logger(settings.log, settings.loglevel)
+
+    logging.info("Initializing logger")
+    logging.info("Settings: %s", settings)
+
     make_directories(settings)
-    logging.basicConfig(
-        level=settings.loglevel,
-        filename=settings.logfile,
-        format="%(asctime)s - %(levelname)s - %(message)s",
-    )
     logging.info("Logger initialized")
 
+    mappings: dict[str, list[str]] = load_mappings(settings.mappings)
     domains: set[str] = download_blocklist(settings.url)
-    mappings: dict[str, str | list[str]] = load_mappings(settings.mappings)
+    domains_cache: set[str] = set(mappings.keys())
+    domains_to_resolve: set[str] = find_domains_to_resolve(
+        domains, domains_cache, settings.part
+    )
 
-    print(domains)
-    print(mappings)
+    # print(domains_to_resolve)
 
 
 @dataclass
@@ -56,16 +59,12 @@ class Settings:
     debug: bool = False
     jobs: int = 0
     loglevel: str = "INFO"
-    logs: str = "/var/log/update-blocklist"
+    log: str = "/var/log/update-blocklist"
     ipset: str = "blocked-ips"
     part: int = 100
     domains: str = "/var/cache/update-blocklist/domains"
     mappings: str = "/var/cache/update-blocklist/mappings"
     url: str = "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/porn-only/hosts"
-
-    @property
-    def logfile(self) -> str:
-        return join(self.logs, f"{datetime.now():%Y-%m-%d}.log")
 
 
 class Parser(ArgumentParser):
@@ -117,7 +116,7 @@ class Parser(ArgumentParser):
             default=Settings.domains,
         )
         self.add_argument(
-            "--logs", help="Path to the logs.", default=Settings.logs
+            "--log", help="Path to the log file.", default=Settings.log
         )
         self.add_argument(
             "--debug",
@@ -125,6 +124,33 @@ class Parser(ArgumentParser):
             help="Enable debug mode.",
             default=Settings.debug,
         )
+
+
+def init_logger(logfile: str, level: str):
+    """Initialize the root logger with a rotating file handler.
+
+    Args:
+        logfile: Path to the log file.
+        level: Log level to set.
+
+    """
+    logger = logging.getLogger()
+    level = getattr(logging, level)
+    file = RotatingFileHandler(logfile, maxBytes=1 * 1024 * 1024, backupCount=5)
+    stream = logging.StreamHandler()
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
+
+    file.setLevel(level)
+    file.setFormatter(formatter)
+
+    stream.setLevel(level)
+    stream.setFormatter(formatter)
+
+    logger.setLevel(level)
+    logger.addHandler(file)
+    logger.addHandler(stream)
 
 
 def make_directories(settings: Settings):
@@ -135,7 +161,6 @@ def make_directories(settings: Settings):
 
     """
     dirs: list[str] = [
-        settings.logs,
         dirname(settings.domains),
         dirname(settings.mappings),
     ]
@@ -165,7 +190,7 @@ def download_blocklist(url: str) -> set[str]:
     }
 
 
-def load_mappings(path: str) -> dict[str, str | list[str]]:
+def load_mappings(path: str) -> dict[str, list[str]]:
     """Load a dictionary with that maps domains to IPs from a file.
 
     Here the `path` must contain a python pickled dictionary. If no file is
@@ -190,6 +215,54 @@ def load_mappings(path: str) -> dict[str, str | list[str]]:
         if not isinstance(result, dict):
             raise InvalidCacheError("The mappings file at %s is not a dict")
         return result
+
+
+def find_domains_to_resolve(
+    new: set[str], old: set[str] | None = None, part: int = 100
+) -> set[str]:
+    """Find the domains that need to be resolved.
+
+    These are:
+        - The domains that are new, i.e., not in `old`.
+        - A random subset of the domains that are retained, i.e., they are both
+          in `new` and `old`.
+
+    Args:
+        new: Set of domains to resolve.
+        old: Set of domains resolved in the previous run.
+
+    Returns:
+        Set of domains to resolve.
+
+    """
+    if old is None:
+        return new
+
+    diff: set[str] = new - old
+    retained: set[str] = old & new
+    retained_subset: set[str] = get_subset(retained, part)
+    return retained_subset | diff
+
+
+def get_subset(domains: set[str], part: int) -> set[str]:
+    """Return a random subset of the domains.
+
+    The size of the subset is determined by the `part` percentage. If `part` is
+    100, the entire set is returned, if `part` is 0, an empty set is returned.
+
+    Args:
+        domains: Set of domains to get the subset from.
+        part: Percentage of the subset to return.
+
+    Returns:
+        A random subset of the domains.
+
+    """
+    # TODO: for now, just return the entire set or not
+    if part:
+        return domains
+    else:
+        return set()
 
 
 class InvalidCacheError(Exception):
@@ -249,7 +322,7 @@ class TestDownloadBlocklist(TestCase):
 
 class TestLoadMappings(TestCase):
     settings: Settings
-    mappings: dict[str, str | list[str]]
+    mappings: dict[str, list[str]]
 
     def setUp(self) -> None:
         self.settings = Settings(mappings="/tmp/mappings")
@@ -281,3 +354,23 @@ class TestLoadMappings(TestCase):
 
         with self.assertRaises(InvalidCacheError):
             load_mappings(self.settings.mappings)
+
+
+class TestFindDomainsToResolve(TestCase):
+    def test_only_new(self):
+        new = {"a", "b", "c"}
+        old = None
+        result = find_domains_to_resolve(new, old, 0)
+        self.assertEqual(result, new)
+
+    def test_only_retained(self):
+        new = set()
+        old = {"a", "b", "c"}
+        result = find_domains_to_resolve(new, old, 0)
+        self.assertEqual(result, set())
+
+    def test_new_and_retained(self):
+        new = {"a", "b", "c"}
+        old = {"b", "c", "d"}
+        result = find_domains_to_resolve(new, old, 0)
+        self.assertEqual(result, {"a"})
