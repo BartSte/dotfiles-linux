@@ -41,11 +41,10 @@ def main():
     settings: Settings = Settings(**vars(args))
 
     init_logger(settings.log, settings.loglevel)
-
     logging.info("Initializing logger")
-    logging.info("Settings: %s", settings)
 
-    make_directories(settings)
+    settings.makedirs()
+    logging.info("Settings: %s", settings)
 
     mappings: Mappings = Mappings(path=settings.mappings)
     mappings.load()
@@ -58,7 +57,7 @@ def main():
     resolve: Domains = retained.make_random_subset(settings.part) | diff
     logging.info("%s domains to resolve", len(resolve))
 
-    mappings.update({domain: [] for domain in resolve})
+    mappings.update_by_resolving(resolve)
     mappings.save()
 
 
@@ -82,12 +81,25 @@ class Settings:
     debug: bool = False
     jobs: int = 0
     loglevel: str = "INFO"
-    log: str = "/var/log/update-blocklist"
+    log: str = "/var/log/update-blocklist.log"
     ipset: str = "blocked-ips"
     part: int = 100
-    domains: str = "/var/cache/update-blocklist/domains"
     mappings: str = "/var/cache/update-blocklist/mappings"
     url: str = "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/porn-only/hosts"
+
+    def makedirs(self):
+        """Create the directories from the settings.
+
+        Args:
+            settings: Settings object with the directories to create.
+
+        """
+        dirs: list[str] = [
+            dirname(self.mappings),
+        ]
+        for d in dirs:
+            logging.info("Trying to create directory %s", d)
+            makedirs(d, exist_ok=True)
 
 
 class Parser(ArgumentParser):
@@ -136,12 +148,6 @@ class Parser(ArgumentParser):
             ),
         )
         self.add_argument(
-            "-d",
-            "--domains",
-            help="Path to the file with the domains.",
-            default=Settings.domains,
-        )
-        self.add_argument(
             "--log", help="Path to the log file.", default=Settings.log
         )
         self.add_argument(
@@ -183,21 +189,6 @@ def init_logger(logfile: str, level: str):
     logger.setLevel(level)
     logger.addHandler(file)
     logger.addHandler(stream)
-
-
-def make_directories(settings: Settings):
-    """Create the directories from the settings.
-
-    Args:
-        settings: Settings object with the directories to create.
-
-    """
-    dirs: list[str] = [
-        dirname(settings.domains),
-        dirname(settings.mappings),
-    ]
-    for d in dirs:
-        makedirs(d, exist_ok=True)
 
 
 class Domains(set[str]):
@@ -320,6 +311,32 @@ class Mappings(dict[str, list[str]]):
         else:
             logging.info("Saved %s mappings to %s", len(self), self.path)
 
+    def update_by_resolving(self, domains: Domains):
+        """Update the mappings by resolving the IPs of the `domains`.
+
+        Domains that are not already in the mappings are added.
+
+        Args:
+            domains: Set of domains to resolve.
+
+        """
+        # TODO: Implement the method
+        self.update({domain: self._resolve(domain) for domain in domains})
+
+    def _resolve(self, domain: str) -> list[str]:
+        """Resolve the IP of a domain.
+
+        A domain might resolve to multiple IPs, so a list is returned.
+
+        Args:
+            domain: Domain to resolve.
+
+        Returns:
+            A list with the resolved IPs.
+
+        """
+        return [""]
+
 
 class InvalidCacheError(Exception):
     """Raised when the cache file is invalid."""
@@ -351,7 +368,6 @@ class TestParser(TestCase):
             "mappings": "/tmp/mappings.txt",
             "ipset": "blocked-ips",
             "part": 50,
-            "domains": "/tmp/domains.txt",
         }
         sys.argv = ["update-blocklist"]
         sys.argv.extend([f"--{k}={v}" for k, v in argv.items()])
