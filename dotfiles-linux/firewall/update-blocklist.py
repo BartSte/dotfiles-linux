@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
+import asyncio
 import logging
 import pickle
 import random
+import socket
 import sys
 import textwrap
 from argparse import ArgumentError, ArgumentParser, Namespace
@@ -11,9 +13,10 @@ from dataclasses import dataclass
 from logging.handlers import RotatingFileHandler
 from os import makedirs, remove
 from os.path import dirname
-from typing import Self, override
+from typing import Coroutine, Self, override
 from unittest import TestCase
 
+import aiodns
 import requests
 
 _DESCRIPTION = """
@@ -256,10 +259,14 @@ class Domains(set[str]):
 
 class Mappings(dict[str, list[str]]):
     path: str
+    _sem: asyncio.Semaphore
+    _resolver: aiodns.DNSResolver
 
-    def __init__(self, path: str):
+    def __init__(self, path: str, max_concurrent: int = 1000):
         super().__init__()
         self.path = path
+        self._sem = asyncio.Semaphore(max_concurrent)
+        self._resolver = aiodns.DNSResolver()
 
     @property
     def domains(self) -> Domains:
@@ -303,7 +310,7 @@ class Mappings(dict[str, list[str]]):
         makedirs(dirname(self.path), exist_ok=True)
         try:
             with open(self.path, "wb") as f:
-                pickle.dump(self, f)
+                pickle.dump(dict(self), f)
         except Exception as e:
             raise InvalidCacheError(
                 f"Error saving mappings file at {self.path}"
@@ -311,31 +318,27 @@ class Mappings(dict[str, list[str]]):
         else:
             logging.info("Saved %s mappings to %s", len(self), self.path)
 
-    def update_by_resolving(self, domains: Domains):
-        """Update the mappings by resolving the IPs of the `domains`.
+    async def update_by_resolving(self, domains: Domains):
+        tasks: list[Coroutine[None, None, tuple[str, list[str]]]] = [
+            self._resolve(domain) for domain in domains
+        ]
+        results = await asyncio.gather(*tasks)
+        self.update({domain: ips for domain, ips in results})
 
-        Domains that are not already in the mappings are added.
-
-        Args:
-            domains: Set of domains to resolve.
-
-        """
-        # TODO: Implement the method
-        self.update({domain: self._resolve(domain) for domain in domains})
-
-    def _resolve(self, domain: str) -> list[str]:
-        """Resolve the IP of a domain.
-
-        A domain might resolve to multiple IPs, so a list is returned.
-
-        Args:
-            domain: Domain to resolve.
-
-        Returns:
-            A list with the resolved IPs.
-
-        """
-        return [""]
+    async def _resolve(self, domain: str) -> tuple[str, list[str]]:
+        async with self._sem:
+            try:
+                # gethostbyname resolves the domain to IPv4 addresses.
+                result = await self._resolver.gethostbyname(
+                    domain, socket.AF_INET
+                )
+                ips: list[str] = result.addresses
+                assert isinstance(ips, list)
+                assert len(ips) == 0 or isinstance(ips[0], str)
+                return domain, ips
+            except Exception as e:
+                logging.error("Error resolving %s: %s", domain, e)
+                return domain, []
 
 
 class InvalidCacheError(Exception):
@@ -407,7 +410,7 @@ class TestDomains(TestCase):
             self.assertIsInstance(x, Domains)
 
 
-class TestLoadMappings(TestCase):
+class TestMappings(TestCase):
     settings: Settings
     mappings: Mappings
 
@@ -447,6 +450,12 @@ class TestLoadMappings(TestCase):
         result = Mappings(self.settings.mappings)
         with self.assertRaises(InvalidCacheError):
             result.load()
+
+    def test_update_by_resolving(self):
+        domains = Domains({"example.net", "example.nl"})
+        # TODO: we need an asycion event loop to run this
+        self.mappings.update_by_resolving(domains)
+        self.assertEqual(len(self.mappings), 4)
 
 
 class TestGetSubset(TestCase):
