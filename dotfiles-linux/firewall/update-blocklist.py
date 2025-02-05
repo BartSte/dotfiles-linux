@@ -11,11 +11,10 @@ from dataclasses import dataclass
 from logging.handlers import RotatingFileHandler
 from os import makedirs, remove
 from os.path import dirname
-from typing import Any, Self, override
+from typing import Self, override
 from unittest import TestCase
 
 import requests
-
 
 _DESCRIPTION = """
 Download the URL blocklist into the BLOCKLIST file. Resolve the IPs of the
@@ -157,6 +156,7 @@ class Parser(ArgumentParser):
         if not 0 <= value <= 100:
             raise ArgumentError(None, "part must be between 0 and 100")
         return value
+
 
 def init_logger(logfile: str, level: str):
     """Initialize the root logger with a rotating file handler.
