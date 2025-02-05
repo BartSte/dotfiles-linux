@@ -2,6 +2,7 @@
 
 import logging
 import pickle
+import random
 import sys
 from argparse import ArgumentParser, Namespace
 from contextlib import suppress
@@ -34,7 +35,8 @@ unnecessarily:
 def main():
     parser = Parser()
     args: Namespace = parser.parse_args()
-    settings = Settings(**vars(args))
+    settings: Settings = Settings(**vars(args))
+    mappings: Mappings = Mappings(path=settings.mappings)
 
     init_logger(settings.log, settings.loglevel)
 
@@ -44,14 +46,16 @@ def main():
     make_directories(settings)
     logging.info("Logger initialized")
 
-    mappings: dict[str, list[str]] = load_mappings(settings.mappings)
-    domains: set[str] = download_blocklist(settings.url)
-    domains_cache: set[str] = set(mappings.keys())
-    domains_to_resolve: set[str] = find_domains_to_resolve(
-        domains, domains_cache, settings.part
-    )
+    mappings.load()
 
-    # print(domains_to_resolve)
+    domains: set[str] = download_blocklist(settings.url)
+    domains_to_resolve: set[str] = find_domains_to_resolve(
+        domains, mappings.domains, settings.part
+    )
+    logging.info("%s domains to resolve", len(domains_to_resolve))
+
+    mappings.update({domain: [] for domain in domains_to_resolve})
+    mappings.save()
 
 
 @dataclass
@@ -190,31 +194,62 @@ def download_blocklist(url: str) -> set[str]:
     }
 
 
-def load_mappings(path: str) -> dict[str, list[str]]:
-    """Load a dictionary with that maps domains to IPs from a file.
+class Mappings(dict[str, list[str]]):
+    path: str
 
-    Here the `path` must contain a python pickled dictionary. If no file is
-    found, an empty dictionary is returned.
+    def __init__(self, path: str):
+        super().__init__()
+        self.path = path
 
-    Args:
-        path: Path to the file with the mappings.
+    @property
+    def domains(self) -> set[str]:
+        return set(self.keys())
 
-    Returns:
-        A dictionary with domains as keys and IPs as values.
+    @property
+    def ips(self) -> set[list[str]]:
+        return set(self.values())
 
-    """
-    try:
-        with open(path, "rb") as f:
-            result = pickle.load(f)
-    except FileNotFoundError:
-        logging.info("No mappings file found at %s", path)
-        return {}
-    except pickle.UnpicklingError as e:
-        raise InvalidCacheError(f"Invalid mappings file at {path}") from e
-    else:
-        if not isinstance(result, dict):
-            raise InvalidCacheError("The mappings file at %s is not a dict")
-        return result
+    def load(self):
+        """Load a dictionary with that maps domains to IPs from a file.
+
+        Here the `path` must contain a python pickled dictionary. If no file is
+        found, an empty dictionary is returned.
+
+        Args:
+            path: Path to the file with the mappings.
+
+        Returns:
+            A dictionary with domains as keys and IPs as values.
+
+        """
+        try:
+            with open(self.path, "rb") as f:
+                self.update(pickle.load(f))
+        except FileNotFoundError:
+            logging.info("No mappings file found at %s", self.path)
+        except pickle.UnpicklingError as e:
+            raise InvalidCacheError(
+                f"Invalid mappings file at {self.path}"
+            ) from e
+        except Exception as e:
+            raise InvalidCacheError(
+                f"Error loading mappings file at {self.path}"
+            ) from e
+        else:
+            logging.info("Loaded %s mappings from %s", len(self), self.path)
+
+    def save(self):
+        """Save the mappings to `Mappings.path`."""
+        makedirs(dirname(self.path), exist_ok=True)
+        try:
+            with open(self.path, "wb") as f:
+                pickle.dump(self, f)
+        except Exception as e:
+            raise InvalidCacheError(
+                f"Error saving mappings file at {self.path}"
+            ) from e
+        else:
+            logging.info("Saved %s mappings to %s", len(self), self.path)
 
 
 def find_domains_to_resolve(
@@ -230,6 +265,7 @@ def find_domains_to_resolve(
     Args:
         new: Set of domains to resolve.
         old: Set of domains resolved in the previous run.
+        part: Percentage of the subset of retained domains to resolve.
 
     Returns:
         Set of domains to resolve.
@@ -258,11 +294,8 @@ def get_subset(domains: set[str], part: int) -> set[str]:
         A random subset of the domains.
 
     """
-    # TODO: for now, just return the entire set or not
-    if part:
-        return domains
-    else:
-        return set()
+    n: int = len(domains) * part // 100
+    return set(random.sample(list(domains), n))
 
 
 class InvalidCacheError(Exception):
@@ -278,10 +311,11 @@ if __name__ == "__main__":
 ################################################################################
 class TestParser(TestCase):
     parser: Parser
+    _argv: list[str]
 
     def setUp(self):
         self.parser = Parser()
-        self._argv: list[str] = sys.argv
+        self._argv = sys.argv
 
     def tearDown(self):
         sys.argv = self._argv
@@ -322,29 +356,34 @@ class TestDownloadBlocklist(TestCase):
 
 class TestLoadMappings(TestCase):
     settings: Settings
-    mappings: dict[str, list[str]]
+    mappings: Mappings
 
     def setUp(self) -> None:
         self.settings = Settings(mappings="/tmp/mappings")
-        self.mappings = {
-            "example.com": "1.2.3.4",
-            "example.org": ["5.6.7.8", "9.10.11.12"],
-        }
+        self.mappings = Mappings(path=self.settings.mappings)
+        self.mappings.update(
+            {
+                "example.com": ["1.2.3.4"],
+                "example.org": ["5.6.7.8", "9.10.11.12"],
+            }
+        )
 
     def tearDown(self) -> None:
         with suppress(FileNotFoundError):
             remove(self.settings.mappings)
 
     def test_valid(self):
-        with open(self.settings.mappings, "wb") as f:
-            pickle.dump(self.mappings, f)
+        self.mappings.save()
 
-        result = load_mappings(self.settings.mappings)
+        result = Mappings(self.settings.mappings)
+        result.load()
         self.assertIsInstance(result, dict)
         self.assertEqual(result, self.mappings)
 
     def test_empty(self):
-        result = load_mappings(self.settings.mappings)
+        result = Mappings("")
+        result.load()
+
         self.assertIsInstance(result, dict)
         self.assertEqual(result, {})
 
@@ -352,8 +391,9 @@ class TestLoadMappings(TestCase):
         with open(self.settings.mappings, "wb") as f:
             pickle.dump({"invalid", "object"}, f)
 
+        result = Mappings(self.settings.mappings)
         with self.assertRaises(InvalidCacheError):
-            load_mappings(self.settings.mappings)
+            result.load()
 
 
 class TestFindDomainsToResolve(TestCase):
