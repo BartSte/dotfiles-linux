@@ -4,17 +4,20 @@ import logging
 import pickle
 import random
 import sys
-from argparse import ArgumentParser, Namespace
+import textwrap
+from argparse import ArgumentError, ArgumentParser, Namespace
 from contextlib import suppress
 from dataclasses import dataclass
 from logging.handlers import RotatingFileHandler
 from os import makedirs, remove
 from os.path import dirname
+from typing import Any, Self, override
 from unittest import TestCase
 
 import requests
 
-_USAGE = """
+
+_DESCRIPTION = """
 Download the URL blocklist into the BLOCKLIST file. Resolve the IPs of the
 domains in the blocklist and add them to an ipset named IPSET_NAME. Then add an
 iptables rule to drop packets to those IPs.
@@ -33,10 +36,10 @@ unnecessarily:
 
 
 def main():
+    sys.excepthook = excepthook
     parser = Parser()
     args: Namespace = parser.parse_args()
     settings: Settings = Settings(**vars(args))
-    mappings: Mappings = Mappings(path=settings.mappings)
 
     init_logger(settings.log, settings.loglevel)
 
@@ -44,18 +47,35 @@ def main():
     logging.info("Settings: %s", settings)
 
     make_directories(settings)
-    logging.info("Logger initialized")
 
+    mappings: Mappings = Mappings(path=settings.mappings)
     mappings.load()
 
-    domains: set[str] = download_blocklist(settings.url)
-    domains_to_resolve: set[str] = find_domains_to_resolve(
-        domains, mappings.domains, settings.part
-    )
-    logging.info("%s domains to resolve", len(domains_to_resolve))
+    domains: Domains = Domains()
+    domains.update_from_url(settings.url)
 
-    mappings.update({domain: [] for domain in domains_to_resolve})
+    diff: Domains = domains - mappings.domains
+    retained: Domains = mappings.domains & domains
+    resolve: Domains = retained.make_random_subset(settings.part) | diff
+    logging.info("%s domains to resolve", len(resolve))
+
+    mappings.update({domain: [] for domain in resolve})
     mappings.save()
+
+
+def excepthook(type_: type[BaseException], value: BaseException, traceback):
+    expected: tuple[type[BaseException], ...] = (
+        KeyboardInterrupt,
+        InvalidCacheError,
+        ArgumentError,
+    )
+    if isinstance(value, expected):
+        logging.error(value)
+    else:
+        logging.critical(
+            "Unexpected error: ", exc_info=(type_, value, traceback)
+        )
+    sys.exit(1)
 
 
 @dataclass
@@ -73,7 +93,7 @@ class Settings:
 
 class Parser(ArgumentParser):
     def __init__(self):
-        super().__init__(prog="update-blocklist", usage=_USAGE)
+        super().__init__(prog="update-blocklist", description=_DESCRIPTION)
         self.add_argument(
             "-u",
             "--url",
@@ -109,9 +129,12 @@ class Parser(ArgumentParser):
         self.add_argument(
             "-p",
             "--part",
-            type=int,
-            help="Percentage of existing mappings to resolve.",
+            type=self.check_part,
             default=Settings.part,
+            help=textwrap.dedent(
+                """Percentage between 0 and 100 of the stored mappings to
+                re-resolve."""
+            ),
         )
         self.add_argument(
             "-d",
@@ -129,6 +152,11 @@ class Parser(ArgumentParser):
             default=Settings.debug,
         )
 
+    def check_part(self, value: int | str) -> int:
+        value = int(value)
+        if not 0 <= value <= 100:
+            raise ArgumentError(None, "part must be between 0 and 100")
+        return value
 
 def init_logger(logfile: str, level: str):
     """Initialize the root logger with a rotating file handler.
@@ -172,26 +200,67 @@ def make_directories(settings: Settings):
         makedirs(d, exist_ok=True)
 
 
-def download_blocklist(url: str) -> set[str]:
-    """Download the blocklist from the URL and parse it into a file.
+class Domains(set[str]):
+    def update_from_url(self, url: str) -> Self:
+        """Download the blocklist from the URL and parse it into a file.
 
-    The blocklist is a list of domains that should be blocked. The file is
-    parsed to extract the domains and write them to the output file.
+        The blocklist is a list of domains that should be blocked. The file is
+        parsed to extract the domains and write them to the output file.
 
-    Args:
-        url: URL to download the blocklist from.
+        Args:
+            url: URL to download the blocklist from.
 
-    Returns:
-        A set with the domains in the blocklist.
+        Returns:
+            A set with the domains in the blocklist.
 
-    """
-    response: requests.Response = requests.get(url)
-    response.raise_for_status()
-    return {
-        line.split()[1]
-        for line in response.text.splitlines()
-        if line.startswith("0.0.0.0")
-    }
+        """
+        response: requests.Response = requests.get(url)
+        response.raise_for_status()
+        self.update(
+            line.split()[1]
+            for line in response.text.splitlines()
+            if line.startswith("0.0.0.0")
+        )
+        return self
+
+    def make_random_subset(self, part: int) -> Self:
+        """Return a random subset of the domains.
+
+        The size of the subset is determined by the `part` percentage. If `part`
+        is 100, the entire set is returned, if `part` is 0, an empty set is
+        returned.
+
+        Args:
+            domains: Set of domains to get the subset from.
+            part: Percentage of the subset to return.
+
+        Returns:
+            A random subset of the domains.
+
+        """
+        n: int = len(self) * part // 100
+        cls: type[Self] = type(self)
+        return cls(random.sample(list(self), n))
+
+    @override
+    def __sub__(self, other: Self) -> Self:
+        return type(self)(super().__sub__(other))
+
+    @override
+    def __and__(self, other: Self) -> Self:
+        return type(self)(super().__and__(other))
+
+    @override
+    def __or__(self, other: Self) -> Self:
+        return type(self)(super().__or__(other))
+
+    @override
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}({super().__repr__()})"
+
+    @override
+    def __str__(self) -> str:
+        return f"{type(self).__name__}({super().__str__()})"
 
 
 class Mappings(dict[str, list[str]]):
@@ -202,8 +271,8 @@ class Mappings(dict[str, list[str]]):
         self.path = path
 
     @property
-    def domains(self) -> set[str]:
-        return set(self.keys())
+    def domains(self) -> Domains:
+        return Domains(self.keys())
 
     @property
     def ips(self) -> set[list[str]]:
@@ -252,52 +321,6 @@ class Mappings(dict[str, list[str]]):
             logging.info("Saved %s mappings to %s", len(self), self.path)
 
 
-def find_domains_to_resolve(
-    new: set[str], old: set[str] | None = None, part: int = 100
-) -> set[str]:
-    """Find the domains that need to be resolved.
-
-    These are:
-        - The domains that are new, i.e., not in `old`.
-        - A random subset of the domains that are retained, i.e., they are both
-          in `new` and `old`.
-
-    Args:
-        new: Set of domains to resolve.
-        old: Set of domains resolved in the previous run.
-        part: Percentage of the subset of retained domains to resolve.
-
-    Returns:
-        Set of domains to resolve.
-
-    """
-    if old is None:
-        return new
-
-    diff: set[str] = new - old
-    retained: set[str] = old & new
-    retained_subset: set[str] = get_subset(retained, part)
-    return retained_subset | diff
-
-
-def get_subset(domains: set[str], part: int) -> set[str]:
-    """Return a random subset of the domains.
-
-    The size of the subset is determined by the `part` percentage. If `part` is
-    100, the entire set is returned, if `part` is 0, an empty set is returned.
-
-    Args:
-        domains: Set of domains to get the subset from.
-        part: Percentage of the subset to return.
-
-    Returns:
-        A random subset of the domains.
-
-    """
-    n: int = len(domains) * part // 100
-    return set(random.sample(list(domains), n))
-
-
 class InvalidCacheError(Exception):
     """Raised when the cache file is invalid."""
 
@@ -339,19 +362,33 @@ class TestParser(TestCase):
             self.assertEqual(getattr(settings, key), value)
 
 
-class TestDownloadBlocklist(TestCase):
+class TestDomains(TestCase):
     def test_valid(self):
-        domains = download_blocklist(Settings.url)
+        domains = Domains().update_from_url(Settings.url)
         self.assertIsInstance(domains, set)
         assert len(domains) > 10
 
     def test_invalid(self):
         with self.assertRaises(requests.exceptions.ConnectionError):
-            download_blocklist("https://notexisting_123abc.com")
+            Domains().update_from_url("https://notexisting_123abc.com")
 
     def test_not_domains_file(self):
-        x = download_blocklist("https://google.com")
+        x = Domains().update_from_url("https://google.com")
         assert x == set()
+
+    def test_operators(self):
+        a = Domains({"a", "b", "c"})
+        b = Domains({"b", "c", "d"})
+        minus = a - b
+        amp = a & b
+        bar = a | b
+
+        self.assertEqual(minus, {"a"})
+        self.assertEqual(amp, {"b", "c"})
+        self.assertEqual(bar, {"a", "b", "c", "d"})
+
+        for x in [minus, amp, bar]:
+            self.assertIsInstance(x, Domains)
 
 
 class TestLoadMappings(TestCase):
@@ -396,21 +433,25 @@ class TestLoadMappings(TestCase):
             result.load()
 
 
-class TestFindDomainsToResolve(TestCase):
-    def test_only_new(self):
-        new = {"a", "b", "c"}
-        old = None
-        result = find_domains_to_resolve(new, old, 0)
-        self.assertEqual(result, new)
+class TestGetSubset(TestCase):
+    def test_empty(self):
+        domains = Domains(set())
+        subset = domains.make_random_subset(100)
+        self.assertEqual(subset, set())
 
-    def test_only_retained(self):
-        new = set()
-        old = {"a", "b", "c"}
-        result = find_domains_to_resolve(new, old, 0)
-        self.assertEqual(result, set())
+    def test_all(self):
+        domains = Domains({"a", "b", "c"})
+        subset = domains.make_random_subset(100)
+        self.assertEqual(subset, domains)
 
-    def test_new_and_retained(self):
-        new = {"a", "b", "c"}
-        old = {"b", "c", "d"}
-        result = find_domains_to_resolve(new, old, 0)
-        self.assertEqual(result, {"a"})
+    def test_half(self):
+        domains = Domains({"a", "b", "c"})
+        subset = domains.make_random_subset(67)
+        self.assertTrue(subset.issubset(domains))
+        self.assertTrue(len(subset) == 2, f"len: {len(subset)}")
+
+    def test_large(self):
+        domains = Domains({f"{x}" for x in range(100000)})
+        subset = domains.make_random_subset(50)
+        self.assertTrue(subset.issubset(domains))
+        self.assertTrue(len(subset) == 50000, len(subset))
