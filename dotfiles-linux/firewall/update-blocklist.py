@@ -89,12 +89,11 @@ def excepthook(type_: type[BaseException], value: BaseException, traceback):
     Logs errors based on type and then exits.
 
     Args:
-
         type_ (type[BaseException]): The exception class.
         value (BaseException): The exception instance.
         traceback: Traceback object.
-    """
 
+    """
     expected: tuple[type[BaseException], ...] = (
         KeyboardInterrupt,
         InvalidCacheError,
@@ -225,6 +224,7 @@ class Parser(ArgumentParser):
 
         Raises:
             ArgumentError: If the value is not between 0 and 100.
+
         """
         value = int(value)
         if not 0 <= value <= 100:
@@ -236,9 +236,9 @@ def init_logger(logfile: str, level: str):
     """Initialize the root logger with a rotating file handler.
 
     Args:
-
         logfile (str): Path to the log file.
         level (str): Log level to set.
+
     """
     logger = logging.getLogger()
     level = getattr(logging, level)
@@ -270,8 +270,8 @@ class Domains(set[str]):
 
         Returns:
             Domains: The updated set of domains.
-        """
 
+        """
         response: requests.Response = requests.get(url)
         response.raise_for_status()
 
@@ -290,6 +290,7 @@ class Domains(set[str]):
 
         Returns:
             Domains: A random subset of the domains.
+
         """
         n: int = len(self) * part // 100
         cls: type[Self] = type(self)
@@ -326,11 +327,11 @@ class Mappings(dict[str, list[str]]):
 
     Attributes:
         path (str): Path to the pickled mappings file.
+
     """
 
     path: str
     _sem: asyncio.Semaphore
-
     _resolver: aiodns.DNSResolver
 
     def __init__(self, path: str):
@@ -338,6 +339,7 @@ class Mappings(dict[str, list[str]]):
 
         Args:
             path (str): File path to load/save the domain→IP mappings.
+
         """
         super().__init__()
         self.path = path
@@ -358,6 +360,7 @@ class Mappings(dict[str, list[str]]):
 
         Returns:
             set[str]: A set of IP addresses.
+
         """
         return set(ip for ips in self.values() for ip in ips)
 
@@ -366,6 +369,7 @@ class Mappings(dict[str, list[str]]):
 
         Raises:
             InvalidCacheError: If the mappings file is invalid.
+
         """
         try:
             with open(self.path, "rb") as f:
@@ -388,6 +392,7 @@ class Mappings(dict[str, list[str]]):
 
         Raises:
             InvalidCacheError: If saving fails.
+
         """
         makedirs(dirname(self.path), exist_ok=True)
         logging.info("Saving %s mappings to %s", len(self), self.path)
@@ -408,6 +413,7 @@ class Mappings(dict[str, list[str]]):
             domains (Domains): Set of domains to resolve.
             jobs (int, optional): Number of concurrent workers. Defaults to 10000.
             timeout (int, optional): Timeout in seconds for each resolution. Defaults to 5.
+
         """
         logging.info("Asyncio event loop starting with %s workers", jobs)
         asyncio.run(self._resolve_multiple(domains, jobs, timeout))
@@ -422,6 +428,7 @@ class Mappings(dict[str, list[str]]):
             domains (Domains): Set of domains to resolve.
             jobs (int, optional): Maximum number of concurrent resolutions.
             timeout (int, optional): Timeout for each resolution.
+
         """
         self._sem = asyncio.Semaphore(jobs)
         self._resolver = aiodns.DNSResolver()
@@ -447,6 +454,7 @@ class Mappings(dict[str, list[str]]):
 
         Returns:
             tuple[str, list[str]]: A tuple containing the domain and a list of resolved IPs.
+
         """
         async with self._sem:
             try:
@@ -472,6 +480,7 @@ class IpSet:
 
     Attributes:
         name (str): The name of the ipset.
+
     """
 
     def __init__(self, name: str):
@@ -479,6 +488,7 @@ class IpSet:
 
         Args:
             name (str): The name of the ipset.
+
         """
         self.name = name
 
@@ -487,25 +497,21 @@ class IpSet:
 
         Raises:
             IpSetError: If creation fails.
+
         """
-        subprocess.check_call(
-            ["ipset", "destroy", self.name],
-            stderr=subprocess.DEVNULL,
-        )
         try:
             exitcode: int = subprocess.check_call(
-                ["ipset", "create", self.name, "hash:ip"]
+                ["ipset", "create", self.name, "hash:ip"],
+                stderr=subprocess.DEVNULL,
             )
-        except subprocess.CalledProcessError as e:
-            raise IpSetError(
-                f"Error creating ipset {self.name}: {e.stderr}"
-            ) from e
+        except subprocess.CalledProcessError:
+            exitcode = subprocess.check_call(["ipset", "flush", self.name])
 
         if not exitcode:
-            logging.info("Created ipset %s", self.name)
+            logging.info("Empty ipset '%s' created", self.name)
         else:
             raise IpSetError(
-                f"Error creating ipset {self.name}: the exit code was {exitcode}"
+                f"Error creating/flushing ipset {self.name}: the exit code was {exitcode}"
             )
 
     def add(self, ips: set[str]):
@@ -540,6 +546,7 @@ class IpSet:
 
         Raises:
             IpSetError: If blocking fails.
+
         """
         try:
             process = subprocess.run(
@@ -600,7 +607,6 @@ class TestParser(TestCase):
 
     def test_parse(self):
         """Test that the parser correctly parses given command-line arguments."""
-
         argv: dict[str, str | int] = {
             "url": "https://example.com",
             "jobs": 10,
@@ -735,9 +741,6 @@ class TestGetSubset(TestCase):
         subset = domains.make_random_subset(50)
         self.assertTrue(subset.issubset(domains))
         self.assertEqual(len(subset), 50000)
-
-
-# Additional tests for Settings and IpSet
 
 
 class TestSettings(TestCase):
