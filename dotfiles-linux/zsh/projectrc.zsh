@@ -43,6 +43,7 @@ reload-session() {
         software-engineering-general
         orders-operations-reports-database
         fr_camera_module
+        fr_qt_material
     )
     [[ " ${winpyprojects[@]} " =~ " $PROJECTRC " ]] && PROJECTRC="winpyproject"
 
