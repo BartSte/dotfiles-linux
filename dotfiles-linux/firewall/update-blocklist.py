@@ -1,10 +1,11 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 import asyncio
 import logging
 import pickle
 import random
 import socket
+import subprocess
 import sys
 import textwrap
 from argparse import ArgumentError, ArgumentParser, Namespace
@@ -53,7 +54,10 @@ def main():
     mappings.load()
 
     domains: Domains = Domains()
-    domains.update_from_url(settings.url)
+    if settings.debug:
+        domains.update({"example.com", "example.org"})
+    else:
+        domains.update_from_url(settings.url)
 
     diff: Domains = domains - mappings.domains
     retained: Domains = mappings.domains & domains
@@ -63,12 +67,18 @@ def main():
     mappings.update_by_resolving(resolve, settings.jobs, settings.timeout)
     mappings.save()
 
+    ipset: IpSet = IpSet(settings.ipset)
+    ipset.make()
+    ipset.add(mappings.ips)
+    ipset.block()
+
 
 def excepthook(type_: type[BaseException], value: BaseException, traceback):
     expected: tuple[type[BaseException], ...] = (
         KeyboardInterrupt,
         InvalidCacheError,
         ArgumentError,
+        IpSetError,
     )
     if isinstance(value, expected):
         logging.error(value)
@@ -82,7 +92,7 @@ def excepthook(type_: type[BaseException], value: BaseException, traceback):
 @dataclass
 class Settings:
     debug: bool = False
-    ipset: str = "blocked-ips"
+    ipset: str = "blocked"
     jobs: int = 10000
     log: str = "/var/log/update-blocklist.log"
     loglevel: str = "INFO"
@@ -278,8 +288,8 @@ class Mappings(dict[str, list[str]]):
         return Domains(self.keys())
 
     @property
-    def ips(self) -> set[list[str]]:
-        return set(self.values())
+    def ips(self) -> set[str]:
+        return set(ip for ips in self.values() for ip in ips)
 
     def load(self):
         """Load a dictionary with that maps domains to IPs from a file.
@@ -326,7 +336,6 @@ class Mappings(dict[str, list[str]]):
         self, domains: Domains, jobs: int = 10000, timeout: int = 5
     ):
         logging.info("Asyncio event loop starting with %s workers", jobs)
-        # TODO add a timeout to the resolver for requestst that take too long.
         asyncio.run(self._resolve_multiple(domains, jobs, timeout))
         logging.info("Asyncio event loop finished")
 
@@ -344,6 +353,7 @@ class Mappings(dict[str, list[str]]):
             self[domain] = ips
             if i % 1000 == 0:
                 logging.info("Resolved %s domains", i)
+        logging.info("Resolved %s domains", len(tasks))
 
     async def _resolve(
         self, domain: str, timeout: int = 5
@@ -366,6 +376,92 @@ class Mappings(dict[str, list[str]]):
 
 class InvalidCacheError(Exception):
     """Raised when the cache file is invalid."""
+
+
+class IpSet:
+    def __init__(self, name: str):
+        self.name = name
+
+    def make(self):
+        """Create the ipset."""
+        subprocess.check_call(
+            ["ipset", "destroy", self.name],
+            stderr=subprocess.DEVNULL,
+        )
+
+        try:
+            exitcode: int = subprocess.check_call(
+                ["ipset", "create", self.name, "hash:ip"]
+            )
+        except subprocess.CalledProcessError as e:
+            raise IpSetError(
+                f"Error creating ipset {self.name}: {e.stderr}"
+            ) from e
+
+        if not exitcode:
+            logging.info("Created ipset %s", self.name)
+        else:
+            raise IpSetError(
+                f"Error creating ipset {self.name}: the exit code was {exitcode}"
+            )
+
+    def add(self, ips: set[str]):
+        """Add the `ips` to the ipset.
+
+        Args:
+            ips: List of IPs to add to the ipset.
+
+        """
+        commands: str = "\n".join(f"add {self.name} {ip}" for ip in ips)
+        try:
+            process = subprocess.run(
+                ["ipset", "restore"], input=commands.encode(), check=True
+            )
+        except subprocess.CalledProcessError as e:
+            raise IpSetError(
+                f"Error adding IPs to ipset {self.name}: {e.stderr}"
+            ) from e
+
+        if not process.returncode:
+            logging.info("Added %s IPs to ipset %s", len(ips), self.name)
+        else:
+            raise IpSetError(
+                f"Error adding IPs to ipset {self.name}: the exit code was {process.returncode}"
+            )
+
+    def block(self):
+        """Use iptables to block the IPs in the ipset."""
+        try:
+            process = subprocess.run(
+                [
+                    "iptables",
+                    "-I",
+                    "INPUT",
+                    "-m",
+                    "set",
+                    "--match-set",
+                    self.name,
+                    "src",
+                    "-j",
+                    "DROP",
+                ],
+                check=True,
+            )
+        except subprocess.CalledProcessError as e:
+            raise IpSetError(
+                f"Error blocking IPs in ipset {self.name}: {e.stderr}"
+            ) from e
+
+        if not process.returncode:
+            logging.info("Blocked IPs in ipset %s", self.name)
+        else:
+            raise IpSetError(
+                f"Error blocking IPs in ipset {self.name}: the exit code was {process.returncode}"
+            )
+
+
+class IpSetError(Exception):
+    """Raised when an error occurs with the ipset command."""
 
 
 if __name__ == "__main__":
