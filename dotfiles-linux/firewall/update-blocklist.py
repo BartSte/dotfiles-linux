@@ -80,7 +80,7 @@ def main():
     ipset: IpSet = IpSet(settings.ipset)
     ipset.make()
     ipset.add(mappings.ips)
-    ipset.block()
+    ipset.block_persistent()
 
 
 def excepthook(type_: type[BaseException], value: BaseException, traceback):
@@ -549,6 +549,7 @@ class IpSet:
 
         """
         try:
+            # FIXME: this rule is duplicated on each run...
             process = subprocess.run(
                 [
                     "iptables",
@@ -575,6 +576,13 @@ class IpSet:
             raise IpSetError(
                 f"Error blocking IPs in ipset {self.name}: the exit code was {process.returncode}"
             )
+
+    def block_persistent(self):
+        """Same as `block` but persists the rule across reboots."""
+        self.block()
+        with open("/etc/iptables/iptables.rules", "w") as f:
+            subprocess.run(["iptables-save"], stdout=f)
+        logging.info("Saved iptables rules to /etc/iptables/iptables.rules")
 
 
 class IpSetError(Exception):
