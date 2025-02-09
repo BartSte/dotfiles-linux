@@ -1,9 +1,0 @@
-#!/usr/bin/env bash
-
-# Remove the DROP rule
-sudo iptables -D OUTPUT -m set --match-set blocked dst -j DROP
-
-# Clear or remove the ipset
-sudo ipset flush blocked
-sudo ipset destroy blocked
-

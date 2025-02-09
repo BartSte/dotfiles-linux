@@ -1,4 +1,21 @@
 #!/usr/bin/env bash
 
-sudo cp -f ~/dotfiles-linux/firewall/update-blocklist /usr/local/bin
-sudo /usr/local/bin/update-blocklist
+URL="https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/porn-only/hosts"
+IPSET="blocked"
+
+echo "Creating or flushing ipset $IPSET"
+sudo ipset create "$IPSET" hash:ip &>/dev/null || sudo ipset flush "$IPSET"
+
+echo "Downloading blocklist from $URL"
+dnscache -o ipset -i "$IPSET" update "$URL" | sudo ipset restore
+
+if ! sudo iptables -C INPUT -m set --match-set "$IPSET" src -j DROP &>/dev/null; then
+    sudo iptables -I INPUT -m set --match-set "$IPSET" src -j DROP
+fi
+
+echo "Saving iptables rules to /etc/iptables/iptables.rules"
+sudo iptables-save | sudo tee /etc/iptables/iptables.rules &>/dev/null
+
+echo "Enabling and restarting iptables service"
+sudo systemctl enable iptables
+sudo systemctl restart iptables
