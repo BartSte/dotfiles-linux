@@ -2,7 +2,7 @@
 
 this_dir=$(readlink -f "$(dirname "$0")")
 
-URL="https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/porn-only/hosts"
+URL="https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-gambling-porn-social/hosts"
 IPSET="blocked"
 
 echo "Creating or flushing ipset $IPSET"
