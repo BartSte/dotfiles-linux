@@ -12,6 +12,7 @@ dnsmasq
 exa
 fd
 fzf
+github-cli
 grim
 inetutils
 isync

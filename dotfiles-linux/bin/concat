@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+usage="Usage: concat <dir> <pattern>
+
+Concatenate the contents of files that match the given <pattern> in the given
+<dir> and write the output to stdout.
+
+Options:
+  -h, --help  Show this help message and exit."
+
+if [[ $# -eq 0 ]]; then
+    echo "$usage"
+    exit 1
+fi
+if [[ $1 == "-h" || $1 == "--help" ]]; then
+    echo "$usage"
+    exit 0
+fi
+
+dir=$1
+pattern=$2
+
+find "$dir" -type f -name "$pattern" -exec cat {} \;
