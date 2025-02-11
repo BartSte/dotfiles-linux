@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-
-echo "Installing the sorters package using pipx"
-tmp_dir=$(mktemp -d)
-git clone https://github.com/BartSte/sorters.git $tmp_dir
-pipx install $tmp_dir
-rm -rf $tmp_dir
-
