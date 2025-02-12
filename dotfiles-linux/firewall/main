@@ -5,28 +5,22 @@ this_dir=$(readlink -f "$(dirname "$0")")
 URL="https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-gambling-porn-social/hosts"
 IPSET="blocked"
 
-echo "Creating or flushing ipset $IPSET"
-sudo ipset create "$IPSET" hash:ip &>/dev/null || sudo ipset flush "$IPSET"
+echo "Installing the 'ipset-load' command"
+sudo cp -f "$this_dir/ipset-load" /usr/local/bin/ipset-load
 
-echo "Downloading blocklist from $URL and saving to ipset $IPSET"
-dnscacher -o ipset -i "$IPSET" update "$URL" | sudo ipset restore
+echo "Downloading blocklist from $URL and saving in ipset format to /etc/ipset.conf with name $IPSET"
+dnscacher -o ipset -i "$IPSET" update "$URL" | sudo tee /etc/ipset.conf &>/dev/null
+
+sudo ipset-load "$IPSET" /etc/ipset.conf
 
 if ! sudo iptables -C INPUT -m set --match-set "$IPSET" src -j DROP &>/dev/null; then
     echo "Adding iptables rule to drop packets from ipset $IPSET"
     sudo iptables -I INPUT -m set --match-set "$IPSET" src -j DROP
+else
+    echo "iptables rule to drop packets from ipset $IPSET already exists"
 fi
 
 echo "Saving iptables rules to /etc/iptables/iptables.rules"
 sudo iptables-save | sudo tee /etc/iptables/iptables.rules &>/dev/null
 
-echo "Saving ipset $IPSET to /etc/ipset.conf"
-sudo ipset save "$IPSET" | sudo tee /etc/ipset.conf &>/dev/null
-
-echo "Enabling and restarting iptables service"
-sudo systemctl enable iptables
-sudo systemctl restart iptables
-
-echo "Enabling and restarting ipset-load service"
-sudo cp -f "$this_dir/ipset-load" /usr/local/bin/ipset-load
-sudo systemctl enable ipset-load
-sudo systemctl restart ipset-load
+# TODO: start ipset-load.service

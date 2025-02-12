@@ -20,10 +20,13 @@ fi
 ipset=$1
 file=$2
 
-if ! ipset create "$ipset" hash:ip &>/dev/null; then
-    echo "ipset $ipset already exists"
-    exit 0
-fi
+echo "Stopping iptables"
+systemctl stop iptables
 
-echo "Restoring ipset $ipset from $file"
+echo "Reset ipset $ipset from $file"
+ipset destroy "$ipset" &>/dev/null || true
+ipset create "$ipset" hash:ip
 ipset restore <"$file"
+
+echo "Starting iptables"
+systemctl start iptables
