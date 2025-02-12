@@ -20,13 +20,6 @@ fi
 ipset=$1
 file=$2
 
-echo "Stopping iptables"
-systemctl stop iptables
-
 echo "Reset ipset $ipset from $file"
-ipset destroy "$ipset" &>/dev/null || true
-ipset create "$ipset" hash:ip
+ipset create "$ipset" hash:ip &>/dev/null || ipset flush "$ipset"
 ipset restore <"$file"
-
-echo "Starting iptables"
-systemctl start iptables

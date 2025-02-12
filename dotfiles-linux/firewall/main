@@ -17,10 +17,12 @@ if ! sudo iptables -C INPUT -m set --match-set "$IPSET" src -j DROP &>/dev/null;
     echo "Adding iptables rule to drop packets from ipset $IPSET"
     sudo iptables -I INPUT -m set --match-set "$IPSET" src -j DROP
 else
-    echo "iptables rule to drop packets from ipset $IPSET already exists"
+    echo "All iptables rules needed already exist".
 fi
 
 echo "Saving iptables rules to /etc/iptables/iptables.rules"
 sudo iptables-save | sudo tee /etc/iptables/iptables.rules &>/dev/null
 
-# TODO: start ipset-load.service
+echo "Enabling iptables and ipset-load services"
+sudo systemctl enable iptables --now
+sudo systemctl enable ipset-load --now
