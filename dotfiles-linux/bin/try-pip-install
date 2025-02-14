@@ -3,7 +3,7 @@
 usage="Usage: try-pip-install [options] -- [<package> ...]
 
 Run pip install for the given packages. If installation fails, do not exit with
-an error code. Instead, continue with the next package.
+an error code. Instead, continue with the next package. 
 
 All option except -h or --help are passed to the pip install command.
 
