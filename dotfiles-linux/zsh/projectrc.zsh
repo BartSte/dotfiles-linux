@@ -47,6 +47,9 @@ reload-session() {
     )
     [[ " ${winpyprojects[@]} " =~ " $PROJECTRC " ]] && PROJECTRC="winpyproject"
 
+    # Set gitlab duo token
+    export GITLAB_TOKEN=$(rbw get gitlabtoken)
+
     # Try to activate a python virtual environment if it exists in a `.venv`
     # directory.
     if [[ -f .venv/bin/activate ]]; then
