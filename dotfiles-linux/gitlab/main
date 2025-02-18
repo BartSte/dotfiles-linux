@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+if [[ ! -f ~/.local/state/github.vim ]]; then
+    rbw get gitlabtoken >~/.local/state/github.vim
+fi
+cat ~/.local/state/github.vim
