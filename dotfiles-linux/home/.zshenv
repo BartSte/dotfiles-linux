@@ -20,7 +20,6 @@ zshenv() {
     export IPDB_CONTEXT_SIZE=10
     export TMUX_PLUGIN_DIR="$HOME/.tmux/plugins"
     export VI_MODE_SET_CURSOR=true
-    export GITLAB_TOKEN=$("$HOME/dotfiles-linux/gitlab/main")
 
     export HISTFILE=$HOME/.histfile
     export HISTSIZE=1000000000
