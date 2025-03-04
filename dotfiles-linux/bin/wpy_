@@ -31,6 +31,10 @@ Commands:
 EOF
 }
 
+escape_backslashes() {
+    sed 's/\\/\\\\/g'
+}
+
 parse_args() {
     while [[ $# -gt 0 ]]; do
         case $1 in
@@ -45,10 +49,11 @@ parse_args() {
             ;;
         --wpy-help)
             usage
-            exit 0
             ;;
         *)
-            command+=("$1")
+            echo "Adding $1 to command" >$debug
+            command+=("$(printf "%s\n" "$1" | escape_backslashes)")
+            echo "Command is now: ${command[*]}" >$debug
             ;;
         esac
         shift
@@ -56,49 +61,50 @@ parse_args() {
 }
 
 get_exe() {
-    local venv_dir=$1
+    venv_dir=$1
     echo "Checking for venv directory $venv_dir" >$debug
-    if [[ -d "$venv_dir" ]]; then
+    [[ -d "$venv_dir" ]] && {
         echo "Using venv $venv_dir" >$debug
         echo "$venv_dir/Scripts/python.exe"
-    fi
+    }
 }
 
 exe=""
 dir=false
 path=false
 debug=/dev/null
+wpy_ops_passed=false
 command=()
-
 parse_args "$@"
 
-# Resolve Python executable
 if [[ -n $WINVENV ]]; then
     echo "Using WINVENV" >$debug
-    exe=$(get_exe "$WINVENV")
+    exe="$(get_exe "$WINVENV")"
 elif [[ -n $WINPY ]]; then
     exe=$WINPY
 fi
 
-# Validate environment
-if ! grep -qi microsoft /proc/version 2>/dev/null; then
+if ! is_running wsl; then
     echo "Not running WSL" >$debug
-    exit 1
+    exit 0
 fi
+
+echo "path=$path
+debug=$debug
+wpy_ops_passed=$wpy_ops_passed
+command=${command[*]}
+exe=$exe" >$debug
 
 if [[ -z $exe ]]; then
     echo "No python interpreter found" >$debug
     exit 1
-fi
-
-# Handle output modes
-if [[ $path == true ]]; then
+elif [[ $path == true ]]; then
+    echo "Printing path to executable" >$debug
     echo "$exe"
-    exit 0
 elif [[ $dir == true ]]; then
+    echo "Printing directory containing executable" >$debug
     dirname "$exe"
-    exit 0
+elif [[ $wpy_ops_passed == false ]]; then
+    echo "Executing $exe ${command[*]}" >$debug
+    eval "$exe ${command[*]}"
 fi
-
-# Execute command
-"$exe" "${command[@]}"
