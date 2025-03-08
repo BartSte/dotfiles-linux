@@ -8,7 +8,6 @@ address=/startpage.com/0.0.0.0
 address=/searx.me/0.0.0.0
 address=/ecosia.org/0.0.0.0
 address=/instagram.com/0.0.0.0
-address=/youtube.com/0.0.0.0
 address=/facebook.com/0.0.0.0
 address=/twitter.com/0.0.0.0
 address=/flickr.com/0.0.0.0

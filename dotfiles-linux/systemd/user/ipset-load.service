@@ -1,0 +1,11 @@
+[Unit]
+Description=Restore ipset sets at boot
+Before=iptables.service
+
+[Service]
+Type=oneshot
+ExecStart=/home/barts/dotfiles-linux/bin/ipset-load blocked
+
+[Install]
+WantedBy=default.target
+

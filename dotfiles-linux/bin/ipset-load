@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+usage="Usage: $(basename "$0") <ipset>
+
+Restore the <ipset> from dnscacher. If the ipset already exists, do nothing.
+
+options:
+  -h, --help  Show this help message and exit"
+
+if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    echo "$usage"
+    exit 0
+fi
+
+if [[ "$#" -ne 1 ]]; then
+    echo "$usage"
+    exit 1
+fi
+
+ipset=$1
+file=$2
+
+echo "Reset ipset $ipset from $file"
+sudo ipset create "$ipset" hash:ip &>/dev/null || sudo ipset flush "$ipset"
+dnscacher -i "$ipset" -o ipset get | sudo ipset restore
