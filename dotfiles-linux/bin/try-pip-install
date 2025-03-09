@@ -9,7 +9,7 @@ All option except -h or --help are passed to the pip install command.
 
 Options:
     -h, --help      Show this message and exit.
-    Rest is is passed to pip install."""
+    Other options are passed to pip"""
 
 if [[ "$1" == "-h" || "$1" == "--help" ]]; then
     echo "$usage"
