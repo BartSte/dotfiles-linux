@@ -1,11 +1,11 @@
 #!/bin/env bash
 
 function clone() {
-    git clone --bare $1 $2
+    git clone --bare "$1" "$2"
 }
 
 function checkout() {
-    git --work-tree=$HOME --git-dir=$1 checkout -f
+    git --work-tree="$HOME" --git-dir="$1" checkout -f
 }
 
 github="https://github.com/BartSte"
@@ -16,22 +16,22 @@ base_dir="$HOME/dotfiles.git"
 lin="$github/dotfiles-linux.git"
 lin_dir="$HOME/dotfiles-linux.git"
 
-lg "# Installing git"
+echo "# Installing git" >&2
 sudo pacman -S git --noconfirm || sudo apt install git -y
 
-lg "# Clone BartSte/dotfiles.git as a bare repository"
-clone $base $base_dir
-checkout $base_dir
+echo "# Clone BartSte/dotfiles.git as a bare repository" >&2
+clone $base "$base_dir"
+checkout "$base_dir"
 
-lg "# Clone BartSte/dotfiles-linux.git as a bare repository"
-clone $lin $lin_dir
-checkout $lin_dir
+echo "# Clone BartSte/dotfiles-linux.git as a bare repository" >&2
+clone $lin "$lin_dir"
+checkout "$lin_dir"
 
-lg "Setup the environment variables"
+echo "Setup the environment variables" >&2
 source ~/.zshenv
 
-touch $HOME/.dotfiles_config.sh
-lg "export MICROSOFT_ACCOUNT=" >> $HOME/.dotfiles_config.sh
+touch "$HOME"/.dotfiles_config.sh
+echo "export MICROSOFT_ACCOUNT=" >>"$HOME"/.dotfiles_config.sh >&2
 
 cat <<EOF
 Please complete the file '$HOME/.dotfiles_config.sh' by setting the one of the 
