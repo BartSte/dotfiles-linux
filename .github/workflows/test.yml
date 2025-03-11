@@ -1,0 +1,10 @@
+name: CI
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    steps:
+      - name: Install package
+        run: pacman -Syu --noconfirm some-package
