@@ -7,4 +7,4 @@ jobs:
     container: archlinux:latest
     steps:
       - name: Install package
-        run: pacman -Syu --noconfirm some-package
+        run: pacman -Syu --noconfirm bat
