@@ -6,5 +6,6 @@ jobs:
     runs-on: ubuntu-latest
     container: archlinux:latest
     steps:
-      - name: Install package
-        run: pacman -Sy --noconfirm --needed bat
+      - name: Initialize
+        run: |
+          curl -O https://raw.githubusercontent.com/BartSte/dotfiles-linux/master/dotfiles-linux/initialize && bash ./initialize; rm ./initialize
