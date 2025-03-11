@@ -1,0 +1,34 @@
+name: Arch Linux AUR Package Workflow
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Update system and install prerequisites
+        run: |
+          set -e
+          pacman -Syu --noconfirm
+          pacman -S --noconfirm git base-devel
+
+      - name: Install AUR helper (yay)
+        run: |
+          set -e
+          tmp_dir=$(mktemp -d)
+          cd "$tmp_dir"
+          git clone https://aur.archlinux.org/yay.git
+          cd yay
+          makepkg -si --noconfirm
+
+      - name: Verify yay installation
+        run: |
+          set -e
+          yay --version
+
+
