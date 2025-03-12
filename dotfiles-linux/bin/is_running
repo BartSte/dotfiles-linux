@@ -71,7 +71,7 @@ tmux() {
 }
 
 ci() {
-    if [ "$CI" == true ]; then
+    if [ -n "$CI" ]; then
         exit 0
     else
         exit 1
