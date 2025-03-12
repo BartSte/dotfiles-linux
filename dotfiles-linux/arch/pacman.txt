@@ -42,7 +42,6 @@ python-icalendar
 python-ipdb
 python-markdown
 python-pip
-python-pip
 python-pipx
 python-pygments
 python-pynvim
