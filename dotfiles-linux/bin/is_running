@@ -71,7 +71,7 @@ tmux() {
 }
 
 ci() {
-    if [ -n "$CI" ]; then
+    if [ -n "$GITHUB_ACTIONS" ]; then
         exit 0
     else
         exit 1
