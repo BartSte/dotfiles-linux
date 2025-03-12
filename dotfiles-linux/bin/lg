@@ -39,6 +39,6 @@ parse_args() {
 message=""
 LGFILE=${LGFILE:-~/.local/state/lg.log}
 parse_args "$@"
-
+mkdir -p "$(dirname "$LGFILE")"
 echo "$message" >>"$LGFILE"
 echo "$message" >&2
