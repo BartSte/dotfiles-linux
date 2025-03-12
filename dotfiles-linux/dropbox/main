@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -eo pipefail
+
 # Ensure rclone is installed
 if ! command -v rclone &>/dev/null; then
     lg "rclone is not installed. Please install it and try again."

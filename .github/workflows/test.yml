@@ -15,12 +15,13 @@ jobs:
           echo 'barts ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
 
       - name: Initialize
-        run: sudo -u barts bash -c '
-          cd /home/barts
-          curl -O https://raw.githubusercontent.com/BartSte/dotfiles-linux/master/dotfiles-linux/initialize
-          bash ./initialize
-          rm ./initialize
-          echo "export MICROSOFT_ACCOUNT=MicrosoftPersonal" > "$HOME/.dotfiles_config.sh"
+        run: |
+          sudo -u barts bash -c '
+            cd /home/barts
+            curl -O https://raw.githubusercontent.com/BartSte/dotfiles-linux/master/dotfiles-linux/initialize
+            bash ./initialize
+            rm ./initialize
+            echo "export MICROSOFT_ACCOUNT=MicrosoftPersonal" > "$HOME/.dotfiles_config.sh"
           '
 
       - name: Main

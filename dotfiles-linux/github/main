@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -eo pipefail
+
 is_auth=$(gh auth status | grep "Logged in to github.com")
 if [[ -n $is_auth ]]; then
     echo "Already authenticated"

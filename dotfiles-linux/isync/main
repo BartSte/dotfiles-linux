@@ -1,4 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+set -eo pipefail
 #
 source="$HOME/dotfiles-linux/isync/.mbsyncrc_$MICROSOFT_ACCOUNT"
 destination="$HOME/.mbsyncrc"

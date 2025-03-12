@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -eo pipefail
+
 # Glob the directory ~/dotfiles-linux/systemd/user/ and store all files in an
 # array. Then copy each file to ~/.config/systemd/user. Overwrite existing
 # files. Next, enable each user script with:

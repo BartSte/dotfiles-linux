@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -eo pipefail
+
 get_spell() {
     lang=$1
     mkdir ~/.config/nvim/spell --parent

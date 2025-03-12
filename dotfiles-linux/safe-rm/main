@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-set -eou pipefail
+
+set -eo pipefail
 
 # check if safe-rm is installed
 if ! command -v safe-rm &>/dev/null; then

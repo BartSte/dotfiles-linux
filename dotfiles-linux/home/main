@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+
+set -eo pipefail
 # 
 # This script symlinks all the files in the directory where this script is
 # located to the home directory to the $HOME directory. Only the script itself

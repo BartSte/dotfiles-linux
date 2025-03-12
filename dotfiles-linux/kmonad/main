@@ -1,4 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+set -eo pipefail
 
 sudo killall kmonad
 sudo systemctl disable kmonad.service
