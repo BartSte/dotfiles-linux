@@ -14,7 +14,8 @@ install_yay() {
     git clone https://aur.archlinux.org/yay.git "$dir"
     old_dir=$(pwd)
     cd "$dir" || exit
-    makepkg -s --noconfirm
+    export PACMAN_NO_CONFIRM=1  # Disable interactive confirmations
+    yes | makepkg -s --noconfirm  # Pipe yes to any remaining prompts
     sudo pacman -U --noconfirm *.pkg.tar.*
     cd "$old_dir" || exit
     rm -rf "$dir"
