@@ -71,11 +71,6 @@ tmux() {
 }
 
 ci() {
-    if [ -n "$GITHUB_ACTIONS" ]; then
-        exit 0
-    else
-        exit 1
-    fi
+    [[ "${GITHUB_ACTIONS:-}" == "true" ]]
 }
-
 eval "$1"

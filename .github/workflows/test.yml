@@ -4,9 +4,7 @@ on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: 
-      image: archlinux:latest
-      options: --tty
+    container: archlinux:latest
     steps:
       - name: Deps
         run: pacman -Sy --noconfirm git sudo
@@ -15,16 +13,14 @@ jobs:
         run: |
           useradd -m barts
           echo 'barts ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
-          echo 'Defaults secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"' >> /etc/sudoers
 
       - name: Initialize
-        run: |
-          sudo -u barts bash -c '
-            cd /home/barts
-            curl -O https://raw.githubusercontent.com/BartSte/dotfiles-linux/master/dotfiles-linux/initialize
-            bash ./initialize
-            rm ./initialize
-            echo "export MICROSOFT_ACCOUNT=MicrosoftPersonal" > "$HOME/.dotfiles_config.sh"
+        run: sudo -u barts bash -c '
+          cd /home/barts
+          curl -O https://raw.githubusercontent.com/BartSte/dotfiles-linux/master/dotfiles-linux/initialize
+          bash ./initialize
+          rm ./initialize
+          echo "export MICROSOFT_ACCOUNT=MicrosoftPersonal" > "$HOME/.dotfiles_config.sh"
           '
 
       - name: Main
