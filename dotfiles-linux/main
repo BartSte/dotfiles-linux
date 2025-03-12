@@ -53,6 +53,10 @@ execute_exclude() {
     done
 }
 
+main_arch_ci() {
+    ~/dotfiles-linux/arch/main
+}
+
 main_raspberry() {
     ~/dotfiles-linux/apt/main
     ~/dotfiles-linux/git/main
@@ -65,19 +69,19 @@ main_raspberry() {
 # - sway: using the windows gui instead
 # - kmonad: using the windows kmonad instead
 main_arch_wsl() {
-    execute_exclude apt sway kmonad dns proxy 
+    execute_exclude apt sway kmonad dns proxy
 }
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        -h | --help)
-            usage
-            exit 0
-            ;;
-        *)
-            lg "Unknown option: $1"
-            exit 1
-            ;;
+    -h | --help)
+        usage
+        exit 0
+        ;;
+    *)
+        lg "Unknown option: $1"
+        exit 1
+        ;;
     esac
 done
 
@@ -87,6 +91,9 @@ source ~/.dotfiles_config.sh
 if is_running arch && running wsl; then
     lg "Running on Arch Linux WSL"
     main_arch_wsl
+elif is_running arch && running ci; then
+    lg "Running on Arch Linux CI"
+    main_arch_ci
 elif is_running arch; then
     lg "Running on Arch Linux"
     main_arch

@@ -10,6 +10,7 @@ Check if the machien is running one of the following systems:
 - arch
 - raspberry OS
 - tmux
+- CI environment
 
 where:
     <type>  the type of the distro to check"
@@ -67,6 +68,14 @@ raspberry() {
 
 tmux() {
     [[ -n $TMUX ]]
+}
+
+ci() {
+    if [ "$GITHUB_ACTIONS" = "true" ]; then
+        exit 0
+    else
+        exit 1
+    fi
 }
 
 eval "$1"
