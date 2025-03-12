@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -eo pipefail
+
 dir=~/dotfiles-linux/arch
 
 . $dir/helpers.sh
@@ -9,7 +11,7 @@ sudo pacman -Syu --noconfirm
 lg "# Installing base dependencies pacman"
 sudo pacman -S --needed base-devel --noconfirm
 lg "# Installing user dependencies pacman"
-sudo cat "$dir/pacman.txt" | sudo pacman -S --noconfirm -
+sudo pacman -S --noconfirm $(cat "$dir/pacman.txt")
 
 lg "# Installing dependencies AUR"
 install_yay /tmp/yay
