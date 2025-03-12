@@ -55,6 +55,7 @@ execute_exclude() {
 
 main_arch_ci() {
     ~/dotfiles-linux/arch/main
+    ~/dotfiles-linux/home/main
 }
 
 main_raspberry() {
