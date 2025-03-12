@@ -19,7 +19,7 @@ EOF
 }
 
 DIR=~/dotfiles-linux
-PATH=$DIR/bin:$PATH
+export PATH=$DIR/bin:$PATH
 
 main_arch() {
     execute_exclude apt wsl
