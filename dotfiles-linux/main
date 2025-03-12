@@ -88,10 +88,10 @@ done
 lg "Installing BartSte/dotfiles-linux repository"
 source ~/.dotfiles_config.sh
 
-if is_running arch && running wsl; then
+if is_running arch && is_running wsl; then
     lg "Running on Arch Linux WSL"
     main_arch_wsl
-elif is_running arch && running ci; then
+elif is_running arch && is_running ci; then
     lg "Running on Arch Linux CI"
     main_arch_ci
 elif is_running arch; then
