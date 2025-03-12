@@ -4,7 +4,9 @@ on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: archlinux:latest
+    container: 
+      image: archlinux:latest
+      options: --tty
     steps:
       - name: Deps
         run: pacman -Sy --noconfirm git sudo
@@ -14,7 +16,6 @@ jobs:
           useradd -m barts
           echo 'barts ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
           echo 'Defaults secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"' >> /etc/sudoers
-          echo 'Defaults !requiretty' >> /etc/sudoers
 
       - name: Initialize
         run: |
