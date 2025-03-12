@@ -7,7 +7,7 @@ jobs:
     container: archlinux:latest
     steps:
       - name: Deps
-        run: pacman -S --noconfirm git sudo
+        run: pacman -Sy --noconfirm git sudo
 
       - name: Initialize
         run: curl -O https://raw.githubusercontent.com/BartSte/dotfiles-linux/master/dotfiles-linux/initialize && bash ./initialize; rm ./initialize
