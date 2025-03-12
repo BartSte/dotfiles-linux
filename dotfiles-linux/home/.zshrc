@@ -35,8 +35,6 @@ _zshrc_p10k() {
 zshrc() {
     source "$HOME/dotfiles-linux/zsh/bootstrap.zsh"
 
-    [[ $1 == "-v" || $1 == "--verbose" ]] && _zshrc_verbose=true
-
     _zshrc_config "$HOME/dotfiles-linux/zsh"
     _zshrc_plugins /usr/share/zsh/plugins
     _zshrc_p10k

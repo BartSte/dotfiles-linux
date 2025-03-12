@@ -12,5 +12,5 @@ jobs:
       - name: Initialize
         run: |
           curl -O https://raw.githubusercontent.com/BartSte/dotfiles-linux/master/dotfiles-linux/initialize && bash ./initialize; rm ./initialize
-          echo "export MICROSOFT_ACCOUNT=MicrosoftPersonal" > "$HOME/.dotfiles_config.sh"
-          ~/dotfiles-linux/main
+          # echo "export MICROSOFT_ACCOUNT=MicrosoftPersonal" > "$HOME/.dotfiles_config.sh"
+          # ~/dotfiles-linux/main
