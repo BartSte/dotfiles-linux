@@ -3,16 +3,12 @@ usage="Usage: lg [OPTION] <message>
 
 This script logs the <message> to stderr and a file that is specified by the 
 LGFILE environment variable. If the LGFILE environment variable is not
-set, the script will log to ~/.local/state/lg.log. If the LGVERBOSE
-environment variable is set to true, the script will log more information to 
-stderr. If no <message> is provided, the script will read from stdin.
+set, the script will log to ~/.local/state/lg.log. If no <message> is provided,
+the script will read from stdin.
 
 options:
     -h, --help      Show this help message.
-    -q, --quiet     Only log to stderr when the LGVERBOSE environment
-                    variable is set to true.
-    -r, --reset     Make the log file empty before logging the message.
-    -t, --title     Log the message as a title."
+    -r, --reset     Make the log file empty before logging the message."
 
 set -euo pipefail
 
@@ -23,16 +19,8 @@ parse_args() {
             echo "$usage"
             exit 0
             ;;
-        -q | --quiet)
-            quiet=true
-            shift
-            ;;
         -r | --reset)
             rm -f "$LGFILE"
-            shift
-            ;;
-        -t | --title)
-            title=true
             shift
             ;;
         *)
@@ -45,23 +33,12 @@ parse_args() {
             ;;
         esac
     done
-
     message=${message:-$(cat)}
 }
 
 message=""
-title=false
-quiet=false
 LGFILE=${LGFILE:-~/.local/state/lg.log}
-LGVERBOSE=${LGVERBOSE:-false}
 parse_args "$@"
 
-if [[ $title == true ]]; then
-    message="## $message"
-fi
-
 echo "$message" >>"$LGFILE"
-
-if [[ $quiet == false || $LGVERBOSE == true ]]; then
-    echo "$message" >&2
-fi
+echo "$message" >&2

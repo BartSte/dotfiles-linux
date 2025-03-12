@@ -3,15 +3,15 @@
 get_spell() {
     lang=$1
     mkdir ~/.config/nvim/spell --parent
-    curl -o ~/.config/nvim/spell/"$lang".utf-8.spl https://ftp.nluug.nl/pub/vim/runtime/spell/"$lang".utf-8.spl 2>&1 | lg -q
+    curl -o ~/.config/nvim/spell/"$lang".utf-8.spl https://ftp.nluug.nl/pub/vim/runtime/spell/"$lang".utf-8.spl 2>&1 | lg
 }
 
 symlink_config() {
     local directory_config=$1
     dotfiles=~/dotfiles/nvim # ensure that root also uses the dotfiles of the user
 
-    lg "Symlinking nvim config as $(whoami)" -q
-    lg "Installing in $directory_config" -q
+    lg "Symlinking nvim config as $(whoami)"
+    lg "Installing in $directory_config"
 
     rm "$directory_config" -rf
     mkdir "$directory_config" -p
@@ -26,16 +26,16 @@ symlink_config() {
 
 }
 
-lg "Setting up nvim" -t
+lg "Setting up nvim"
 nvim_config_dir=~/.config/nvim
 symlink_config $nvim_config_dir
 get_spell nl
 get_spell en 
-sudo pacman -S python-pynvim --noconfirm | lg -q
+sudo pacman -S python-pynvim --noconfirm | lg
 
 if [ "$(whoami)" != "root" ]; then
     root_config=/root/.config
-    lg "Linking nvim config to root: $nvim_config_dir -> $root_config" -q
+    lg "Linking nvim config to root: $nvim_config_dir -> $root_config"
     sudo mkdir -p $root_config
     sudo ln -sf "$nvim_config_dir" $root_config
 fi
