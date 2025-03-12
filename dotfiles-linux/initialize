@@ -29,7 +29,7 @@ echo "# Clone BartSte/dotfiles-linux.git as a bare repository" >&2
 clone $lin "$lin_dir"
 checkout "$lin_dir"
 
-echo "Setup the environment variables" >&2
+echo "# Setup the environment variables" >&2
 source "$HOME"/dotfiles-linux/home/.zshenv
 
 touch "$HOME"/.dotfiles_config.sh
