@@ -19,6 +19,7 @@ EOF
 }
 
 DIR=~/dotfiles-linux
+. $DIR/home/.zshenv
 
 main_arch() {
     execute_exclude apt wsl
