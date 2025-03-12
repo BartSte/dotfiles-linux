@@ -30,7 +30,7 @@ elif [ "$2" != "" ]; then
     log "Error: too many arguments"
     echo "$usage"
     exit 1
-elif ! [[ "$1" =~ ^(wsl|arch|raspberry|tmux)$ ]]; then
+elif ! [[ "$1" =~ ^(wsl|arch|raspberry|tmux|ci)$ ]]; then
     log "Error: unknown argument"
     echo "$usage"
     exit 1
