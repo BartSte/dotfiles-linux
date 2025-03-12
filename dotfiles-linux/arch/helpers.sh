@@ -15,7 +15,7 @@ install_yay() {
     old_dir=$(pwd)
     cd "$dir" || exit
     export PACMAN_NO_CONFIRM=1  # Disable interactive confirmations
-    yes | makepkg -s --noconfirm  # Pipe yes to any remaining prompts
+    makepkg -s --noconfirm  # Pipe yes to any remaining prompts
     sudo pacman -U --noconfirm *.pkg.tar.*
     cd "$old_dir" || exit
     rm -rf "$dir"
