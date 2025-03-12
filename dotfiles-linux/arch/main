@@ -4,10 +4,12 @@ dir=~/dotfiles-linux/arch
 
 . $dir/helpers.sh
 
-lg "# Installing dependencies pacman"
+lg "# Updating pacman"
 sudo pacman -Syu --noconfirm
+lg "# Installing base dependencies pacman"
 sudo pacman -S --needed base-devel --noconfirm
-echo "$dir/pacman.txt" | sudo pacman -S --noconfirm -
+lg "# Installing user dependencies pacman"
+sudo cat "$dir/pacman.txt" | sudo pacman -S --noconfirm -
 
 lg "# Installing dependencies AUR"
 install_yay /tmp/yay
