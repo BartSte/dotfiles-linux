@@ -30,7 +30,7 @@ clone $lin "$lin_dir"
 checkout "$lin_dir"
 
 echo "Setup the environment variables" >&2
-source "$HOME"/dotfiles-linux/home/.zshrc
+source "$HOME"/dotfiles-linux/home/.zshenv
 
 touch "$HOME"/.dotfiles_config.sh
 echo "export MICROSOFT_ACCOUNT=" >>"$HOME"/.dotfiles_config.sh >&2
