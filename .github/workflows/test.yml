@@ -1,7 +1,5 @@
 name: Test
 on: [push]
-env:
-  CI: true
 
 jobs:
   build:
@@ -27,4 +25,8 @@ jobs:
           '
 
       - name: Main
-        run: sudo -u barts bash -c '~/dotfiles-linux/main'
+        run: |
+          sudo -u barts bash -c '
+            export CI=true
+            ~/dotfiles-linux/main
+          '
