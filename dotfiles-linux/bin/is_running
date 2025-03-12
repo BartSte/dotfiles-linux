@@ -71,6 +71,6 @@ tmux() {
 }
 
 ci() {
-    [[ "${GITHUB_ACTIONS:-}" == "true" ]]
+    [[ -n "$GITHUB_ACTIONS" ]]
 }
 eval "$1"
