@@ -20,7 +20,7 @@ parse_args() {
             exit 0
             ;;
         -r | --reset)
-            rm -f "$LGFILE"
+            rm -f "$LGFILE" || true
             shift
             ;;
         *)
