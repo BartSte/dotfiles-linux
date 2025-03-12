@@ -14,8 +14,7 @@ install_yay() {
     git clone https://aur.archlinux.org/yay.git "$dir"
     old_dir=$(pwd)
     cd "$dir" || exit
-    makepkg -s --noconfirm
-    sudo pacman -U --noconfirm "*.pkg.tar.*"
+    makepkg -si --noconfirm
     cd "$old_dir" || exit
     rm -rf "$dir"
 }
