@@ -8,7 +8,7 @@ copy_config() {
     directory_config=$2
     destination="$directory_config/davmail.properties"
 
-    rm $destination || mkdir $directory_config
+    rm "$destination" 2>/dev/null || mkdir "$directory_config"
     cp $source $destination
     lg "Davmail: copied $source to $destination"
 }

@@ -45,16 +45,16 @@ execute_exclude() {
     # Execute all other modules. Do not execute the modules in the `exclude`.
     for module in $dirs; do
         if [[ " ${exclude[@]} " =~ " ${module} " ]]; then
-            lg "Skip: $module"
+            lg "### Skip: $module"
         elif [[ -f "$DIR/$module/main" ]]; then
-            lg "Execute: $module"
+            lg "### Execute: $module"
             $DIR/"$module"/main
         fi
     done
 }
 
 main_arch_ci() {
-    execute_exclude apt wsl bitwarden systemd
+    execute_exclude apt wsl bitwarden systemd dns firewall
 }
 
 main_raspberry() {
