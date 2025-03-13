@@ -13,8 +13,6 @@ reload-session() {
     PROJECTRC=$(get_project_name)
     export PROJECTRC
 
-    _zshrc_log "Project name: $PROJECTRC"
-
     # If a project is a python project that is developed for windows, then
     # loading the winpyprojectrc.zsh file is nice as it allows you to call the
     # python windows interpreter from wsl. See the wpy executable for more

@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -eo pipefail
+
 mkdir -p ~/.config/key2pane
 ln -sf ~/dotfiles-linux/key2pane/config.json ~/.config/key2pane/config.json
 lg "Linking key2pane config.json" >&2

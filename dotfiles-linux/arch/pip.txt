@@ -1,9 +1,8 @@
+dnscacher
 ipython
-khalorg
+key2pane
 khal
 khalorg
 khard
-vdirsyncer
-key2pane
-dnscacher
 pygeneral
+vdirsyncer

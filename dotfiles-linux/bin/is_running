@@ -10,6 +10,7 @@ Check if the machien is running one of the following systems:
 - arch
 - raspberry OS
 - tmux
+- CI environment
 
 where:
     <type>  the type of the distro to check"
@@ -29,7 +30,7 @@ elif [ "$2" != "" ]; then
     log "Error: too many arguments"
     echo "$usage"
     exit 1
-elif ! [[ "$1" =~ ^(wsl|arch|raspberry|tmux)$ ]]; then
+elif ! [[ "$1" =~ ^(wsl|arch|raspberry|tmux|ci)$ ]]; then
     log "Error: unknown argument"
     echo "$usage"
     exit 1
@@ -69,4 +70,7 @@ tmux() {
     [[ -n $TMUX ]]
 }
 
+ci() {
+    [[ -n "$CI" ]]
+}
 eval "$1"

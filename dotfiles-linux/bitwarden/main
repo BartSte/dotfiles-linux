@@ -1,5 +1,6 @@
-#!/bin/bash
-#
+#!/usr/bin/env bash
+
+set -eo pipefail
 
 if rbw unlocked; then
     echo "Rbw is already setup, lock rbw first to switch to another account"

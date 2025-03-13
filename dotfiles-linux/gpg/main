@@ -1,4 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+set -eo pipefail
 
 MS_EMAIL=$(bw-cli-get username "$MICROSOFT_ACCOUNT")
 MS_REALNAME=$(bw-cli-get name "$MICROSOFT_ACCOUNT")

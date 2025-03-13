@@ -8,7 +8,7 @@ zshenv() {
 
     export BROWSER='qutebrowser'
     export WSLBROWSER='/mnt/c/Program Files/qutebrowser/qutebrowser.exe'
-    hash nvim && export EDITOR='nvim'
+    hash nvim && export EDITOR='nvim' || unset EDITOR
     export GPG_TTY=$(tty)
     export EARBUDS='30:53:C1:B8:CE:F6'
     export ESCDELAY=0
@@ -26,7 +26,7 @@ zshenv() {
     export SAVEHIST=100000
     export KEYTIMEOUT=1
 
-    _fzfenv
+    source ~/dotfiles-linux/zsh/fzf.zsh && _fzfenv
     export HELP_MESSAGE_RC="$HOME/dotfiles-linux/zsh/fzfhelprc.zsh"
     export FZF_OPEN_REGEX_EXTRA=$(~/dotfiles-linux/tmux/tmux-fzf-open/regex-extra)
 }

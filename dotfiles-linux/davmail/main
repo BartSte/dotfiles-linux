@@ -1,4 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+set -eo pipefail
+
 this_dir=$(dirname "$(realpath "${BASH_SOURCE:-$0}")")
 
 source "$this_dir/helpers.bash"

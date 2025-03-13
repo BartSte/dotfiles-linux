@@ -22,10 +22,3 @@ append_to_path() {
         fi
     done
 }
-
-_zshrc_log() {
-    if ${_zshrc_verbose:-false}; then
-        echo "$@" 2>&1
-    fi
-}
-_zshrc_verbose=${_zshrc_verbose:-false}

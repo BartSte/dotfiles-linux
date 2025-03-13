@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -eo pipefail
+
 lg "Linking arduino config"
 mkdir -p ~/.arduino15
 ln -sf ~/dotfiles-linux/arduino/arduino-cli.yaml ~/.arduino15/arduino-cli.yaml

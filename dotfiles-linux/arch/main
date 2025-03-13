@@ -1,20 +1,24 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+set -eo pipefail
 
 dir=~/dotfiles-linux/arch
 
 . $dir/helpers.sh
 
-lg "# Installing dependencies pacman"
+lg "# Updating pacman"
 sudo pacman -Syu --noconfirm
+lg "# Installing base dependencies pacman"
 sudo pacman -S --needed base-devel --noconfirm
-sudo pacman -S --noconfirm - <$dir/pacman.txt
+lg "# Installing user dependencies pacman"
+sudo pacman -S --noconfirm $(cat "$dir/pacman.txt")
 
 lg "# Installing dependencies AUR"
 install_yay /tmp/yay
-yay -S --noconfirm - <$dir/aur.txt
+yay -S --noconfirm $(cat $dir/aur.txt)
 
 lg "# Installing node.js"
 install_node_js
 
 lg "# Installing python packages"
-install_python_packages $dir/pip.txt
+pipx install $(cat $dir/pip.txt)
