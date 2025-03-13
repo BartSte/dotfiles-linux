@@ -54,8 +54,7 @@ execute_exclude() {
 }
 
 main_arch_ci() {
-    ~/dotfiles-linux/arch/main
-    ~/dotfiles-linux/home/main
+    execute_exclude apt wsl bitwarden systemd
 }
 
 main_raspberry() {
