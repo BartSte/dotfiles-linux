@@ -54,7 +54,7 @@ execute_exclude() {
 }
 
 main_arch_ci() {
-    execute_exclude apt wsl bitwarden systemd dns firewall
+    execute_exclude apt wsl bitwarden systemd dns firewall dropbox
 }
 
 main_raspberry() {
