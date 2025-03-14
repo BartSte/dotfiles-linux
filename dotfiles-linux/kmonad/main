@@ -2,8 +2,8 @@
 
 set -eo pipefail
 
-sudo killall kmonad
-sudo systemctl disable kmonad.service
+sudo killall kmonad || true
+sudo systemctl disable kmonad.service || true
 
 pushd .
 cd ~/dotfiles-linux/kmonad
