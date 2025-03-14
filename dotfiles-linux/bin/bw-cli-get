@@ -25,7 +25,9 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-if [[ -z $USE_BW_CLI ]]; then
+if [[ -n $CI ]]; then
+    echo "CI active"
+elif [[ -z $USE_BW_CLI ]]; then
     rbw_get $@
 else
     bw_get $@
