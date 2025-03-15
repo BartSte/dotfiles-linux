@@ -6,5 +6,9 @@ set -eo pipefail
 
 lg "Qutebrowser: link config files"
 link_config
+
+lg "Qutebrowser: link bookmarks"
 link_bookmarks
+
+lg "Qutebrowser: link userscripts"
 link_userscripts

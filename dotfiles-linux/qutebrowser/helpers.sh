@@ -4,7 +4,7 @@ link_config() {
     destination_dir=~/.config/qutebrowser
 
     lg "Ensure $destination_dir exists"
-    mkdir -p "$(dirname $destination_dir)"
+    mkdir -p "$destination_dir"
 
     echo "Link all files from $source_dir to $destination_dir"
     files=$(find $source_dir -maxdepth 1 -type f -exec basename {} \;)
