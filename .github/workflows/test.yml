@@ -14,7 +14,7 @@ jobs:
 
       - name: Deps
         run: |
-          pacman -Sy --noconfirm git sudo
+          pacman -Sy --noconfirm git sudo zsh
 
       - name: Setup barts user
         run: |
