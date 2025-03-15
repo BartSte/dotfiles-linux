@@ -35,11 +35,13 @@ source "$HOME"/dotfiles-linux/home/.zshenv
 touch "$HOME"/.dotfiles_config.sh
 echo "export MICROSOFT_ACCOUNT=" >>"$HOME"/.dotfiles_config.sh >&2
 
-cat <<EOF
-Please complete the file '$HOME/.dotfiles_config.sh' by setting the one of the 
-following two microsft accounts: 
- - export MICROSOFT_ACCOUNT=MicrosoftPersonal 
- - export MICROSOFT_ACCOUNT=MicrosoftWork
-One of these accounts is used to configure the mail accounts for neomutt and
-isync, using bitwarden to retrieve the passwords.
-EOF
+echo "
+Please complete the file '$HOME/.dotfiles_config.sh' by setting the following
+environment variables:
+
+- RBWEMAIL: the email use for bitwarden password manager. This is always you
+    personal email since work paswords are also stored here.
+
+- MICROSOFT_ACCOUNT: the bitwarden key (MicrosoftPersonal or MicrosoftWork)
+    that holds the credentials to your microsft account. The microsft account
+    is used to configure neomutt and isync."

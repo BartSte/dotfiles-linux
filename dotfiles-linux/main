@@ -54,7 +54,9 @@ execute_exclude() {
 }
 
 main_arch_ci() {
-    execute_exclude apt wsl bitwarden systemd dns firewall dropbox kmonad
+    # user interaction: bitwarden, dropbox
+    # bitwarden dependent: git, mutt, isync, gpg, vdirsyncer
+    execute_exclude apt bitwarden systemd dns firewall dropbox kmonad
 }
 
 main_raspberry() {
