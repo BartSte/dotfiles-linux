@@ -6,8 +6,15 @@ jobs:
     runs-on: ubuntu-latest
     container: archlinux:latest
     steps:
+      - name: Cache pacman packages
+        uses: actions/cache@v3
+        with:
+          path: /var/cache/pacman/pkg
+          key: pacman-packages-${{ runner.os }}
+
       - name: Deps
-        run: pacman -Sy --noconfirm git sudo
+        run: |
+          pacman -Sy --noconfirm git sudo
 
       - name: Setup barts user
         run: |
@@ -23,11 +30,6 @@ jobs:
             rm ./initialize
             echo "export MICROSOFT_ACCOUNT=MicrosoftPersonal" > "$HOME/.dotfiles_config.sh"
           '
-      - name: Cache pacman packages
-        uses: actions/cache@v3
-        with:
-          path: /var/cache/pacman/pkg
-          key: pacman-packages-${{ runner.os }}
 
       - name: Main
         run: |
