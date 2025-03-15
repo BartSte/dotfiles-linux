@@ -16,6 +16,9 @@ jobs:
           path: /var/cache/pacman/pkg
           key: pacman-packages-${{ runner.os }}
 
+      - name: Deps
+        run: pacman -Sy --noconfirm git sudo
+
       - name: Setup barts user
         run: |
           useradd -m barts
@@ -23,7 +26,6 @@ jobs:
 
       - name: Initialize
         run: |
-          pacman -Sy --noconfirm git sudo
           sudo -u barts bash -c '
             cd /home/barts
             curl -O https://raw.githubusercontent.com/BartSte/dotfiles-linux/master/dotfiles-linux/initialize
