@@ -1,6 +1,10 @@
 name: Test
 on: [push]
 
+concurrency:
+  group: test-arch-linux-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test-arch-linux:
     runs-on: ubuntu-latest
