@@ -16,11 +16,6 @@ jobs:
           path: /var/cache/pacman/pkg
           key: pacman-packages-${{ runner.os }}
 
-      - name: Deps
-        run: |
-          pacman -Sy --noconfirm git sudo zsh
-          pacman -Sc --noconfirm
-
       - name: Setup barts user
         run: |
           useradd -m barts
@@ -28,6 +23,8 @@ jobs:
 
       - name: Initialize
         run: |
+          pacman -Sy --noconfirm git sudo
+          pacman -Sc --noconfirm
           sudo -u barts bash -c '
             cd /home/barts
             curl -O https://raw.githubusercontent.com/BartSte/dotfiles-linux/master/dotfiles-linux/initialize
@@ -38,7 +35,7 @@ jobs:
 
       - name: Main
         run: |
-          sudo -u barts zsh -c '
+          sudo -u barts bash -c '
             export CI=true
             ~/dotfiles-linux/main
           '
