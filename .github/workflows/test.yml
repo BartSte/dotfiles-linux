@@ -24,7 +24,6 @@ jobs:
       - name: Initialize
         run: |
           pacman -Sy --noconfirm git sudo
-          pacman -Sc --noconfirm
           sudo -u barts bash -c '
             cd /home/barts
             curl -O https://raw.githubusercontent.com/BartSte/dotfiles-linux/master/dotfiles-linux/initialize
