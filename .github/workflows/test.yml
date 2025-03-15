@@ -10,7 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     container: archlinux:latest
     steps:
-
       - name: Cache pacman packages
         uses: actions/cache@v3
         with:
@@ -20,6 +19,7 @@ jobs:
       - name: Deps
         run: |
           pacman -Sy --noconfirm git sudo zsh
+          pacman -Sc --noconfirm
 
       - name: Setup barts user
         run: |
