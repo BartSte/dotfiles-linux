@@ -44,6 +44,7 @@ python-pip
 python-pipx
 python-pygments
 python-pynvim
+python-pynvim 
 python-pytest
 python-pytz
 python-tzlocal

@@ -33,7 +33,6 @@ nvim_config_dir=~/.config/nvim
 symlink_config $nvim_config_dir
 get_spell nl
 get_spell en 
-sudo pacman -S python-pynvim --noconfirm | lg
 
 if [ "$(whoami)" != "root" ]; then
     root_config=/root/.config

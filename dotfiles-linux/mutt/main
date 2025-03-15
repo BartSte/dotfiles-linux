@@ -2,7 +2,6 @@
 
 set -eo pipefail
 
-lg "# Neomutt"
 directory="$HOME/.config/neomutt"
 cache="$HOME/.cache/neomutt"
 
