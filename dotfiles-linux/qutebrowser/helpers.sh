@@ -41,13 +41,13 @@ link_userscripts() {
     destination_dir="$HOME/.config/qutebrowser/greasemonkey"
 
     lg "Ensure $destination_dir exists"
-    mkdir -p "$(dirname $destination_dir)"
+    mkdir -p "$destination_dir"
 
     lg "Ensure $source_dir exists, in case dropbox is setup later."
-    mkdir -p "$(dirname $source_dir)"
+    mkdir -p "$source_dir"
 
     lg "Link all files from $source_dir to $destination_dir"
-    files=$(find $source_dir -maxdepth 1 -type f -exec basename {} \;)
+    files=$(find "$source_dir" -maxdepth 1 -type f -exec basename {} \;)
     for file in $files; do
         source="$source_dir/$file"
         destination="$destination_dir/$file"
