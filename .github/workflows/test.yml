@@ -33,7 +33,7 @@ jobs:
 
       - name: Main
         run: |
-          sudo -u barts bash -c '
+          sudo -u barts zsh -c '
             export CI=true
             ~/dotfiles-linux/main
           '
