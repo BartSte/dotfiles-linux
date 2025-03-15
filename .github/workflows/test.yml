@@ -23,6 +23,11 @@ jobs:
             rm ./initialize
             echo "export MICROSOFT_ACCOUNT=MicrosoftPersonal" > "$HOME/.dotfiles_config.sh"
           '
+      - name: Cache pacman packages
+        uses: actions/cache@v3
+        with:
+          path: /var/cache/pacman/pkg
+          key: pacman-packages-${{ runner.os }}
 
       - name: Main
         run: |
