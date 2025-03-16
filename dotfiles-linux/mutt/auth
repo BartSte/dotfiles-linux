@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+lg "Setting up OAUTH2 for mutt. This requires user interaction."
+init_mutt_oauth2
+
+lg "Synchronizing mail"
+mymailsync
