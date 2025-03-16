@@ -12,11 +12,3 @@ copy_config() {
     cp $source $destination
     lg "Davmail: copied $source to $destination"
 }
-
-activate_as_service() {
-    killall davmail
-    systemctl --user disable davmail.service
-    systemctl --user daemon-reload
-    systemctl --user enable davmail.service
-    systemctl --user start davmail.service
-}

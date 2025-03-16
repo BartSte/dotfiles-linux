@@ -54,7 +54,7 @@ execute_exclude() {
 }
 
 main_arch_ci() {
-    # user interaction: bitwarden, dropbox
+    # user interaction: bitwarden, dropbox, mutt, davmail
     # bitwarden dependent: git, mutt, isync, gpg, vdirsyncer
     execute_exclude apt bitwarden systemd dns firewall dropbox kmonad
 }

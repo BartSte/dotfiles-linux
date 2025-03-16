@@ -9,6 +9,9 @@ jobs:
   test-arch-linux:
     runs-on: ubuntu-latest
     container: archlinux:latest
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Cache pacman packages
         uses: actions/cache@v3
