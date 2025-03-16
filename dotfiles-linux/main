@@ -7,13 +7,11 @@ usage() {
 Usage: main [OPTION]...
 
 This script resides in a directory where each subdirectory is a module. The 
-modules that contain a file called $(main) will be executed by running the $(main)
+modules that contain a file called "main" will be executed by running this
 script.
 
-In general, the order does not matter. However, the directories listed in the 
-$(exclude) array need to be executed first, in the order they are listed.
-
 options:
+    --dry           Dry run.
     -h, --help      Show this help message.
 EOF
 }
@@ -27,28 +25,36 @@ main_arch() {
 
 # Execute all modules except the ones that are listed as arguments.
 execute_exclude() {
-    local exclude dirs module front
+    local exclude dirs module front end both
     exclude=("$@")
     front=("bitwarden" "arch" "systemd" "home")
+    end=("mutt")
+    both=("${front[@]}" "${end[@]}")
 
     # Get all the directories in the $DIR directory.
     dirs=$(find $DIR -maxdepth 1 -mindepth 1 -type d -exec basename {} \; | sort)
 
-    # Remove the directories in the `front` array from the `dirs` array. Next,
-    # prepend the `front` array to the `dirs` array. As a result, the `front`
-    # array will be executed first, in the order they are listed.
-    for item in "${front[@]}"; do
+    # Remove the directories in the `front` and `end` array from the `dirs`
+    # array. Next, prepend the `front` array to the `dirs` array, and append the
+    # `end` array. As a result, the `front` array will be executed first, in the
+    # order they are listed.
+    for item in "${both[@]}"; do
         dirs=$(echo "$dirs" | sed "s/$item//")
     done
-    dirs=$(echo "${front[@]}" $dirs)
+    dirs=$(echo "${front[@]}" "$dirs" "${end[@]}")
+    for item in "${exclude[@]}"; do
+        dirs=$(echo "$dirs" | sed "s/$item//")
+    done
+    dirs=$(echo "$dirs" | tr '\n' ' ' | sed 's/ \+/ /g')
+    lg "### Executing modules: $dirs"
 
     # Execute all other modules. Do not execute the modules in the `exclude`.
     for module in $dirs; do
-        if [[ " ${exclude[@]} " =~ " ${module} " ]]; then
-            lg "### Skip: $module"
-        elif [[ -f "$DIR/$module/main" ]]; then
+        if [[ -f "$DIR/$module/main" ]]; then
             lg "### Execute: $module"
-            $DIR/"$module"/main
+            if ! $DRY; then
+                $DIR/"$module"/main
+            fi
         fi
     done
 }
@@ -56,7 +62,7 @@ execute_exclude() {
 main_arch_ci() {
     # user interaction: bitwarden, mutt, vidirsyncer/davmail
     # systemd dependent (not supported on CI): systemd dns firewall kmonad
-    execute_exclude apt systemd dns firewall kmonad
+    execute_exclude apt bitwarden systemd dns firewall kmonad
 }
 
 main_raspberry() {
@@ -74,8 +80,13 @@ main_arch_wsl() {
     execute_exclude apt sway kmonad dns proxy
 }
 
+DRY=false
 while [[ $# -gt 0 ]]; do
     case "$1" in
+    --dry)
+        DRY=true
+        shift
+        ;;
     -h | --help)
         usage
         exit 0

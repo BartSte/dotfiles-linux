@@ -11,3 +11,9 @@ ln -sf "$HOME"/dotfiles-linux/mutt/muttrc "$directory"/muttrc
 mkdir -p "$HOME"/.local/share/mail/INBOX
 mkdir -p "$cache"
 touch "$cache"/header_cache
+
+lg "Setting up OAUTH2 for mutt. This requires user interaction."
+init_mutt_oauth2
+
+lg "Synchronizing mail"
+mymailsync

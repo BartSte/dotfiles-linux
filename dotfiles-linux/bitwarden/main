@@ -2,9 +2,7 @@
 
 this_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
-if [[ -n "$CI" ]]; then
-    lg "Running in CI, not using bitwarden"
-elif [[ -n $USE_BW_CLI ]]; then
+if [[ -n $USE_BW_CLI ]]; then
     "$this_dir"/bw_main
 else
     "$this_dir"/rbw_main
