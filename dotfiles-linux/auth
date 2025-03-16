@@ -1,0 +1,45 @@
+#!/bin/env bash
+
+set -eo pipefail
+
+usage="main [-h, --help, --dry-run]
+
+Runs the 'auth' scripts in the '~/dotfiles-linux' directory.
+
+Options:
+    --dry-run     Dry run mode.
+    -h, --help    Show this help message and exit."
+
+DIR=~/dotfiles-linux
+DRY=false
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+    --dry-run)
+        DRY=true
+        shift
+        ;;
+    -h | --help)
+        echo "$usage"
+        exit 0
+        ;;
+    *)
+        lg "Unknown option: $1"
+        exit 1
+        ;;
+    esac
+done
+
+main() {
+    lg "Installing BartSte/dotfiles-linux repository"
+    . $DIR/home/.zshenv
+    source ~/.dotfiles_config.sh
+
+    lg "All the auth files are executed. User interaction is required."
+    execute
+}
+
+execute() {
+    # TODO: execute the auth files in dotfiles-linux in a specific order.
+}
+
+main

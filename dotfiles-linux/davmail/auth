@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-
-set -eo pipefail
-
-lg "Open a new shell and run 'mbsync -a'. Next, follow the instructions in this 
-shell. Checkout the 'Davmail' section in the README for troubleshooting."
-
-davmail ~/.config/davmail/davmail.properties

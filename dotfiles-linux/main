@@ -2,95 +2,15 @@
 
 set -eo pipefail
 
-usage() {
-    cat <<EOF
-Usage: main [OPTION]...
+usage="main [-h, --help, --dry-run]
 
-This script resides in a directory where each subdirectory is a module. The 
-modules that contain the files "main" and/or "install" are executed. The "main"
-files are executed first, followed by the "auth" files.
+Runs the 'main' scripts in the '~/dotfiles-linux' directory based on the OS.
 
-options:
-    --dry           Dry run.
-    -h, --help      Show this help message.
-EOF
-}
+Options:
+    --dry-run     Dry run mode.
+    -h, --help    Show this help message and exit."
 
 DIR=~/dotfiles-linux
-. $DIR/home/.zshenv
-
-main_arch() {
-    execute_exclude apt wsl
-}
-
-# Execute all modules except the ones that are listed as arguments.
-execute_exclude() {
-    local exclude dirs module front end
-    exclude=("$@")
-    front=("bitwarden" "arch" "systemd" "home")
-
-    # Get all the directories in the $DIR directory.
-    dirs=$(find $DIR -maxdepth 1 -mindepth 1 -type d -exec basename {} \; | sort)
-
-    # Remove the directories in the `front` and `end` array from the `dirs`
-    # array. Next, prepend the `front` array to the `dirs` array, and append the
-    # `end` array. As a result, the `front` array will be executed first, in the
-    # order they are listed.
-    for item in "${front[@]}"; do
-        dirs=$(echo "$dirs" | sed "s/$item//")
-    done
-    dirs=$(echo "${front[@]}" "$dirs")
-    for item in "${exclude[@]}"; do
-        dirs=$(echo "$dirs" | sed "s/$item//")
-    done
-    dirs=$(echo "$dirs" | tr '\n' ' ' | sed 's/ \+/ /g')
-    lg "### Executing modules: $dirs"
-
-    # Execute all other modules. Do not execute the modules in the `exclude`.
-    for module in $dirs; do
-        if [[ -f "$DIR/$module/main" ]]; then
-            lg "### Execute main: $module"
-            if ! $DRY; then
-                $DIR/"$module"/main
-            fi
-        fi
-    done
-
-    # Execute the "auth" files at the end
-    if [[ -n "$CI" ]]; then
-        return
-    fi
-    for module in $dirs; do
-        if [[ -f "$DIR/$module/auth" ]]; then
-            lg "### Execute auth: $module"
-            if ! $DRY; then
-                $DIR/"$module"/auth
-            fi
-        fi
-    done
-}
-
-main_arch_ci() {
-    # user interaction: bitwarden, mutt, davmail
-    # systemd dependent (not supported on CI): systemd dns firewall kmonad
-    execute_exclude apt bitwarden systemd dns firewall kmonad
-}
-
-main_raspberry() {
-    ~/dotfiles-linux/apt/main
-    ~/dotfiles-linux/git/main
-    ~/dotfiles-linux/home/main
-    ~/dotfiles-linux/zsh/main
-    ~/dotfiles-linux/tmux/main
-}
-
-# On wsl, do not install:
-# - sway: using the windows gui instead
-# - kmonad: using the windows kmonad instead
-main_arch_wsl() {
-    execute_exclude apt sway kmonad dns proxy
-}
-
 DRY=false
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -99,7 +19,7 @@ while [[ $# -gt 0 ]]; do
         shift
         ;;
     -h | --help)
-        usage
+        echo "$usage"
         exit 0
         ;;
     *)
@@ -109,27 +29,109 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-lg "Installing BartSte/dotfiles-linux repository"
-source ~/.dotfiles_config.sh
+### Main entry point for the dotfiles installation script
+### Detects the current operating environment and invokes the appropriate installation routine
+### Handles dry-run mode and help options
+main() {
+    lg "Installing BartSte/dotfiles-linux repository"
+    . $DIR/home/.zshenv
+    source ~/.dotfiles_config.sh
 
-lg "First all the main files are executed, and then all auth files. User
-interaction is required at the start (bitwarden) and at the end (the rest)."
+    lg "All the main files are executed. User interaction is required at the start (bitwarden)."
 
-if is_running arch; then
-    if is_running wsl; then
-        lg "Running on Arch Linux WSL"
-        main_arch_wsl
-    elif is_running ci; then
-        lg "Running on Arch Linux CI"
-        main_arch_ci
+    if is_running arch; then
+        if is_running wsl; then
+            lg "Running on Arch Linux WSL"
+            main_arch_wsl
+        elif is_running ci; then
+            lg "Running on Arch Linux CI"
+            main_arch_ci
+        else
+            lg "Running on Arch Linux"
+            main_arch
+        fi
+    elif is_running raspberry; then
+        lg "Running on Raspberry Pi"
+        main_raspberry
     else
-        lg "Running on Arch Linux"
-        main_arch
+        lg "Unknown system"
+        exit 1
     fi
-elif is_running raspberry; then
-    lg "Running on Raspberry Pi"
-    main_raspberry
-else
-    lg "Unknown system"
-    exit 1
-fi
+}
+
+### Arch Linux installation routine
+### Excludes WSL-specific modules from execution
+main_arch() {
+    execute_exclude apt wsl
+}
+
+### Execute all module main scripts except those specified as arguments
+### @param $@ List of modules to exclude from execution
+### Modules are processed in specific order: 'front' modules first, followed by others
+execute_exclude() {
+    local exclude=("$@") front=(bitwarden arch systemd home)
+    local all_dirs dir module
+    local -A excluded_map
+
+    # Create lookup map for excluded modules
+    for module in "${exclude[@]}"; do
+        excluded_map["$module"]=1
+    done
+
+    # Get sorted directory list using safer array approach
+    mapfile -t all_dirs < <(
+        find "$DIR" -maxdepth 1 -mindepth 1 -type d -printf '%f\n' | sort
+    )
+
+    # Process directories in correct order: front first, then others (excluding excluded)
+    local dirs=()
+    # Add front modules first if not excluded
+    for module in "${front[@]}"; do
+        if [[ ! ${excluded_map["$module"]+_} ]]; then
+            dirs+=("$module")
+        fi
+    done
+
+    # Add remaining directories excluding front modules and excluded
+    for dir in "${all_dirs[@]}"; do
+        if [[ ! ${excluded_map["$dir"]+_} ]] &&
+            [[ ! " ${front[*]} " =~ " $dir " ]]; then
+            dirs+=("$dir")
+        fi
+    done
+
+    lg "### Executing modules: ${dirs[*]}"
+    if $DRY; then
+        return
+    fi
+    for module in "${dirs[@]}"; do
+        if [[ -f "$DIR/$module/main" ]]; then
+            lg "### Execute main: $module"
+            "$DIR/$module/main"
+        fi
+    done
+}
+
+### CI environment installation routine for Arch Linux
+### Excludes modules requiring user interaction or systemd dependencies
+main_arch_ci() {
+    execute_exclude apt bitwarden systemd dns firewall kmonad
+}
+
+### Raspberry Pi installation routine
+### Executes core modules for Raspberry Pi environment
+main_raspberry() {
+    ~/dotfiles-linux/apt/main
+    ~/dotfiles-linux/git/main
+    ~/dotfiles-linux/home/main
+    ~/dotfiles-linux/zsh/main
+    ~/dotfiles-linux/tmux/main
+}
+
+### WSL installation routine for Arch Linux
+### Excludes GUI and Windows-handled modules from execution
+main_arch_wsl() {
+    execute_exclude apt sway kmonad dns proxy
+}
+
+main
