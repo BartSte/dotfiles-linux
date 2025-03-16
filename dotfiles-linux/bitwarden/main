@@ -1,17 +1,11 @@
 #!/usr/bin/env bash
 
-set -eo pipefail
+this_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
-if rbw unlocked; then
-    echo "Rbw is already setup, lock rbw first to switch to another account"
-    exit 0
-elif [ -z "$RBWEMAIL" ]; then
-    echo "RBWEMAIL is not set"
-    exit 1
+if [[ -n "$CI" ]]; then
+    lg "Running in CI, not using bitwarden"
+elif [[ -n $USE_BW_CLI ]]; then
+    "$this_dir"/bw_main
+else
+    "$this_dir"/rbw_main
 fi
-
-lg "Setting up bitwarden cli."
-# Always use my personal bitwarden account as this also contains a work section
-rbw config set email "$RBWEMAIL"
-rbw config set lock_timeout 86400
-lg "Finished setting up bitwarden."

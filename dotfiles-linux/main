@@ -29,7 +29,7 @@ main_arch() {
 execute_exclude() {
     local exclude dirs module front
     exclude=("$@")
-    front=("arch" "systemd" "bitwarden" "home")
+    front=("bitwarden" "arch" "systemd" "home")
 
     # Get all the directories in the $DIR directory.
     dirs=$(find $DIR -maxdepth 1 -mindepth 1 -type d -exec basename {} \; | sort)
@@ -54,9 +54,9 @@ execute_exclude() {
 }
 
 main_arch_ci() {
-    # user interaction: bitwarden, dropbox, mutt, davmail
-    # bitwarden dependent: git, mutt, isync, gpg, vdirsyncer
-    execute_exclude apt bitwarden systemd dns firewall dropbox kmonad
+    # user interaction: bitwarden, mutt, vidirsyncer/davmail
+    # systemd dependent (not supported on CI): systemd dns firewall kmonad
+    execute_exclude apt systemd dns firewall kmonad
 }
 
 main_raspberry() {

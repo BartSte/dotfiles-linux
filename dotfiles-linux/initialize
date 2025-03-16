@@ -39,7 +39,7 @@ echo "
 Please complete the file '$HOME/.dotfiles_config.sh' by setting the following
 environment variables:
 
-- RBWEMAIL: the email use for bitwarden password manager. This is always you
+- BWEMAIL: the email use for bitwarden password manager. This is always you
     personal email since work paswords are also stored here.
 
 - MICROSOFT_ACCOUNT: the bitwarden key (MicrosoftPersonal or MicrosoftWork)

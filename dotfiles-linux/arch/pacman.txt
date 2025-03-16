@@ -6,6 +6,7 @@ aspell-nl
 base-devel
 bat
 bind-tools
+bitwarden-cli
 btop
 cmake
 dnsmasq
