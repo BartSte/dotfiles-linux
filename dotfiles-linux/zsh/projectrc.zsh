@@ -43,6 +43,7 @@ reload-session() {
         fr_camera_module
         fr_qt_material
         fc-deckcam-software
+        fr_message_broker
     )
     [[ " ${winpyprojects[@]} " =~ " $PROJECTRC " ]] && PROJECTRC="winpyproject"
 
