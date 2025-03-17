@@ -11,6 +11,9 @@ Options:
     -h, --help    Show this help message and exit."
 
 DIR=~/dotfiles-linux
+. $DIR/home/.zshenv
+source ~/.dotfiles_config.sh
+
 DRY=false
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -34,8 +37,6 @@ done
 ### Handles dry-run mode and help options
 main() {
     lg "Installing BartSte/dotfiles-linux repository"
-    . $DIR/home/.zshenv
-    source ~/.dotfiles_config.sh
 
     lg "All the main files are executed. User interaction is required at the start (bitwarden)."
 
