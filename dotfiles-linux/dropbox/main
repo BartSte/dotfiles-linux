@@ -2,24 +2,9 @@
 
 set -eo pipefail
 
-# Ensure rclone is installed
-if ! command -v rclone &>/dev/null; then
-    lg "rclone is not installed. Please install it and try again."
-    exit 1
-else
-    lg "rclone is installed. Dropbox will be configured. You will need to authenticate your Dropbox account with the browser."
-fi
+lg "Creating a new rclone configuration for Dropbox non-interactive."
+rclone config create --obscure dropbox dropbox config_is_local=false token="$(bw-cli-get password rclone_dropbox)" > /dev/null
 
-lg "Creating a new rclone configuration for Dropbox."
-rclone config create dropbox dropbox config_is_local false
-
-read -p "Do want to login to rclone? You need a webbrowser on this machine (y/n)" response
-lg "Reconnecting to Dropbox."
-if [[ "$response" == "y" ]]; then
-
-	rclone config reconnect dropbox:
-
-	lg "Syncing Dropbox. This may take a while."
-	rclone sync dropbox: ~/dropbox
-	rclone bisync dropbox: ~/dropbox --resync
-fi
+lg "Syncing Dropbox. This may take a while."
+rclone sync dropbox: ~/dropbox
+rclone bisync dropbox: ~/dropbox --resync

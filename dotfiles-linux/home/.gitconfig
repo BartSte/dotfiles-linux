@@ -1,0 +1,20 @@
+[credential]
+	helper = store
+[core]
+	autocrlf = input
+[user]
+	name = barts
+	email = bartsteensma@outlook.com
+[push]
+	autoSetupRemote = yes
+[pull]
+	rebase = false
+[diff]
+	tool = nvimdiff
+[difftool]
+	prompt = false
+[filter "lfs"]
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+	clean = git-lfs clean -- %f

@@ -2,17 +2,12 @@
 
 set -eo pipefail
 
-lg "# Neomutt"
 directory="$HOME/.config/neomutt"
 cache="$HOME/.cache/neomutt"
 
-mkdir -p $directory
-ln -sf $HOME/dotfiles-linux/mutt/muttrc $directory/muttrc
+mkdir -p "$directory"
+ln -sf "$HOME"/dotfiles-linux/mutt/muttrc "$directory"/muttrc
 
-mkdir -p $HOME/.local/share/mail/INBOX
-mkdir -p $cache
-touch $cache/header_cache
-
-lg "# Downloading emails"
-mbsync -a
-notmuch new
+mkdir -p "$HOME"/.local/share/mail/INBOX
+mkdir -p "$cache"
+touch "$cache"/header_cache

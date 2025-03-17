@@ -1,11 +1,24 @@
 name: Test
 on: [push]
 
+concurrency:
+  group: test-arch-linux-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build:
+  test-arch-linux:
     runs-on: ubuntu-latest
     container: archlinux:latest
+    defaults:
+      run:
+        shell: bash
     steps:
+      - name: Cache pacman packages
+        uses: actions/cache@v3
+        with:
+          path: /var/cache/pacman/pkg
+          key: pacman-packages-${{ runner.os }}
+
       - name: Deps
         run: pacman -Sy --noconfirm git sudo
 
