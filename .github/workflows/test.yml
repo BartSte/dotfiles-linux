@@ -12,30 +12,42 @@ jobs:
     defaults:
       run:
         shell: bash
-    steps:
-      - name: Cache pacman packages
-        uses: actions/cache@v3
-        with:
-          path: /var/cache/pacman/pkg
-          key: pacman-packages-${{ runner.os }}
 
-      - name: Deps
-        run: pacman -Sy --noconfirm git sudo
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Setup barts user
         run: |
-          useradd -m barts
+          useradd -m barts -s /bin/bash
           echo 'barts ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
+
+      - name: Prepare repository
+        run: |
+          mkdir -p /home/barts/dotfiles-linux
+          cp -r "$GITHUB_WORKSPACE"/. /home/barts/dotfiles-linux/
+          chown -R barts:barts /home/barts/dotfiles-linux
+
+      - name: Cache pacman packages
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/pacman/pkg
+          key: pacman-packages-${{ hashFiles('/home/barts/dotfiles-linux/arch/pacman.txt') }}
 
       - name: Initialize
         run: |
+          pacman -Syu --noconfirm git sudo base-devel
           sudo -u barts bash -c '
-            cd /home/barts
-            curl -O https://raw.githubusercontent.com/BartSte/dotfiles-linux/master/dotfiles-linux/initialize
-            bash ./initialize
-            rm ./initialize
+            cd /home/barts/dotfiles-linux
+            bash initialize
             echo "export MICROSOFT_ACCOUNT=MicrosoftPersonal" > "$HOME/.dotfiles_config.sh"
           '
+
+      - name: Cache yay packages
+        uses: actions/cache@v4
+        with:
+          path: /home/barts/.cache/yay
+          key: yay-packages-${{ hashFiles('/home/barts/dotfiles-linux/arch/aur.txt') }}
 
       - name: Main
         run: |
