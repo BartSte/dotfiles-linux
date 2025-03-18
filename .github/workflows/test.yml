@@ -44,6 +44,9 @@ jobs:
           path: /home/barts/.cache/yay
           key: yay-packages-${{ hashFiles('/home/barts/dotfiles-linux/arch/aur.txt') }}
 
+      - name: Set yay cache ownership
+        run: chown -R barts:barts /home/barts/.cache/yay
+
       - name: Main
         run: |
           sudo -u barts bash -c '
