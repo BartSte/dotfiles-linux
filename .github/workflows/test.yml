@@ -11,12 +11,9 @@ concurrency:
   group: test-arch-linux-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  LAST_COMMIT: ${{ github.event.before }}
-
 jobs:
   test-arch-linux:
-    if: ${{ github.event_name == 'schedule' && env.LAST_COMMIT != '0000000000000000000000000000000000000000' }} || ${{ github.event_name == 'workflow_dispatch' }}
+    if: ${{ github.event_name == 'schedule' }} || ${{ github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     container: archlinux:latest
     defaults:
