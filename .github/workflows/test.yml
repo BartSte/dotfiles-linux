@@ -7,19 +7,49 @@ on:
       - main
   workflow_dispatch:
 
-concurrency:
-  group: test-arch-linux-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
+  check-changes:
+    name: Check for changes
+    if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    outputs:
+      has_changes: ${{ steps.check.outputs.has_changes }}
+    steps:
+      - name: Check code changes
+        id: check
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const branch = context.ref.replace('refs/heads/', '');
+            const currentSha = context.sha;
+            const workflowRuns = await github.rest.actions.listWorkflowRuns({
+              owner,
+              repo,
+              workflow_id: context.workflow,
+              branch,
+              status: 'success',
+              per_page: 1
+            });
+            if (workflowRuns.data.total_count === 0) {
+              core.setOutput('has_changes', 'true');
+              return;
+            }
+            const lastRunSha = workflowRuns.data.workflow_runs[0].head_sha;
+            const hasChanges = lastRunSha !== currentSha;
+            core.setOutput('has_changes', hasChanges.toString());
+
   test-arch-linux:
-    if: ${{ github.event_name == 'schedule' }} || ${{ github.event_name == 'workflow_dispatch' }}
+    needs: check-changes
+    if: ${{ needs.check-changes.outputs.has_changes == 'true' }}
+    concurrency:
+      group: test-arch-linux-${{ github.ref }}
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     container: archlinux:latest
     defaults:
       run:
         shell: bash
-
     steps:
       - name: Install dependencies
         run: pacman -Sy --noconfirm git sudo base-devel
