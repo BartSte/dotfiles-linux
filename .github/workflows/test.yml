@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 concurrency:
   group: test-arch-linux-${{ github.ref }}
@@ -15,7 +16,7 @@ env:
 
 jobs:
   test-arch-linux:
-    if: ${{ github.event_name == 'schedule' && env.LAST_COMMIT != '0000000000000000000000000000000000000000' }}
+    if: ${{ github.event_name == 'schedule' && env.LAST_COMMIT != '0000000000000000000000000000000000000000' }} || ${{ github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     container: archlinux:latest
     defaults:
