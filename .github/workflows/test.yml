@@ -1,12 +1,21 @@
 name: Test
-on: [push]
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  push:
+    branches:
+      - main
 
 concurrency:
   group: test-arch-linux-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  LAST_COMMIT: ${{ github.event.before }}
+
 jobs:
   test-arch-linux:
+    if: ${{ github.event_name == 'schedule' && env.LAST_COMMIT != '0000000000000000000000000000000000000000' }}
     runs-on: ubuntu-latest
     container: archlinux:latest
     defaults:
