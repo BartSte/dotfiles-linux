@@ -7,59 +7,55 @@ on:
       - main
   workflow_dispatch:
 
-jobs:
-  check-changes:
-    name: Check for changes
-    if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
-    runs-on: ubuntu-latest
-    outputs:
-      has_changes: ${{ steps.check.outputs.has_changes }}
-    steps:
-      - name: Check code changes
-        id: check
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const { owner, repo } = context.repo;
-            const branch = context.ref.replace('refs/heads/', '');
-            const currentSha = context.sha;
-            const workflowRuns = await github.rest.actions.listWorkflowRuns({
-              owner,
-              repo,
-              workflow_id: context.workflow,
-              branch,
-              status: 'success',
-              per_page: 1
-            });
-            if (workflowRuns.data.total_count === 0) {
-              core.setOutput('has_changes', 'true');
-              return;
-            }
-            const lastRunSha = workflowRuns.data.workflow_runs[0].head_sha;
-            const hasChanges = lastRunSha !== currentSha;
-            core.setOutput('has_changes', hasChanges.toString());
+concurrency:
+  group: test-arch-linux-${{ github.ref }}
+  cancel-in-progress: true
 
+jobs:
   test-arch-linux:
-    needs: check-changes
-    if: ${{ needs.check-changes.outputs.has_changes == 'true' }}
-    concurrency:
-      group: test-arch-linux-${{ github.ref }}
-      cancel-in-progress: true
+    if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     container: archlinux:latest
     defaults:
       run:
         shell: bash
     steps:
-      - name: Install dependencies
-        run: pacman -Sy --noconfirm git sudo base-devel
+      - uses: actions/checkout@v3
 
+      - name: Install dependencies
+        run: pacman -Sy --noconfirm jq git sudo base-devel 
+
+      - name: Check if repo changed since last scheduled run
+        if: ${{ github.event_name == 'schedule' }}
+        id: check_changes
+        run: |
+          # Get current commit SHA (the scheduled run uses HEAD of main)
+          current_commit=${GITHUB_SHA}
+          echo "Current commit: $current_commit"
+
+          # Query the GitHub API for the most recent scheduled run
+          last_run_commit=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/workflows/${{ github.workflow }}/runs?event=schedule&status=success&per_page=1" \
+            | jq -r '.workflow_runs[0].head_sha')
+          echo "Last run commit: $last_run_commit"
+
+          if [ "$current_commit" = "$last_run_commit" ]; then
+            echo "No new changes detected since last run."
+            echo "::set-output name=changed::false"
+          else
+            echo "New changes detected."
+            echo "::set-output name=changed::true"
+          fi
+
+      # For non-scheduled events (or if changes detected), run the remaining steps.
       - name: Setup barts user
+        if: ${{ github.event_name != 'schedule' || steps.check_changes.outputs.changed == 'true' }}
         run: |
           useradd -m barts -s /bin/bash
           echo 'barts ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
 
       - name: Initialize
+        if: ${{ github.event_name != 'schedule' || steps.check_changes.outputs.changed == 'true' }}
         run: |
           sudo -u barts bash -c '
             cd /home/barts
@@ -70,21 +66,25 @@ jobs:
           '
 
       - name: Cache pacman packages
+        if: ${{ github.event_name != 'schedule' || steps.check_changes.outputs.changed == 'true' }}
         uses: actions/cache@v4
         with:
           path: /var/cache/pacman/pkg
           key: pacman-packages-${{ hashFiles('/home/barts/dotfiles-linux/arch/pacman.txt') }}
 
       - name: Cache yay packages
+        if: ${{ github.event_name != 'schedule' || steps.check_changes.outputs.changed == 'true' }}
         uses: actions/cache@v4
         with:
           path: /home/barts/.cache/yay
           key: yay-packages-${{ hashFiles('/home/barts/dotfiles-linux/arch/aur.txt') }}
 
       - name: Set yay cache ownership
+        if: ${{ github.event_name != 'schedule' || steps.check_changes.outputs.changed == 'true' }}
         run: chown -R barts:barts /home/barts/.cache
 
       - name: Main
+        if: ${{ github.event_name != 'schedule' || steps.check_changes.outputs.changed == 'true' }}
         run: |
           sudo -u barts bash -c '
             export CI=true
