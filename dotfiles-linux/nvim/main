@@ -24,6 +24,7 @@ symlink_config() {
     ln $dotfiles/lua "$directory_config" -sf
     ln $dotfiles/vim "$directory_config" -sf
     ln $dotfiles/init.lua "$directory_config"/init.lua -sf
+    ln $dotfiles/workspaces "$directory_config" -sf
     cp $dotfiles/lazy-lock.json "$directory_config"/lazy-lock.json # cannot be linked
 
 }
