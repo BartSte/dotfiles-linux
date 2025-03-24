@@ -24,6 +24,7 @@ reload-wsl() {
     alias powc="$PWSH -NoLogo -Command $@"
     alias powh="$PWSH -NoLogo -NoExit -Command 'cd ~;$set_tmux'"
     alias powm="$PWSH -NoLogo -NoExit -Command 'cd $(winmirror);$set_tmux'"
+    alias dotnet="/mnt/c/Program\ Files/dotnet/dotnet.exe"
 
     alias wjava="/mnt/c/Program\\ Files/Eclipse\\ Adoptium/jre-*-hotspot/bin/java.exe"
     alias plantuml='wjava -jar C:\\ProgramData\\chocolatey\\lib\\plantuml\\tools\\plantuml.jar'
