@@ -12,3 +12,8 @@ install_yay() {
     cd "$old_dir" || exit
     rm -rf "$dir"
 }
+
+update_mirrors() {
+    echo "Update mirrors"
+    sudo reflector --latest 5 --sort rate --save /etc/pacman.d/mirrorlist
+}

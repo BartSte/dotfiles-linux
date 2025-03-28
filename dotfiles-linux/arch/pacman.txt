@@ -54,6 +54,7 @@ qutebrowser
 rbw
 rclone
 redshift
+reflector
 ripgrep
 ruby
 tar
