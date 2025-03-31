@@ -2,7 +2,7 @@
 
 # Use this configuration when you are doing a python project for windows. This
 # way you can work in wsl and call to windows executables when running code.
-alias ai="ai --read ~/dotfiles-linux/aider/PYTHON_CONVENTIONS.md"
+export AIDER_CONFIG="~/dotfiles-linux/aider/.aider.winpyproject.conf.yml"
 
 if is_running wsl; then
     name="$(basename $(pwd))"

@@ -1,2 +1,0 @@
-#!/usr/bin/env bash
-aider --vim --read ~/dotfiles-linux/aider/CONVENTIONS.md $@
