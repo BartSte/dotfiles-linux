@@ -17,6 +17,7 @@ _zshrc_config() {
         "completion.zsh"
         "vi-mode.zsh"
         "bindings.zsh"
+        "host.zsh"
         "projectrc.zsh")
 
     save-source "$HOME/.dotfiles_config.sh"

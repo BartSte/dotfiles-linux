@@ -5,8 +5,6 @@ reload-session() {
     setopt LOCAL_OPTIONS
     set -euo pipefail
 
-    [[ $1 == "-v" || $1 == "--verbose" ]] && _zshrc_verbose=true
-
     local dir="$HOME/dotfiles-linux/zsh/projectrc"
     source "$dir/helpers.zsh"
 
@@ -54,9 +52,10 @@ reload-session() {
     fi
 
     # Load the project specific zsh configuration file if it exists.
-    if [[ -f "$dir/$PROJECTRC.zsh" ]]; then
-       source "$dir/$PROJECTRC.zsh"
+    if [[ -f "$dir/projects/$PROJECTRC.zsh" ]]; then
+        source "$dir/projects/$PROJECTRC.zsh"
     fi
+
 }
 
 reload-session "$@"
