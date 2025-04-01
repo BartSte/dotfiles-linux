@@ -26,15 +26,3 @@ fullsync() {
     echo "\n### Syncing dropbox"
     rclone bisync dropbox: ~/dropbox
 }
-
-################################################################################
-# Run Aider
-################################################################################
-ai() {
-    aider \
-        --cache-prompts \
-        --config ${AIDER_CONFIG:-$HOME/.aider.conf.yml} \
-        --dark-mode \
-        --editor nvim \
-        --vim 
-}
