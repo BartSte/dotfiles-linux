@@ -26,3 +26,8 @@ fullsync() {
     echo "\n### Syncing dropbox"
     rclone bisync dropbox: ~/dropbox
 }
+
+ai() {
+    source $HOME/dotfiles-linux/aider/host_settings.zsh
+    aider
+}

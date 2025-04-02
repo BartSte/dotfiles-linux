@@ -2,8 +2,8 @@
 
 # Use this configuration when you are doing a python project for windows. This
 # way you can work in wsl and call to windows executables when running code.
-dir="$HOME/dotfiles-linux/aider"
-export AIDER_READ="[$dir/CONVENTIONS.md, $dir/PYTHON_CONVENTIONS.md]"
+prompts="$HOME/dotfiles-linux/aider/prompts"
+export AIDER_READ="[$dir/conventions.md, $dir/python/conventions.md]"
 
 if is_running wsl; then
     name="$(basename $(pwd))"
