@@ -5,6 +5,8 @@ alias ....='cd ./../../../'
 alias .....='cd ./../../../../'
 alias ......='cd ./../../../../../'
 
+alias ai="source $HOME/dotfiles-linux/aider/host_settings.zsh; aider"
+alias prompts="source $HOME/dotfiles-linux/aider/host_settings.zsh; prompts"
 alias act='source .venv/bin/activate'
 alias bat='bat --theme gruvbox-dark'
 alias blueoff='bluetoothctl power off'
