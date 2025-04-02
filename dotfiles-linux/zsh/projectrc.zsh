@@ -11,12 +11,20 @@ reload-session() {
     PROJECTRC=$(get_project_name)
     export PROJECTRC
 
-    # If a project is a python project that is developed for windows, then
-    # loading the winpyprojectrc.zsh file is nice as it allows you to call the
-    # python windows interpreter from wsl. See the wpy executable for more
-    # info. Also, the name is changed to winpyprojectrc to group their
-    # configurations.
-    local winpyprojects=(
+    # A python project enables the following:
+    # - call the python windows python interpreter from wsl. See the wpy
+    # executable for more info.
+    # - load aider python conventions
+    local pyproject=(
+        bartste-prompts
+        khalorg
+        pygeneral
+    )
+    [[ " ${pyproject[@]} " =~ " $PROJECTRC " ]] && PROJECTRC="pyproject"
+
+    # Same as pyproject but now it loads configurations for projects at Fleet
+    # Robotics
+    local fr_pyproject=(
         automated-reporting
         fc-data-client
         fc-deckcam-software
@@ -43,7 +51,7 @@ reload-session() {
         fc-deckcam-software
         fr_message_broker
     )
-    [[ " ${winpyprojects[@]} " =~ " $PROJECTRC " ]] && PROJECTRC="winpyproject"
+    [[ " ${fr_pyproject[@]} " =~ " $PROJECTRC " ]] && PROJECTRC="fr_pyproject"
 
     # Try to activate a python virtual environment if it exists in a `.venv`
     # directory.
