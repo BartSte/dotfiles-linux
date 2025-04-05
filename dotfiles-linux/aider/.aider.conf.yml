@@ -435,38 +435,3 @@ vim: true
 
 editor: nvim
 
-############################
-# Deprecated model settings:
-
-## Use claude-3-opus-20240229 model for the main chat (deprecated, use --model)
-#opus: false
-
-## Use anthropic/claude-3-7-sonnet-20250219 model for the main chat (deprecated, use --model)
-#sonnet: false
-
-## Use claude-3-5-haiku-20241022 model for the main chat (deprecated, use --model)
-#haiku: false
-
-## Use gpt-4-0613 model for the main chat (deprecated, use --model)
-#4: false
-
-## Use gpt-4o model for the main chat (deprecated, use --model)
-#4o: false
-
-## Use gpt-4o-mini model for the main chat (deprecated, use --model)
-#mini: false
-
-## Use gpt-4-1106-preview model for the main chat (deprecated, use --model)
-#4-turbo: false
-
-## Use gpt-3.5-turbo model for the main chat (deprecated, use --model)
-#35turbo: false
-
-## Use deepseek/deepseek-chat model for the main chat (deprecated, use --model)
-#deepseek: false
-
-## Use o1-mini model for the main chat (deprecated, use --model)
-#o1-mini: false
-
-## Use o1-preview model for the main chat (deprecated, use --model)
-#o1-preview: false
