@@ -379,7 +379,7 @@ dark-mode: true
 #  - zzz
 
 ## specify a read-only file (can be used multiple times)
-read: ~/dotfiles-linux/aider/conventions.md
+read: ~/dotfiles-linux/aider/prompts/conventions.md
 ## Specify multiple values like this:
 #read:
 #  - xxx
