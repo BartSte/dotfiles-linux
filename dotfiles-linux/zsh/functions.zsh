@@ -26,3 +26,17 @@ fullsync() {
     echo "\n### Syncing dropbox"
     rclone bisync dropbox: ~/dropbox
 }
+
+###############################################################################
+# Run aider
+# Before, specify host and project settings are loaded.
+###############################################################################
+ai() {
+    local dir
+    dir=$HOME/dotfiles-linux/aider
+    source $dir/host_settings.zsh
+    if [[ -f $dir/$PROJECTRC.zsh ]]; then
+        source $dir/$PROJECTRC.zsh
+    fi
+    aider $@
+}
