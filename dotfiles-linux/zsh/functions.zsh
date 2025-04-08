@@ -38,5 +38,12 @@ ai() {
     if [[ -f $dir/$PROJECTRC.zsh ]]; then
         source $dir/$PROJECTRC.zsh
     fi
+
+    if [[ $# == 0 ]]; then
+        aider
+    else
+
+
+            
     aider $@
 }
