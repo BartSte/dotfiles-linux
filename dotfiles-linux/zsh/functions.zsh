@@ -34,16 +34,17 @@ fullsync() {
 ai() {
     local dir
     dir=$HOME/dotfiles-linux/aider
-    source $dir/host_settings.zsh
+    if [[ -f $dir/host_settings.zsh ]]; then
+        source $dir/host_settings.zsh
+    fi
     if [[ -f $dir/$PROJECTRC.zsh ]]; then
         source $dir/$PROJECTRC.zsh
     fi
 
-    if [[ $# == 0 ]]; then
+    # If no args, run aider solo
+    if [[ $# -eq 0 ]]; then
         aider
-    else
-
-
-            
-    aider $@
+    else # Otherwise, run aider --message $(prompts <options> <command>) [files]
+        # TODO
+    fi
 }
