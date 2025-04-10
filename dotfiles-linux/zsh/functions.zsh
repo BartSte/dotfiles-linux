@@ -28,62 +28,32 @@ fullsync() {
 }
 
 ###############################################################################
-# Run aider chat
-# Before, specify host and project settings are loaded.
+# Run aider --yes-always --message <message> <file1> <file2> ... where the
+# <message> is retrieved from bartste-prompts.
+#
+# The command line interface is the same as `prompts --help`. If no arguments
+# are applied, aider is executed without arguments (entering chat mode).
 ###############################################################################
-chat() {
+ai() {
+    if [[ $# -eq 1 ]] && [[ $1 == "-h" || $1 == "--help" ]]; then
+        prompts --help
+        return
+    fi
+
     local dir
     dir=$HOME/dotfiles-linux/aider
     save-source $dir/host_settings.zsh
     save-source $dir/$PROJECTRC.zsh
-    aider
-}
 
-###############################################################################
-# Run aider --message with a prompts from bartste-prompts
-###############################################################################
-ai() {
-    usage="Usage: ai [options] command file1 file2 ...
+    if [[ $# -gt 0 ]]; then
+        local args message files
+        args=$(prompts $@ --json)
+        message=$(jq -r '.prompt' <<<$args)
+        # TODO multiple files are not yet supported ....
+        # files=$(jq -r '.files[]' <<<$args | tr '\n' ' ')
+        aider --yes-always --message "$message"
 
-    Runs 'aider --yes-always --message <message> file1 file2 ...' where
-    <message> is retrieved from bartste-prompts.
-
-    Options:
-    -h, --help      Show this help message.
-    -f, --filetype  Specify a file type for the prompt.
-    -q, --quiet     Disable output to stderr."""
-
-    local prompt file_type quiet command files message
-    while (("$#")); do
-        case $1 in
-        -h | --help)
-            echo "$usage"
-            return
-            ;;
-        -f | --filetype)
-            file_type=$2
-            shift 2
-            ;;
-        -q | --quiet)
-            quiet="--quiet"
-            shift
-            ;;
-        *)
-            if [[ -z "$command" ]]; then
-                command=$1
-            else
-                files+=("$1")
-            fi
-            shift
-            ;;
-        esac
-    done
-
-    if [[ -z "$command" ]]; then
-        echo "Error: No command specified."
-        echo "$usage"
-        return 1
+    else
+        aider
     fi
-
-    # TODO
 }
