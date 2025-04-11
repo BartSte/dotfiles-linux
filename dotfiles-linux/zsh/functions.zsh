@@ -27,33 +27,22 @@ fullsync() {
     rclone bisync dropbox: ~/dropbox
 }
 
-###############################################################################
-# Run aider --yes-always --message <message> <file1> <file2> ... where the
-# <message> is retrieved from bartste-prompts.
+################################################################################
+# Runs `aider` if no arguments are provided, or `prompts-aider` with arguments
+# otherwise.
 #
-# The command line interface is the same as `prompts --help`. If no arguments
-# are applied, aider is executed without arguments (entering chat mode).
-###############################################################################
+# Aider environment variables are set based on the `PROJECTRC` variable and the
+# hostname.
+# ###############################################################################
 ai() {
-    if [[ $# -eq 1 ]] && [[ $1 == "-h" || $1 == "--help" ]]; then
-        prompts --help
-        return
-    fi
-
     local dir
     dir=$HOME/dotfiles-linux/aider
     save-source $dir/host_settings.zsh
     save-source $dir/$PROJECTRC.zsh
 
-    if [[ $# -gt 0 ]]; then
-        local args message files
-        args=$(prompts $@ --json)
-        message=$(jq -r '.prompt' <<<$args)
-        # TODO multiple files are not yet supported ....
-        # files=$(jq -r '.files[]' <<<$args | tr '\n' ' ')
-        aider --yes-always --message "$message"
-
-    else
+    if [[ $# -eq 0 ]]; then
         aider
+    else
+        prompts-aider $@
     fi
 }
