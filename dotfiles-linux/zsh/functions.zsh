@@ -43,6 +43,6 @@ ai() {
     if [[ $# -eq 0 ]]; then
         aider
     else
-        prompts $@ --tool aider
+        prompts $@ --action aider
     fi
 }
