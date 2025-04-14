@@ -1,8 +1,5 @@
 #!/bin/env zsh
 
-this_dir=$(readlink -f "$(dirname "$0")")
-source $this_dir/pyproject.zsh
-
 if is_running wsl; then
     name="$(basename $(pwd))"
     export WINVENV=$WH/venvs/$name
