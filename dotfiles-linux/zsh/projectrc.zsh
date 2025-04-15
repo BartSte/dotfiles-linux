@@ -28,6 +28,8 @@ reload-session() {
         automated-reporting
         fc-data-client
         fc-deckcam-software
+        fc-deckcam-software
+        fc-pipelines
         fc-report
         fc-report
         fc-sonar-server
@@ -37,19 +39,17 @@ reload-session() {
         fcissgui
         fctools
         fleet-inspector
-        navigation
-        quay-detector
-        supervisor-software
         fr-pyqt
-        isssdk
-        navigation310
-        fc-pipelines
-        software-engineering-general
-        orders-operations-reports-database
         fr_camera_module
-        fr_qt_material
-        fc-deckcam-software
         fr_message_broker
+        fr_qt_material
+        isssdk
+        navigation
+        navigation310
+        orders-operations-reports-database
+        quay-detector
+        software-engineering-general
+        supervisor-software
     )
     [[ " ${fr_pyproject[@]} " =~ " $PROJECTRC " ]] && PROJECTRC="fr_pyproject"
 
