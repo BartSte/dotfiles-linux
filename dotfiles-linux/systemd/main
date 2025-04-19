@@ -21,7 +21,7 @@ enable_scripts_user() {
         lg "Enabling $file"
         systemctl --user enable --now "$(basename "$file")"
         systemctl --user start "$(basename "$file")"
-        systemctl --user status "$(basename "$file")"
+        systemctl --user status "$(basename "$file")" || lg "systemctl status exited with $?"
     done
 }
 
