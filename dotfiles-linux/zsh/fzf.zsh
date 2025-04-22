@@ -135,13 +135,12 @@ _fzf-rbw-widget() {
 }
 
 _fzf-prompts-widget() {
-    # TODO: the filetype can be passed by typing "python" on the command line
-    # and then pressing the shortcut. Next the BUFFER value can be passed to the
-    # command
+    filetype="${$(echo ${(z)BUFFER})%.[^.]*}"
+    cmd="prompts {} -f $filetype 2>/dev/null || prompts {}"
     args="docstrings typehints refactor fix unittests"
-    cmd=$(echo $args | tr ' ' '\n' | fzf --preview 'prompts {}')
-    if [[ -n $cmd ]]; then
-        prompts $cmd | wl-copy
+    arg=$(echo $args | tr ' ' '\n' | fzf --preview $cmd)
+    if [[ -n $arg ]]; then
+        prompts $arg -f $filetype 2>/dev/null || prompts $arg
     fi
     zle reset-prompt
     return $ret
