@@ -128,9 +128,21 @@ _fzf-file-widget-open-home() {
 }
 
 _fzf-rbw-widget() {
-    _reset_unrestricted
     $HOME/dotfiles-linux/scripts/fzfrbw
     local ret=$?
+    zle reset-prompt
+    return $ret
+}
+
+_fzf-prompts-widget() {
+    # TODO: the filetype can be passed by typing "python" on the command line
+    # and then pressing the shortcut. Next the BUFFER value can be passed to the
+    # command
+    args="docstrings typehints refactor fix unittests"
+    cmd=$(echo $args | tr ' ' '\n' | fzf --preview 'prompts {}')
+    if [[ -n $cmd ]]; then
+        prompts $cmd | wl-copy
+    fi
     zle reset-prompt
     return $ret
 }
