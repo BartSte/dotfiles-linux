@@ -309,10 +309,10 @@ dark-mode: true
 #just-check-update: false
 
 ## Check for new aider versions on launch
-#check-update: true
+check-update: false
 
 ## Show release notes on first run of new version (default: None, ask user)
-#show-release-notes: xxx
+show-release-notes: false
 
 ## Install the latest version from the main branch
 #install-main-branch: false
@@ -434,4 +434,3 @@ vim: true
 ## Specify which editor to use for the /editor command
 
 editor: nvim
-
