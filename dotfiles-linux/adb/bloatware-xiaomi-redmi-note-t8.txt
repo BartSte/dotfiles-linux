@@ -29,7 +29,6 @@ com.einnovation.temu
 com.android.chrome
 com.google.android.ims
 com.mi.global.shop
-com.google.android.gms
 com.block.juggle
 com.google.ar.core
 com.google.android.apps.wellbeing
