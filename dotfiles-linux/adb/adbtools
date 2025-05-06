@@ -1,21 +1,20 @@
 #!/usr/bin/env bash
-# Redmi Note 8T package tool — ADB *shell-only*
+# Redmi Note 8T package & settings tool — uses *only* `adb shell`
 set -euo pipefail
 
 usage() {
     cat <<EOF
-Usage: $(basename "$0") [--list |
-                         --uninstall-from-file FILE |
-                         --install-from-file FILE |
-                         --install PKG |
-                         --uninstall PKG |
-                         --help]
+Usage: $(basename "$0") COMMAND [ARG]
 
-  --list                   List all installed packages (with paths)
-  --uninstall-from-file f  Uninstall every package in file f for user 0
-  --install-from-file f    Re-install every package in file f for user 0
-  --install PKG            Re-install a single package for user 0
-  --uninstall PKG          Uninstall a single package for user 0
+  --list                                list all installed packages
+  --uninstall-from-file    FILE         uninstall each package in FILE
+  --install-from-file      FILE         re-install each package in FILE
+  --uninstall              PKG          uninstall a single package
+  --install                PKG          re-install a single package
+  --dump-settings          FILE         save all system / secure / global
+                                         settings to FILE
+  --restore-settings       FILE         restore settings from FILE
+  --help                                show this help
 EOF
 }
 
@@ -24,35 +23,67 @@ EOF
     exit 1
 }
 
-case "$1" in
+cmd="$1"
+arg="${2-}"
+
+case "$cmd" in
 --help | -h) usage ;;
+
 --list)
     adb shell 'pm list packages -f'
     ;;
+
 --uninstall-from-file | --install-from-file)
-    [[ $# -eq 2 && -f "$2" ]] || {
+    [[ -f "$arg" ]] || {
         usage
         exit 1
     }
-    cmd=$([[ $1 == --install-from-file ]] && echo "cmd package install-existing" || echo "pm uninstall --user 0")
-    verb=$([[ $1 == --install-from-file ]] && echo "Installing" || echo "Removing")
-    adb shell "while read -r p; do
-       [[ -z \$p || \$p == \#* ]] && continue
-       echo \"$verb \$p …\"
-       $cmd \$p || echo \"⚠️  \$p failed\"
-    done" <"$2"
+    op=$([[ $cmd == --install-from-file ]] && echo "cmd package install-existing" || echo "pm uninstall --user 0")
+    adb shell "while read p; do [[ -z \$p || \$p == \#* ]] && continue; $op \$p; done" <"$arg"
     ;;
---install | --uninstall)
-    [[ $# -eq 2 ]] || {
+
+--uninstall)
+    [[ $arg ]] || {
         usage
         exit 1
     }
-    if [[ $1 == --install ]]; then
-        adb shell "cmd package install-existing $2"
-    else
-        adb shell "pm uninstall --user 0 $2"
-    fi
+    adb shell "pm uninstall --user 0 $arg"
     ;;
+
+--install)
+    [[ $arg ]] || {
+        usage
+        exit 1
+    }
+    adb shell "cmd package install-existing $arg"
+    ;;
+
+--dump-settings)
+    [[ $arg ]] || {
+        usage
+        exit 1
+    }
+    {
+        adb shell 'settings list system' | sed 's/^/system /'
+        adb shell 'settings list secure' | sed 's/^/secure /'
+        adb shell 'settings list global' | sed 's/^/global /'
+    } >"$arg"
+    echo "Settings dumped to $arg"
+    ;;
+
+--restore-settings)
+    [[ -f "$arg" ]] || {
+        usage
+        exit 1
+    }
+    adb shell 'while IFS=" " read tbl kv; do
+                 [[ -z $tbl ]] && continue
+                 key=${kv%%=*}; val=${kv#*=}
+                 settings put "$tbl" "$key" "$val"
+               done' <"$arg"
+    echo "Settings restored from $arg"
+    ;;
+
 *)
     usage
     exit 1
