@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+# Redmi Note 8T package tool — ADB *shell-only*
+set -euo pipefail
+
+usage() {
+    cat <<EOF
+Usage: $(basename "$0") [--list |
+                         --uninstall-from-file FILE |
+                         --install-from-file FILE |
+                         --install PKG |
+                         --uninstall PKG |
+                         --help]
+
+  --list                   List all installed packages (with paths)
+  --uninstall-from-file f  Uninstall every package in file f for user 0
+  --install-from-file f    Re-install every package in file f for user 0
+  --install PKG            Re-install a single package for user 0
+  --uninstall PKG          Uninstall a single package for user 0
+EOF
+}
+
+[[ $# -eq 0 ]] && {
+    usage
+    exit 1
+}
+
+case "$1" in
+--help | -h) usage ;;
+--list)
+    adb shell 'pm list packages -f'
+    ;;
+--uninstall-from-file | --install-from-file)
+    [[ $# -eq 2 && -f "$2" ]] || {
+        usage
+        exit 1
+    }
+    cmd=$([[ $1 == --install-from-file ]] && echo "cmd package install-existing" || echo "pm uninstall --user 0")
+    verb=$([[ $1 == --install-from-file ]] && echo "Installing" || echo "Removing")
+    adb shell "while read -r p; do
+       [[ -z \$p || \$p == \#* ]] && continue
+       echo \"$verb \$p …\"
+       $cmd \$p || echo \"⚠️  \$p failed\"
+    done" <"$2"
+    ;;
+--install | --uninstall)
+    [[ $# -eq 2 ]] || {
+        usage
+        exit 1
+    }
+    if [[ $1 == --install ]]; then
+        adb shell "cmd package install-existing $2"
+    else
+        adb shell "pm uninstall --user 0 $2"
+    fi
+    ;;
+*)
+    usage
+    exit 1
+    ;;
+esac

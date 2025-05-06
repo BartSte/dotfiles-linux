@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+this_dir=$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")
+
+source="$this_dir/adbtools"
+target=~/dotfiles-linux/bin
+ln -sf "$source" "$target"
+
+lg "Symlink $source to $target"
