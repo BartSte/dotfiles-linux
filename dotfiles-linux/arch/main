@@ -17,8 +17,5 @@ lg "# Installing dependencies AUR"
 install_yay /tmp/yay
 yay -S --noconfirm $(cat $dir/aur.txt)
 
-lg "# Installing node.js"
-install_node_js
-
 lg "# Installing python packages"
 pipx install $(cat $dir/pip.txt)
