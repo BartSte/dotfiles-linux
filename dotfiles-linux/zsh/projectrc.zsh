@@ -11,19 +11,41 @@ reload-session() {
     PROJECTRC=$(get_project_name)
     export PROJECTRC
 
-    # A python project enables the following:
-    # - call the python windows python interpreter from wsl. See the wpy
-    # executable for more info.
-    # - load aider python conventions
+    _pyproject
+    _fr_pyproject
+
+    # Load the project specific zsh configuration file if it exists.
+    if [[ -f "$dir/projects/$PROJECTRC.zsh" ]]; then
+        source "$dir/projects/$PROJECTRC.zsh"
+    fi
+}
+
+# A python project enables the following:
+# - load aider python conventions
+_pyproject() {
+    _activate_venv
     local pyproject=(
         bartste-prompts
         khalorg
         pygeneral
     )
     [[ " ${pyproject[@]} " =~ " $PROJECTRC " ]] && PROJECTRC="pyproject"
+}
 
-    # Same as pyproject but now it loads configurations for projects at Fleet
-    # Robotics
+# Try to activate a python virtual environment if it exists in a `.venv`
+# directory.
+_activate_venv() {
+    if [[ -f .venv/bin/activate ]]; then
+        source .venv/bin/activate
+    fi
+}
+
+# - Same as pyproject but now it loads configurations for projects at Fleet
+# Robotics
+# - call the python windows python interpreter from wsl. See the wpy
+# executable for more info.
+_fr_pyproject() {
+    _activate_venv
     local fr_pyproject=(
         automated-reporting
         fc-data-client
@@ -52,18 +74,6 @@ reload-session() {
         supervisor-software
     )
     [[ " ${fr_pyproject[@]} " =~ " $PROJECTRC " ]] && PROJECTRC="fr_pyproject"
-
-    # Try to activate a python virtual environment if it exists in a `.venv`
-    # directory.
-    if [[ -f .venv/bin/activate ]]; then
-        source .venv/bin/activate
-    fi
-
-    # Load the project specific zsh configuration file if it exists.
-    if [[ -f "$dir/projects/$PROJECTRC.zsh" ]]; then
-        source "$dir/projects/$PROJECTRC.zsh"
-    fi
-
 }
 
 reload-session "$@"
