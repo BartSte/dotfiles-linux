@@ -67,11 +67,10 @@ _fr_pyproject() {
         fr_qt_material
         isssdk
         navigation
-        navigation310
         orders-operations-reports-database
         quay-detector
         software-engineering-general
-        supervisor-software
+        fleet-diver-software
     )
     [[ " ${fr_pyproject[@]} " =~ " $PROJECTRC " ]] && PROJECTRC="fr_pyproject"
 }
