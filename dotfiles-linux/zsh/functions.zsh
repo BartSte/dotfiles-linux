@@ -46,3 +46,15 @@ ai() {
         prompts $@ --action aider
     fi
 }
+
+aibase() {
+  GIT_DIR=$HOME/dotfiles.git \
+  GIT_WORK_TREE=$HOME \
+  ai "$@"
+}
+
+ailin() {
+  GIT_DIR=$HOME/.dotfiles-linux.git \
+  GIT_WORK_TREE=$HOME \
+  ai "$@"
+}
