@@ -63,6 +63,7 @@ _fr_pyproject() {
         fleet-inspector
         fr-pyqt
         fr_camera_module
+        fr_logger
         fr_message_broker
         fr_qt_material
         isssdk
