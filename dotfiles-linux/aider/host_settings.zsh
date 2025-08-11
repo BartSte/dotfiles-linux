@@ -8,6 +8,5 @@ if [[ $(hostname) == "bart-asus" ]]; then
 elif [[ $(hostname) == "zbook" ]]; then
     export OPENAI_API_KEY AIDER_MODEL
     OPENAI_API_KEY=$(rbw_get password openai_token)
-    AIDER_MODEL=o4-mini
-
+    AIDER_MODEL=gpt-5
 fi
