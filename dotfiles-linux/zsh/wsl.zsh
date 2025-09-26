@@ -9,11 +9,9 @@ reload-wsl() {
     append_to_path /mnt/c/Windows/System32
     append_to_path /mnt/c/Windows/System32/WindowsPowerShell/v1.0/
     append_to_path /mnt/c/Program\ Files/PowerShell/7-preview/
-    append_to_path /mnt/c/Python310/
 
     export WH=$(wslpath "$(_winenv USERPROFILE)")
-    export WSLVENVS="$WH/venvs"
-    export PWSH="/mnt/c/Program\ Files/PowerShell/7-preview/pwsh.exe"
+    export WINPY=/mnt/c/Python313/python.exe
 
     set_tmux="\$Env:TMUX=\"${TMUX:-}\""
     alias wh="cd $WH"

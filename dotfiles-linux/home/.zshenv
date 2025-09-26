@@ -7,19 +7,20 @@ zshenv() {
     add_to_path "$HOME/dotfiles-linux/bin" "$HOME/.local/bin" "$HOME/.cargo/bin" "$HOME/go/bin" /usr/bin/vendor_perl
 
     export BROWSER='qutebrowser'
-    export WSLBROWSER='/mnt/c/Program Files/qutebrowser/qutebrowser.exe'
-    hash nvim && export EDITOR='nvim' || unset EDITOR
-    export GPG_TTY=$(tty)
     export EARBUDS='30:53:C1:B8:CE:F6'
     export ESCDELAY=0
-    export MANPAGER="nvim +Man!"
-    export TIME_ZONE="Europe/Amsterdam"
+    export GPG_TTY=$(tty)
     export HEADPHONES="28:11:A5:A4:3A:CF"
-    export SONY="AC:80:0A:C8:77:2C"
-    export PYTHONBREAKPOINT='ipdb.set_trace'
     export IPDB_CONTEXT_SIZE=10
+    export MANPAGER="nvim +Man!"
+    export PYTHONBREAKPOINT='ipdb.set_trace'
+    export SONY="AC:80:0A:C8:77:2C"
+    export TIME_ZONE="Europe/Amsterdam"
     export TMUX_PLUGIN_DIR="$HOME/.tmux/plugins"
+    export UV_CONFIG_FILE=~/.config/uv/config.toml
     export VI_MODE_SET_CURSOR=true
+    export WSLBROWSER='/mnt/c/Program Files/qutebrowser/qutebrowser.exe'
+    hash nvim && export EDITOR='nvim' || unset EDITOR
 
     export HISTFILE=$HOME/.histfile
     export HISTSIZE=1000000000

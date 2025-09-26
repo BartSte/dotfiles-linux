@@ -37,7 +37,7 @@ pandoc
 perl
 poppler
 powerline-fonts
-python
+python-uv
 python-adblock
 python-gpgme
 python-html2text

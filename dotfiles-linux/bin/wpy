@@ -1,104 +1,128 @@
-#!/bin/env bash
+#!/usr/bin/env bash
+set -euo pipefail
 
 usage() {
-    cat <<EOF
+    cat <<'EOF'
 Usage: wpy [options] <command>
 
-Uses a windows python interpreter in WSL, instead of the one supplied by your
-linux distribution. It is assumed that you are running WSL with a mounted
-windows drive.
+Run a Windows Python from WSL.
 
-This program checks for the the following environment variables, in order of 
-priority:
-  - WINVENV: The path to a python virtual environment in windows (e.g. /mnt/c/Users/foo/venv)
-  - WINPY: The path to a python interpreter in windows (e.g. /mnt/c/Python/python.exe)
-
-When one of these variables is set, it will be used as the python interpreter.
-All arguments passed to wpy are directly passed to the python interpreter. When
-one of the options below is passed, no arguments are passed to python.
+Env precedence:
+  WINVENV   Path to a Windows venv (Linux or Windows path)
+  WINPY     Path to a Windows python.exe
 
 Options:
-  --wpy-help      Show this message. No arguments are passed to python anymore.
-  --wpy-path      Print the path to the python executable, do not execute
-                  any command. No arguments are passed to python anymore.
-  --wpy-dir       Print the path to the directory containing the python
-                  executable. No arguments are passed to python anymore.
-  --wpy-debug     Enable debug output. No arguments are passed to python
-                  anymore.
+  --wpy-help   Show help and exit
+  --wpy-path   Print resolved python.exe and exit
 
-Commands:
-    <command>     Command to execute
+  --wpy-dir    Print directory of python.exe and exit
+  --wpy-debug  Log debug to stderr
 EOF
+
 }
 
-parse_args() {
-    while [[ $# -gt 0 ]]; do
-        case $1 in
-        --wpy-dir)
-            dir=true
-            ;;
-        --wpy-path)
-            path=true
-            ;;
-        --wpy-debug)
-            debug=/dev/stderr
-            ;;
-        --wpy-help)
-            usage
-            exit 0
-            ;;
-        *)
-            command+=("$1")
-            ;;
-        esac
-        shift
-    done
-}
+# ---------- flags ----------
+debug=/dev/null
+mode="run" # run | path | dir
+argv=()
 
-get_exe() {
-    local venv_dir=$1
-    echo "Checking for venv directory $venv_dir" >$debug
-    if [[ -d "$venv_dir" ]]; then
-        echo "Using venv $venv_dir" >$debug
-        echo "$venv_dir/Scripts/python.exe"
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+    --wpy-help)
+        usage
+        exit 0
+        ;;
+    --wpy-path) mode="path" ;;
+    --wpy-dir) mode="dir" ;;
+    --wpy-debug) debug=/dev/stderr ;;
+    *) argv+=("$1") ;;
+
+    esac
+    shift
+done
+
+# ---------- guards ----------
+if ! grep -qi microsoft /proc/version 2>/dev/null; then
+    echo "Not running in WSL" >"$debug"
+    exit 1
+fi
+
+# ---------- helpers ----------
+is_win_path() { [[ "$1" =~ ^([A-Za-z]:\\|\\\\) ]]; }
+
+to_win_path() {
+    local p="$1"
+    if is_win_path "$p"; then
+        printf '%s' "$p"
+    else
+        wslpath -w -- "$p"
     fi
 }
 
-exe=""
-dir=false
-path=false
-debug=/dev/null
-command=()
+exists_win() {
+    # Test existence of a Windows path via wslpath conversion
+    local p="$1"
+    local as_lin
+    as_lin="$(wslpath -u -- "$p" 2>/dev/null)" || return 1
+    [[ -e "$as_lin" ]]
+}
 
-parse_args "$@"
+venv_python_from() {
+    local venv="$1"
+    local venv_win
+    venv_win="$(to_win_path "$venv")"
+    printf '%s' "${venv_win%\\}\Scripts\python.exe"
 
-# Resolve Python executable
-if [[ -n $WINVENV ]]; then
-    echo "Using WINVENV" >$debug
-    exe=$(get_exe "$WINVENV")
-elif [[ -n $WINPY ]]; then
-    exe=$WINPY
+}
+
+# ---------- resolve python.exe ----------
+py=""
+
+if [[ -n "${WINVENV:-}" ]]; then
+    echo "Using WINVENV: $WINVENV" >"$debug"
+    cand="$(venv_python_from "$WINVENV")"
+    echo "Candidate python.exe: $cand" >"$debug"
+    if exists_win "$cand"; then
+
+        py="$cand"
+    else
+        echo "Venv python not found: $cand" >"$debug"
+    fi
 fi
 
-# Validate environment
-if ! grep -qi microsoft /proc/version 2>/dev/null; then
-    echo "Not running WSL" >$debug
+if [[ -z "$py" && -n "${WINPY:-}" ]]; then
+    echo "Using WINPY: $WINPY" >"$debug"
+    cand="$(to_win_path "$WINPY")"
+    if exists_win "$cand"; then
+
+        py="$cand"
+    else
+        echo "WINPY not found: $cand" >"$debug"
+
+    fi
+fi
+
+[[ -n "$py" ]] || {
+    echo "No python interpreter found (set WINVENV or WINPY)"
     exit 1
-fi
+}
 
-if [[ -z $exe ]]; then
-    echo "No python interpreter found" >$debug
-    exit 1
-fi
+echo "Resolved python.exe: $py" >"$debug"
 
-# Handle output modes
-if [[ $path == true ]]; then
-    echo "$exe"
+# ---------- output modes ----------
+case "$mode" in
+path)
+    echo "$py"
     exit 0
-elif [[ $dir == true ]]; then
-    dirname "$exe"
+    ;;
+dir) # dirname for Windows path: convert to Linux, dirname, convert back
+    d_lin="$(dirname "$(wslpath -u -- "$py")")"
+    d_win="$(wslpath -w -- "$d_lin")"
+    echo "$d_win"
     exit 0
-fi
+    ;;
+esac
 
-# Execute command
-"$exe" "${command[@]}"
+# ---------- execute ----------
+# Call Windows python.exe with original arguments
+exec "$py" "${argv[@]}"

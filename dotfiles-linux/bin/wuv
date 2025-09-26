@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+    cat <<'EOF'
+Usage: wuv [options] <uv-args>
+
+Run Windows uv.exe from WSL and force a specific project venv.
+
+Env vars (read once at start):
+  WINVENV                 Path to desired venv (Linux or Windows path)
+  WIN_UV_PROJECT_CONFIG   Optional uv config file (Linux or Windows path)
+
+
+Options:
+  --wuv-help   Show help and exit
+  --wuv-debug  Log debug to stderr
+
+EOF
+}
+
+# --- flags ---
+debug=/dev/null
+args=()
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+    --wuv-help)
+        usage
+        exit 0
+        ;;
+    --wuv-debug) debug=/dev/stderr ;;
+    *) args+=("$1") ;;
+    esac
+    shift
+done
+
+# --- guards ---
+if ! grep -qi microsoft /proc/version 2>/dev/null; then
+    echo "Not running in WSL" >"$debug"
+    exit 1
+
+fi
+: "${WINVENV:?WINVENV not set}"
+
+# --- helpers ---
+is_win_path() { [[ "$1" =~ ^([A-Za-z]:\\|\\\\) ]]; }
+
+to_win_path() {
+    local p="$1"
+    if is_win_path "$p"; then
+        printf '%s' "$p"
+    else
+        wslpath -w -- "$p"
+    fi
+}
+
+ps_quote() {
+
+    # PowerShell single-quote escape: ' -> ''
+    local s="$1"
+    s="${s//\'/\'}" # bash replace doesn't handle backrefs; this doubles quotes
+    printf "'%s'" "$s"
+}
+
+# --- resolve paths ---
+venv_win=$(to_win_path "$WINVENV")
+cfg_win=""
+if [[ -n "${WIN_UV_PROJECT_CONFIG:-${UV_PROJECT_CONFIG:-}}" ]]; then
+    cfg_win=$(to_win_path "${WIN_UV_PROJECT_CONFIG:-$UV_PROJECT_CONFIG}")
+
+fi
+
+# --- build command string for PowerShell ---
+ps=()
+ps+=("\$env:UV_PROJECT_ENVIRONMENT=$(ps_quote "$venv_win");")
+ps+=("& uv")
+if [[ -n "$cfg_win" ]]; then
+    ps+=("--config-file" $(ps_quote "$cfg_win"))
+fi
+# append user args, each quoted for PS
+for a in "${args[@]}"; do ps+=("$(ps_quote "$a")"); done
+ps_cmd="${ps[*]}"
+
+echo "venv_win: $venv_win" >"$debug"
+[[ -n "$cfg_win" ]] && echo "config_win: $cfg_win" >"$debug"
+echo "pwsh cmd: $ps_cmd" >"$debug"
+
+# --- execute ---
+exec pwsh.exe -NoProfile -Command "$ps_cmd"
