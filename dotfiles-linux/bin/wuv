@@ -9,7 +9,7 @@ Run Windows uv.exe from WSL and force a specific project venv.
 
 Env vars (read once at start):
   WINVENV                 Path to desired venv (Linux or Windows path)
-  WIN_UV_PROJECT_CONFIG   Optional uv config file (Linux or Windows path)
+  WIN_UV_CONFIG_FILE   Optional uv config file (Linux or Windows path)
 
 
 Options:
@@ -65,8 +65,8 @@ ps_quote() {
 # --- resolve paths ---
 venv_win=$(to_win_path "$WINVENV")
 cfg_win=""
-if [[ -n "${WIN_UV_PROJECT_CONFIG:-${UV_PROJECT_CONFIG:-}}" ]]; then
-    cfg_win=$(to_win_path "${WIN_UV_PROJECT_CONFIG:-$UV_PROJECT_CONFIG}")
+if [[ -n "${WIN_UV_CONFIG_FILE:-${UV_CONFIG_FILE:-}}" ]]; then
+    cfg_win=$(to_win_path "${WIN_UV_CONFIG_FILE:-$UV_CONFIG_FILE}")
 
 fi
 
