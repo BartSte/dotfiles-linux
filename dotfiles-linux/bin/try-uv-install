@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 tmpdir=$(mktemp -d)
 req="$tmpdir/req.txt"
 trap 'rm -rf "$tmpdir"' EXIT

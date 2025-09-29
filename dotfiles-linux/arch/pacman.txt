@@ -49,7 +49,6 @@ texlive-core
 texlive-plaingeneric
 the_silver_searcher
 tmux
-trash-cli
 tree
 ttf-jetbrains-mono-nerd
 unzip

@@ -1,4 +1,5 @@
 adblock
+aider-chat
 dnscacher
 gpgme
 html2text
@@ -16,5 +17,6 @@ pynvim
 pytest
 pytz
 tzlocal
+trash-cli
 vdirsyncer
 vobject
