@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+tmpdir=$(mktemp -d)
+req="$tmpdir/req.txt"
+trap 'rm -rf "$tmpdir"' EXIT
+
+uv export --format=requirements.txt --no-hashes --no-header --no-annotate --frozen -o "$req"
+sed -i -E '/^ *-e +\.$/d' "$req"
+
+uv venv --clear
+. .venv/bin/activate
+
+while IFS= read -r line; do
+    case "$line" in "" | \#*) continue ;; esac
+    uv pip install "$line" || printf 'skip: %s\n' "$line"
+done <"$tmpdir/req.txt"

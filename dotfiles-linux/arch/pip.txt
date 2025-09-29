@@ -1,8 +1,0 @@
-dnscacher
-ipython
-key2pane
-khal
-khalorg
-khard
-pygeneral
-vdirsyncer

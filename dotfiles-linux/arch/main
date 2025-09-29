@@ -18,4 +18,7 @@ install_yay /tmp/yay
 yay -S --noconfirm $(cat $dir/aur.txt)
 
 lg "# Installing python packages"
-pipx install $(cat $dir/pip.txt)
+while read -r pkg; do
+    [ -n "$pkg" ] && uv tool install "$pkg"
+done < "$dir/uv.txt"
+
