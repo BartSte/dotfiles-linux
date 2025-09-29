@@ -39,7 +39,7 @@ done
 
 for package in "${packages[@]}"; do
     echo "Installing $package"
-    pip install "${options[@]}" "$package"
+    uv pip install "${options[@]}" "$package"
     if [[ $? -ne 0 ]]; then
         echo "Failed to install $package."
     fi

@@ -59,20 +59,9 @@ to_win_path() {
     fi
 }
 
-exists_win() {
-    # Test existence of a Windows path via wslpath conversion
-    local p="$1"
-    local as_lin
-    as_lin="$(wslpath -u -- "$p" 2>/dev/null)" || return 1
-    [[ -e "$as_lin" ]]
-}
-
 venv_python_from() {
     local venv="$1"
-    local venv_win
-    venv_win="$(to_win_path "$venv")"
-    printf '%s' "${venv_win%\\}\Scripts\python.exe"
-
+    printf '%s' "${venv}/Scripts/python.exe"
 }
 
 # ---------- resolve python.exe ----------
@@ -82,7 +71,7 @@ if [[ -n "${WINVENV:-}" ]]; then
     echo "Using WINVENV: $WINVENV" >"$debug"
     cand="$(venv_python_from "$WINVENV")"
     echo "Candidate python.exe: $cand" >"$debug"
-    if exists_win "$cand"; then
+    if [[ -e "$cand" ]]; then
 
         py="$cand"
     else
@@ -92,8 +81,7 @@ fi
 
 if [[ -z "$py" && -n "${WINPY:-}" ]]; then
     echo "Using WINPY: $WINPY" >"$debug"
-    cand="$(to_win_path "$WINPY")"
-    if exists_win "$cand"; then
+    if [[ -e "$cand" ]]; then
 
         py="$cand"
     else
