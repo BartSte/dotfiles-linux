@@ -18,10 +18,10 @@ reload-wsl() {
     alias mirror='echo $(pwd | sed "s|$HOME|$WH|")'
     alias winmirror='wslpath -w $(mirror)'
 
-    alias pow="$PWSH -NoLogo -NoExit -Command '$set_tmux'"
-    alias powc="$PWSH -NoLogo -Command $@"
-    alias powh="$PWSH -NoLogo -NoExit -Command 'cd ~;$set_tmux'"
-    alias powm="$PWSH -NoLogo -NoExit -Command 'cd $(winmirror);$set_tmux'"
+    alias pow="pwsh.exe -NoLogo -NoExit -Command '$set_tmux'"
+    alias powc="pwsh.exe -NoLogo -Command $@"
+    alias powh="pwsh.exe -NoLogo -NoExit -Command 'cd ~;$set_tmux'"
+    alias powm="pwsh.exe -NoLogo -NoExit -Command 'cd $(winmirror);$set_tmux'"
     alias dotnet="/mnt/c/Program\ Files/dotnet/dotnet.exe"
 
     alias wjava="/mnt/c/Program\\ Files/Eclipse\\ Adoptium/jre-*-hotspot/bin/java.exe"

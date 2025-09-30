@@ -7,7 +7,7 @@ Usage: wuv [options] <uv-args>
 
 Run Windows uv.exe from WSL and force a specific project venv.
 
-Env vars (read once at start):
+Env vars (used by wpy):
   WINVENV                 Path to desired venv (Linux or Windows path)
   WIN_UV_CONFIG_FILE   Optional uv config file (Linux or Windows path)
 
@@ -64,20 +64,18 @@ ps_quote() {
 
 # --- resolve paths ---
 venv_win=$(to_win_path "$WINVENV")
+wpy=$(to_win_path $(wpy --wpy-path))
 cfg_win=""
 if [[ -n "${WIN_UV_CONFIG_FILE:-${UV_CONFIG_FILE:-}}" ]]; then
     cfg_win=$(to_win_path "${WIN_UV_CONFIG_FILE:-$UV_CONFIG_FILE}")
-
 fi
 
 # --- build command string for PowerShell ---
 ps=()
 ps+=("\$env:UV_PROJECT_ENVIRONMENT=$(ps_quote "$venv_win");")
+ps+=("\$env:UV_CONFIG_FILE=\"$cfg_win\";")
+ps+=("\$env:UV_PYTHON=\"${wpy}\";")
 ps+=("& uv")
-if [[ -n "$cfg_win" ]]; then
-    ps+=("--config-file" $(ps_quote "$cfg_win"))
-fi
-# append user args, each quoted for PS
 for a in "${args[@]}"; do ps+=("$(ps_quote "$a")"); done
 ps_cmd="${ps[*]}"
 
