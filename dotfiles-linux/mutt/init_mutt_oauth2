@@ -6,5 +6,7 @@ account=${MICROSOFT_ACCOUNT:-}
     exit 1
 }
 username=$(bw-cli-get username $account)
+token="$HOME/.config/neomutt/$username.tokens"
 
-mutt_oauth2 --verbose --authorize "$HOME/.config/neomutt/$username.tokens"
+rm "$token" 2>/dev/null || true
+mutt_oauth2 --verbose --authorize "$token"

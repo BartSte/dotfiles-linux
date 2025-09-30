@@ -5,6 +5,9 @@ set -eo pipefail
 directory="$HOME/.config/neomutt"
 cache="$HOME/.cache/neomutt"
 
+rm -rf "$directory" || true
+rm -rf "$cache" || true
+
 mkdir -p "$directory"
 ln -sf "$HOME"/dotfiles-linux/mutt/muttrc "$directory"/muttrc
 
