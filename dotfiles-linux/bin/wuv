@@ -5,9 +5,10 @@ usage() {
     cat <<'EOF'
 Usage: wuv [options] <uv-args>
 
-Run Windows uv.exe from WSL and force a specific project venv.
+Run Windows uv.exe from WSL and force a specific project venv. wuv depends on
+wpy.
 
-Env vars (used by wpy):
+Environment variables:
   WINPY                Used by wpy
   WINVENV              Path to desired venv (Linux or Windows path)
   WIN_UV_CONFIG_FILE   Optional uv config file (Linux or Windows path)
@@ -16,7 +17,6 @@ Env vars (used by wpy):
 Options:
   --wuv-help   Show help and exit
   --wuv-debug  Log debug to stderr
-
 EOF
 }
 
@@ -65,11 +65,12 @@ ps_quote() {
 # --- resolve paths ---
 venv_win=$(to_win_path "${WINVENV:-}")
 python_win=$(to_win_path $(wpy --wpy-path))
-cfg_win=$(to_win_path "${WIN_UV_CONFIG_FILE:-$UV_CONFIG_FILE}")
+config_win=$(to_win_path "${WIN_UV_CONFIG_FILE:-$UV_CONFIG_FILE}")
+powershell=$(command -v pwsh.exe || command -v powershell.exe)
 
 # --- build command string for PowerShell ---
 ps=()
-ps+=("\$env:UV_CONFIG_FILE=\"$cfg_win\";")
+ps+=("\$env:UV_CONFIG_FILE=\"$config_win\";")
 ps+=("\$env:UV_PROJECT_ENVIRONMENT=\"${venv_win}\";")
 ps+=("\$env:UV_PYTHON=\"${python_win}\";")
 ps+=("& uv")
@@ -77,8 +78,8 @@ for a in "${args[@]}"; do ps+=("$(ps_quote "$a")"); done
 ps_cmd="${ps[*]}"
 
 echo "venv_win: $venv_win" >"$debug"
-[[ -n "$cfg_win" ]] && echo "config_win: $cfg_win" >"$debug"
+[[ -n "$config_win" ]] && echo "config_win: $config_win" >"$debug"
 echo "pwsh cmd: $ps_cmd" >"$debug"
 
 # --- execute ---
-exec pwsh.exe -NoProfile -Command "$ps_cmd"
+exec "$powershell" -NoProfile -Command "$ps_cmd"

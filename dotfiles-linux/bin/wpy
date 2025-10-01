@@ -18,8 +18,9 @@ EOF
 }
 
 # ---------- flags ----------
+py="${WINPY:-}"
 debug=/dev/null
-mode="run" # run | path | dir
+mode="run"
 argv=()
 
 while [[ $# -gt 0 ]]; do
@@ -40,11 +41,7 @@ done
 if ! grep -qi microsoft /proc/version 2>/dev/null; then
     echo "Not running in WSL" >"$debug"
     exit 1
-fi
-
-# ---------- resolve python.exe ----------
-py="${WINPY:-}"
-if [[ -z "$py" ]]; then
+elif [[ -z "$py" ]]; then
     echo "WINPY is not set" >/dev/stderr
     exit 1
 elif [[ ! -e "$py" ]]; then
