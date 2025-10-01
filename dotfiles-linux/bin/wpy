@@ -5,17 +5,13 @@ usage() {
     cat <<'EOF'
 Usage: wpy [options] <command>
 
-Run a Windows Python from WSL.
+Run a Windows Python from WSL. If WINPY cannot be resolved, it is an error.
 
-Env precedence:
-  WINVENV   Path to a Windows venv (Linux or Windows path)
-  WINPY     Path to a Windows python.exe
+WINPY Path to python.exe
 
 Options:
   --wpy-help   Show help and exit
   --wpy-path   Print resolved python.exe and exit
-
-  --wpy-dir    Print directory of python.exe and exit
   --wpy-debug  Log debug to stderr
 EOF
 
@@ -33,7 +29,6 @@ while [[ $# -gt 0 ]]; do
         exit 0
         ;;
     --wpy-path) mode="path" ;;
-    --wpy-dir) mode="dir" ;;
     --wpy-debug) debug=/dev/stderr ;;
     *) argv+=("$1") ;;
 
@@ -47,66 +42,20 @@ if ! grep -qi microsoft /proc/version 2>/dev/null; then
     exit 1
 fi
 
-# ---------- helpers ----------
-is_win_path() { [[ "$1" =~ ^([A-Za-z]:\\|\\\\) ]]; }
-
-to_win_path() {
-    local p="$1"
-    if is_win_path "$p"; then
-        printf '%s' "$p"
-    else
-        wslpath -w -- "$p"
-    fi
-}
-
-venv_python_from() {
-    local venv="$1"
-    printf '%s' "${venv}/Scripts/python.exe"
-}
-
 # ---------- resolve python.exe ----------
-py=""
-
-if [[ -n "${WINVENV:-}" ]]; then
-    echo "Using WINVENV: $WINVENV" >"$debug"
-    cand="$(venv_python_from "$WINVENV")"
-    echo "Candidate python.exe: $cand" >"$debug"
-    if [[ -e "$cand" ]]; then
-
-        py="$cand"
-    else
-        echo "Venv python not found: $cand" >"$debug"
-    fi
-fi
-
-if [[ -z "$py" && -n "${WINPY:-}" ]]; then
-    echo "Using WINPY: $WINPY" >"$debug"
-    if [[ -e "$cand" ]]; then
-
-        py="$cand"
-    else
-        echo "WINPY not found: $cand" >"$debug"
-
-    fi
-fi
-
-[[ -n "$py" ]] || {
-    echo "No python interpreter found (set WINVENV or WINPY)"
+py="${WINPY:-}"
+if [[ -z "$py" ]]; then
+    echo "WINPY is not set" >/dev/stderr
     exit 1
-}
-
-echo "Resolved python.exe: $py" >"$debug"
+elif [[ ! -e "$py" ]]; then
+    echo "Failed to resolve $py" >/dev/stderr
+    exit 1
+fi
 
 # ---------- output modes ----------
 case "$mode" in
 path)
     echo "$py"
-    exit 0
-    ;;
-dir) # dirname for Windows path: convert to Linux, dirname, convert back
-    d_lin="$(dirname "$(wslpath -u -- "$py")")"
-    d_win="$(wslpath -w -- "$d_lin")"
-    echo "$d_win"
     exit 0
     ;;
 esac
