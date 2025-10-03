@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-this_dir="$(dirname "$(readlink -f "$0")")"
-. "$this_dir/regexes.sh"
+# this_dir="$(dirname "$(readlink -f "$0")")"
+# . "$this_dir/regexes.sh"
 
 ################################################################################
 # Some patterns that can be selected by fzf cannot be accepted by the program
