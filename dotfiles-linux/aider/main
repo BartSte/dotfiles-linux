@@ -4,3 +4,5 @@ this_dir="$(dirname "$(readlink -f "$0")")"
 
 lg "Copy aider config to home directory"
 ln -sf "$this_dir"/.aider.conf.yml ~/.aider.conf.yml
+lg "Copy aider model settings to home directory"
+ln -sf "$this_dir"/.aider.model.settings.yml ~/.aider.model.settings.yml
