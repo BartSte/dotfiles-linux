@@ -19,7 +19,7 @@ zshenv() {
     export TMUX_PLUGIN_DIR="$HOME/.tmux/plugins"
     export UV_CONFIG_FILE=~/.config/uv/config.toml
     export VI_MODE_SET_CURSOR=true
-    export WSLBROWSER='/mnt/c/Program Files/qutebrowser/qutebrowser.exe'
+    export WSLBROWSER="$LOCALAPPDATA/Programs/qutebrowser/qutebrowser.exe"
     hash nvim && export EDITOR='nvim' || unset EDITOR
 
     export HISTFILE=$HOME/.histfile
