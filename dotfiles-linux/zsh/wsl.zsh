@@ -12,7 +12,9 @@ reload-wsl() {
 
     export WH=$(wslpath "$(_winenv USERPROFILE)")
     export APPDATA="$WH/AppData/Roaming"
+    export LOCALAPPDATA="$WH/AppData/Local"
     export WINPY="$APPDATA/uv/python/cpython-3.13.7-windows-x86_64-none/python.exe"
+    export BROWSER="$LOCALAPPDATA/Programs/qutebrowser/qutebrowser.exe"
 
     set_tmux="\$Env:TMUX=\"${TMUX:-}\""
     alias wh="cd $WH"
