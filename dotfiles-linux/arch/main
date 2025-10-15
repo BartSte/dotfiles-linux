@@ -21,4 +21,3 @@ lg "# Installing python packages"
 while read -r pkg; do
     [ -n "$pkg" ] && uv tool install "$pkg"
 done < "$dir/uv.txt"
-

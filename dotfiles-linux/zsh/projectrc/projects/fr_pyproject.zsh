@@ -2,9 +2,8 @@
 
 if is_running wsl; then
     name="$(basename $(pwd))"
-    export WINVENV=$WH/venvs/$name
-    export WINPY=$WINVENV/Scripts/python.exe
-    export WINCODE=$WH/code/$name
+    export WVENV=$WH/venvs/$name
+    export WPY=$WVENV/Scripts/python.exe
 
     alias wpip='wpy -m pip'
     alias wipdb='wpy -m ipdb'

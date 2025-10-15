@@ -72,6 +72,7 @@ _fr_pyproject() {
         quay-detector
         software-engineering-general
         fleet-diver-software
+        fr_github
     )
     [[ " ${fr_pyproject[@]} " =~ " $PROJECTRC " ]] && PROJECTRC="fr_pyproject"
 }
