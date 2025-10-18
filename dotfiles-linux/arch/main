@@ -18,6 +18,14 @@ install_yay /tmp/yay
 yay -S --noconfirm $(cat $dir/aur.txt)
 
 lg "# Installing python packages"
+config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/uv"
+config_file="$config_dir/config.toml"
+lg "# Ensuring uv config file exists"
+mkdir -p "$config_dir"
+if [[ ! -f "$config_file" ]]; then
+    touch "$config_file"
+fi
+
 while read -r pkg; do
     [ -n "$pkg" ] && uv tool install "$pkg"
 done < "$dir/uv.txt"
