@@ -6,26 +6,32 @@ dir=~/dotfiles-linux/arch
 
 . $dir/helpers.sh
 
+ensure_uv_config_exists() {
+    config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/uv"
+    config_file="$config_dir/config.toml"
+    lg "# Ensuring uv config file exists"
+    mkdir -p "$config_dir"
+    if [[ ! -f "$config_file" ]]; then
+        touch "$config_file"
+    fi
+}
+
 lg "# Updating pacman"
 sudo pacman -Syu --noconfirm
+
 lg "# Installing base dependencies pacman"
 sudo pacman -S --needed base-devel --noconfirm
+
 lg "# Installing user dependencies pacman"
 sudo pacman -S --noconfirm $(cat "$dir/pacman.txt")
+
+lg "# Installing python packages"
+while read -r pkg; do
+    [ -n "$pkg" ] && pipx install "$pkg"
+done <"$dir/pipx.txt"
+ensure_uv_config_exists
 
 lg "# Installing dependencies AUR"
 install_yay /tmp/yay
 yay -S --noconfirm $(cat $dir/aur.txt)
 
-lg "# Installing python packages"
-config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/uv"
-config_file="$config_dir/config.toml"
-lg "# Ensuring uv config file exists"
-mkdir -p "$config_dir"
-if [[ ! -f "$config_file" ]]; then
-    touch "$config_file"
-fi
-
-while read -r pkg; do
-    [ -n "$pkg" ] && uv tool install "$pkg"
-done < "$dir/uv.txt"

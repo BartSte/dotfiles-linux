@@ -37,6 +37,14 @@ pandoc
 perl
 poppler
 powerline-fonts
+python-adblock
+python-gpgme
+python-html2text
+python-markdown
+python-pipx
+python-pygments
+python-pytest
+python-pytz
 qutebrowser
 rbw
 rclone
@@ -62,3 +70,4 @@ zathura-pdf-mupdf
 zsh
 zsh-autosuggestions
 zsh-syntax-highlighting
+
