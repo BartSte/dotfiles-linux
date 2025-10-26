@@ -1,4 +1,5 @@
 aider-install
+bartste-prompts
 dnscacher
 icalendar
 ipython
