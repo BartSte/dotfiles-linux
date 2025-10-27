@@ -9,6 +9,5 @@ khalorg
 khard
 pygeneral
 trash-cli
-tzlocal
 vdirsyncer
 vobject
