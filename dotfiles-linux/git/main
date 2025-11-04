@@ -1,3 +1,19 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
+git config --global user.name "bartste"
 git config --global user.email "$(bw-cli-get username "$MICROSOFT_ACCOUNT")"
+
+git config --global credential.helper "store"
+git config --global core.autocrlf "input"
+
+git config --global push.autoSetupRemote "yes"
+
+git config --global pull.rebase "false"
+git config --global diff.tool "nvimdiff"
+git config --global difftool.prompt "false"
+
+git config --global filter.lfs.smudge "git-lfs smudge -- %f"
+git config --global filter.lfs.process "git-lfs filter-process"
+git config --global filter.lfs.required "true"
+git config --global filter.lfs.clean "git-lfs clean -- %f"
