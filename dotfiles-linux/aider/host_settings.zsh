@@ -1,5 +1,3 @@
-#!/bin/env bash
-
 if [[ $(hostname) == "bart-asus" ]]; then
     export DEEPSEEK_API_KEY AIDER_MODEL
     DEEPSEEK_API_KEY=$(rbw_get password deepseektoken)

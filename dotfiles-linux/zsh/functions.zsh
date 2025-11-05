@@ -37,8 +37,7 @@ fullsync() {
 ai() {
     local dir
     dir=$HOME/dotfiles-linux/aider
-    save-source $dir/host_settings.zsh
-    save-source $dir/$PROJECTRC.zsh
+    source $dir/host_settings.zsh
 
     if [[ $# -eq 0 ]]; then
         aider
