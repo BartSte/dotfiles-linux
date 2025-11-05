@@ -8,10 +8,13 @@ reload-session() {
     local this_dir=${${(%):-%x}:A:h}
     local configs="$this_dir/projectrc"
     local cwd_relative_to_home=$(sed "s|^$HOME||" <<< "$PWD")
-    local config=$(realpath "${configs}/${cwd_relative_to_home}.zsh")
-    local config_default=$(realpath "${configs}/${cwd_relative_to_home}/default.zsh")
 
-    source $config || source $config_default || true
+    local config=$(realpath "${configs}/${cwd_relative_to_home}.zsh")
+    local config_default=$(dirname $config)/default.zsh
+
+    source "$config" 2>/dev/null || source "$config_default" 2>/dev/null || true
+    PROJECTRC=$(sed "s|/|_|g; s|^_||" <<< "$cwd_relative_to_home")
+    export PROJECTRC
 }
 
 reload-session "$@"
