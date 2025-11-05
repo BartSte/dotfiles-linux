@@ -1,19 +1,255 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-git config --global user.name "bartste"
-git config --global user.email "$(bw-cli-get username "$MICROSOFT_ACCOUNT")"
 
-git config --global credential.helper "store"
+# ==== EDIT THESE 6 VALUES ====
+PERSONAL_EMAIL=$(rbw_get username MicrosoftPersonal)
+WORK_EMAIL=$(rbw_get username MicrosoftWork)
+
+PERSONAL_ROOT="$HOME/code/personal/"
+WORK_ROOT="$HOME/code/work/"
+# =================================
+
+# Derived names and paths
+SSH_DIR="$HOME/.ssh"
+CFG_MAIN="$HOME/.gitconfig"
+CFG_PERSONAL="$HOME/.gitconfig-personal"
+CFG_WORK="$HOME/.gitconfig-work"
+ALLOWED_SIGNERS="$HOME/.config/git/allowed_signers"
+SSH_KEY_PERSONAL="$SSH_DIR/id_ed25519_personal"
+SSH_KEY_WORK="$SSH_DIR/id_ed25519_work"
+SSH_CONFIG="$SSH_DIR/config"
+
+HOST_ALIAS_PERSONAL="github.com-personal"
+HOST_ALIAS_WORK="github.com-work"
+
+mkdir -p "$SSH_DIR" "$(dirname "$ALLOWED_SIGNERS")" "$PERSONAL_ROOT" "$WORK_ROOT"
+chmod 700 "$SSH_DIR"
+
+have_cmd() { command -v "$1" >/dev/null 2>&1; }
+
+write_file_if_changed() {
+  local path="$1"
+  local tmp
+  tmp="$(mktemp)"
+  cat >"$tmp"
+  if [ ! -f "$path" ] || ! cmp -s "$tmp" "$path"; then
+    mkdir -p "$(dirname "$path")"
+    mv "$tmp" "$path"
+  else
+    rm -f "$tmp"
+  fi
+}
+
+append_unique_line() {
+  local line="$1" file="$2"
+  mkdir -p "$(dirname "$2")"
+  touch "$file"
+  grep -Fxq "$line" "$file" || echo "$line" >> "$file"
+}
+
+# 1) Generate SSH keys if missing
+if ! [ -f "${SSH_KEY_PERSONAL}" ]; then
+  ssh-keygen -t ed25519 -C "$PERSONAL_EMAIL" -f "$SSH_KEY_PERSONAL" -N ""
+fi
+if ! [ -f "${SSH_KEY_WORK}" ]; then
+  ssh-keygen -t ed25519 -C "$WORK_EMAIL" -f "$SSH_KEY_WORK" -N ""
+fi
+chmod 600 "${SSH_KEY_PERSONAL}" "${SSH_KEY_PERSONAL}.pub" "${SSH_KEY_WORK}" "${SSH_KEY_WORK}.pub"
+
+# 2) SSH config with host aliases
+ssh_cfg_content="# Managed by setup_git_identities.sh
+Host ${HOST_ALIAS_PERSONAL}
+  HostName github.com
+  User git
+  IdentityFile ${SSH_KEY_PERSONAL}
+  IdentitiesOnly yes
+
+Host ${HOST_ALIAS_WORK}
+  HostName github.com
+  User git
+  IdentityFile ${SSH_KEY_WORK}
+  IdentitiesOnly yes
+"
+# Merge safely: keep existing config, add or replace our block
+if [ -f "$SSH_CONFIG" ]; then
+  # remove prior managed block if present
+  awk '
+    BEGIN{skip=0}
+    /^# Managed by setup_git_identities.sh/{skip=1; next}
+    skip && NF==0 {skip=0; next}
+    !skip {print}
+  ' "$SSH_CONFIG" > "${SSH_CONFIG}.tmp" || true
+  mv "${SSH_CONFIG}.tmp" "$SSH_CONFIG"
+fi
+# append fresh block
+{
+  echo
+  echo "$ssh_cfg_content"
+} >> "$SSH_CONFIG"
+chmod 600 "$SSH_CONFIG"
+
+# 3) Git global safety and includes
+git config --global user.useConfigOnly true
+
+# includeIf blocks
+# Note: Git expects trailing slash in gitdir path for directory rules
+include_block=$(cat <<EOF
+[user]
+\tuseConfigOnly = true
+
+[includeIf "gitdir:${PERSONAL_ROOT}"]
+\tpath = ${CFG_PERSONAL}
+
+[includeIf "gitdir:${WORK_ROOT}"]
+\tpath = ${CFG_WORK}
+EOF
+)
+# Merge global config fields idempotently
+# If ~/.gitconfig missing, create minimal, else ensure includeIf entries exist
+touch "$CFG_MAIN"
+for block in \
+  "[includeIf \"gitdir:${PERSONAL_ROOT}\"]" \
+  "[includeIf \"gitdir:${WORK_ROOT}\"]"
+do
+  if ! grep -Fq "$block" "$CFG_MAIN"; then
+    printf '\n%s\n\tpath = %s\n' "$block" \
+      "$( [ "$block" = "[includeIf \"gitdir:${PERSONAL_ROOT}\"]" ] && echo "$CFG_PERSONAL" || echo "$CFG_WORK" )" \
+      >> "$CFG_MAIN"
+  fi
+done
+
+# 4) Per-scope identities and SSH signing
+write_file_if_changed "$CFG_PERSONAL" <<EOF
+[user]
+name = BartSte
+email = ${PERSONAL_EMAIL}
+signingkey = ${SSH_KEY_PERSONAL}.pub
+
+[gpg]
+format = ssh
+EOF
+
+write_file_if_changed "$CFG_WORK" <<EOF
+[user]
+name = BartSte
+email = ${WORK_EMAIL}
+signingkey = ${SSH_KEY_WORK}.pub
+
+[gpg]
+format = ssh
+EOF
+
+git config --global gpg.format ssh
+mkdir -p "$(dirname "$ALLOWED_SIGNERS")"
+touch "$ALLOWED_SIGNERS"
+chmod 600 "$ALLOWED_SIGNERS"
+append_unique_line "${WORK_EMAIL}  $(cat "${SSH_KEY_WORK}.pub")" "$ALLOWED_SIGNERS"
+append_unique_line "${PERSONAL_EMAIL}  $(cat "${SSH_KEY_PERSONAL}.pub")" "$ALLOWED_SIGNERS"
+
+# 5) Helpful global defaults
 git config --global core.autocrlf "input"
-
-git config --global push.autoSetupRemote "yes"
-
-git config --global pull.rebase "false"
 git config --global diff.tool "nvimdiff"
 git config --global difftool.prompt "false"
-
-git config --global filter.lfs.smudge "git-lfs smudge -- %f"
+git config --global filter.lfs.clean "git-lfs clean -- %f"
 git config --global filter.lfs.process "git-lfs filter-process"
 git config --global filter.lfs.required "true"
-git config --global filter.lfs.clean "git-lfs clean -- %f"
+git config --global filter.lfs.smudge "git-lfs smudge -- %f"
+git config --global init.defaultBranch main
+git config --global pull.rebase "false"
+git config --global push.autoSetupRemote "yes"
+git config --global push.default simple
+
+# 6) Load keys into agent for this session
+if have_cmd ssh-add; then
+  eval "$(ssh-agent -s)" >/dev/null 2>&1 || true
+  ssh-add "${SSH_KEY_PERSONAL}" >/dev/null 2>&1 || true
+  ssh-add "${SSH_KEY_WORK}" >/dev/null 2>&1 || true
+fi
+
+# 7) Print GitHub configuration steps
+cat <<'GH_STEPS'
+
+================ GitHub configuration steps ================
+You must do these steps in GitHub (personal) and in your work host.
+
+1) Add SSH keys to each account
+   Personal key file: ~/.ssh/id_ed25519_personal.pub
+   Work key file:     ~/.ssh/id_ed25519_work.pub   
+   Action:
+     - Copy the .pub contents.
+     - In GitHub → Settings → SSH and GPG keys → "New SSH key".
+     - Paste, name it, save.
+
+2) Enable SSH commit signing on each account
+   Use the same public keys as "Signing keys".
+   In GitHub → Settings → SSH and GPG keys → "New SSH key" → Key type: "Signing key".
+
+3) Authenticate GitHub CLI separately per host alias (optional but recommended)
+   Run:
+     gh auth login --hostname "github.com-personal"
+     gh auth login --hostname "YOUR_WORK_HOST-WORKLABEL"
+   Choose:
+     - Git operations over SSH
+     - Paste a web token when prompted or follow device flow
+
+4) Use the correct clone URLs
+   Personal:
+     git clone git@github.com-personal:YOUR_PERSONAL_USER/REPO.git  $HOME/code/personal/REPO
+   Work (github.com or Enterprise):
+     git clone git@YOUR_WORK_HOST-WORKLABEL:ORG_OR_USER/REPO.git    $HOME/code/work/REPO
+
+5) Verify identity before first commit
+   Inside any repo:
+     git config user.name
+     git config user.email
+   They should match the scope (personal/work) automatically based on directory.
+
+6) Switching existing repos (if needed)
+   Personal:
+     git -C /path/to/repo remote set-url origin git@github.com-personal:YOUR_PERSONAL_USER/REPO.git
+   Work:
+     git -C /path/to/repo remote set-url origin git@YOUR_WORK_HOST-WORKLABEL:ORG_OR_USER/REPO.git
+
+Notes:
+- Put personal repos under: $HOME/code/personal/
+- Put work repos under:     $HOME/code/work/
+- The includeIf rules pick the right identity by path.
+============================================================
+
+GH_STEPS
+
+# 8) Print resolved values for convenience
+cat <<VALUES
+
+Resolved values:
+  PERSONAL_EMAIL = ${PERSONAL_EMAIL}
+  WORK_EMAIL     = ${WORK_EMAIL}
+  PERSONAL_ROOT  = ${PERSONAL_ROOT}
+  WORK_ROOT      = ${WORK_ROOT}
+
+Key files:
+  ${SSH_KEY_PERSONAL}.pub
+  ${SSH_KEY_WORK}.pub
+
+Host aliases:
+  ${HOST_ALIAS_PERSONAL}
+  ${HOST_ALIAS_WORK}
+
+VALUES
+
+# 9) Final usage tips
+cat <<USAGE
+Clone using these remotes:
+
+  Personal:
+    git clone git@${HOST_ALIAS_PERSONAL}:BartSte/REPO.git  ${PERSONAL_ROOT}REPO
+
+  Work:
+    git clone git@${HOST_ALIAS_WORK}:ORG_OR_USER/REPO.git             ${WORK_ROOT}REPO
+
+Existing repos can be switched with:
+    git -C /path/to/repo remote set-url origin git@${HOST_ALIAS_PERSONAL}:BartSte/REPO.git
+or
+    git -C /path/to/repo remote set-url origin git@${HOST_ALIAS_WORK}:ORG_OR_USER/REPO.git
+USAGE

@@ -3,10 +3,12 @@
 [core]
 	autocrlf = input
 [user]
-	name = barts
+	name = bartste
 	email = bartsteensma@outlook.com
+	useConfigOnly = true
 [push]
 	autoSetupRemote = yes
+	default = simple
 [pull]
 	rebase = false
 [diff]
@@ -18,3 +20,13 @@
 	process = git-lfs filter-process
 	required = true
 	clean = git-lfs clean -- %f
+
+[includeIf "gitdir:/home/barts/code/personal/"]
+	path = /home/barts/.gitconfig-personal
+
+[includeIf "gitdir:/home/barts/code/work/"]
+	path = /home/barts/.gitconfig-work
+[gpg]
+	format = ssh
+[init]
+	defaultBranch = main

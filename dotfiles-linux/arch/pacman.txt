@@ -26,6 +26,7 @@ make
 man-db
 neomutt
 networkmanager
+nodejs
 notmuch
 npm
 ntfs-3g
