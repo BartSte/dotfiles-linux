@@ -20,9 +20,6 @@ lg "# Updating pacman"
 sudo pacman -Syu --noconfirm
 
 lg "# Installing base dependencies pacman"
-sudo pacman -S --needed base-devel --noconfirm
-
-lg "# Installing user dependencies pacman"
 sudo pacman -S --noconfirm $(cat "$dir/pacman.txt")
 
 lg "# Installing python packages"
@@ -34,4 +31,3 @@ ensure_uv_config_exists
 lg "# Installing dependencies AUR"
 install_yay /tmp/yay
 yay -S --noconfirm $(cat $dir/aur.txt)
-
