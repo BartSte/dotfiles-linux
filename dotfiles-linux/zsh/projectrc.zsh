@@ -34,21 +34,6 @@ __projectrc_from_map() {
 }
 
 #------------------------------------------------------------------------------
-# __projectrc_from_git
-# If $PWD is inside a Git repo, returns a snippet keyed by repo name:
-#   $PROJECTRC_HOME/projectrc.git/<reponame>.zsh
-# Output: single absolute path if readable, otherwise empty
-# Side effects: none
-#------------------------------------------------------------------------------
-__projectrc_from_git() {
-  local gitroot repo file
-  gitroot=$(command git rev-parse --show-toplevel 2>/dev/null) || return 0
-  repo=${gitroot:t}
-  file="$PROJECTRC_HOME/projectrc.git/${repo}.zsh"
-  [[ -r $file ]] && print -r -- "$file"
-}
-
-#------------------------------------------------------------------------------
 # __projectrc_is_safe
 # Basic safety: ensures the candidate file is a regular, readable file
 # and lives under $PROJECTRC_HOME. Returns 0 if safe.
@@ -66,17 +51,17 @@ __projectrc_is_safe() {
 # Side effects: sources user snippets
 #------------------------------------------------------------------------------
 __projectrc_load_startup() {
-  local files=()
+  local files=() f first_file=""
   files+=($(__projectrc_from_map))
-  files+=($(__projectrc_from_git))
   files=(${(u)files})  # unique
-
-  local f
   for f in $files; do
+    [[ -z $first_file ]] && first_file="$f"
     if __projectrc_is_safe "$f"; then
       source "$f"
     fi
   done
+
+  export PROJECTRC=$([[ -n $first_file ]] && echo ${first_file:t:r})
 }
 
 # Run once when .zshrc is sourced (initial shell PWD only)
