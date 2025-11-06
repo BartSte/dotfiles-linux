@@ -5,7 +5,6 @@ cache-prompts: true
 check-update: false
 dark-mode: true
 editor: nvim
-read: ~/dotfiles-linux/aider/prompts/conventions.md
 show-release-notes: false
 vim: true
 ##########################################################

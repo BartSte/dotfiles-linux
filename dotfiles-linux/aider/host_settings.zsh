@@ -2,6 +2,7 @@ if [[ $(hostname) == "bart-asus" ]]; then
     export DEEPSEEK_API_KEY AIDER_MODEL
     DEEPSEEK_API_KEY=$(rbw_get password deepseektoken)
     AIDER_MODEL=deepseek/deepseek-reasoner
+    AIDER_WEAK_MODEL=deepseek/deepseek-chat
 
 elif [[ $(hostname) == "zbook" ]]; then
     export OPENAI_API_KEY AIDER_MODEL AIDER_WEAK_MODEL
