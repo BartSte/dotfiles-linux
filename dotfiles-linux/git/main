@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-
 # ==== EDIT THESE 6 VALUES ====
-PERSONAL_EMAIL=$(rbw_get username MicrosoftPersonal)
-WORK_EMAIL=$(rbw_get username MicrosoftWork)
+PERSONAL_EMAIL=$(bw-cli-get username MicrosoftPersonal)
+WORK_EMAIL=$(bw-cli-get username MicrosoftWork)
 
 PERSONAL_ROOT="$HOME/code/personal/"
 WORK_ROOT="$HOME/code/work/"
@@ -29,31 +28,31 @@ chmod 700 "$SSH_DIR"
 have_cmd() { command -v "$1" >/dev/null 2>&1; }
 
 write_file_if_changed() {
-  local path="$1"
-  local tmp
-  tmp="$(mktemp)"
-  cat >"$tmp"
-  if [ ! -f "$path" ] || ! cmp -s "$tmp" "$path"; then
-    mkdir -p "$(dirname "$path")"
-    mv "$tmp" "$path"
-  else
-    rm -f "$tmp"
-  fi
+    local path="$1"
+    local tmp
+    tmp="$(mktemp)"
+    cat >"$tmp"
+    if [ ! -f "$path" ] || ! cmp -s "$tmp" "$path"; then
+        mkdir -p "$(dirname "$path")"
+        mv "$tmp" "$path"
+    else
+        rm -f "$tmp"
+    fi
 }
 
 append_unique_line() {
-  local line="$1" file="$2"
-  mkdir -p "$(dirname "$2")"
-  touch "$file"
-  grep -Fxq "$line" "$file" || echo "$line" >> "$file"
+    local line="$1" file="$2"
+    mkdir -p "$(dirname "$2")"
+    touch "$file"
+    grep -Fxq "$line" "$file" || echo "$line" >>"$file"
 }
 
 # 1) Generate SSH keys if missing
 if ! [ -f "${SSH_KEY_PERSONAL}" ]; then
-  ssh-keygen -t ed25519 -C "$PERSONAL_EMAIL" -f "$SSH_KEY_PERSONAL" -N ""
+    ssh-keygen -t ed25519 -C "$PERSONAL_EMAIL" -f "$SSH_KEY_PERSONAL" -N ""
 fi
 if ! [ -f "${SSH_KEY_WORK}" ]; then
-  ssh-keygen -t ed25519 -C "$WORK_EMAIL" -f "$SSH_KEY_WORK" -N ""
+    ssh-keygen -t ed25519 -C "$WORK_EMAIL" -f "$SSH_KEY_WORK" -N ""
 fi
 chmod 600 "${SSH_KEY_PERSONAL}" "${SSH_KEY_PERSONAL}.pub" "${SSH_KEY_WORK}" "${SSH_KEY_WORK}.pub"
 
@@ -73,20 +72,20 @@ Host ${HOST_ALIAS_WORK}
 "
 # Merge safely: keep existing config, add or replace our block
 if [ -f "$SSH_CONFIG" ]; then
-  # remove prior managed block if present
-  awk '
+    # remove prior managed block if present
+    awk '
     BEGIN{skip=0}
     /^# Managed by setup_git_identities.sh/{skip=1; next}
     skip && NF==0 {skip=0; next}
     !skip {print}
-  ' "$SSH_CONFIG" > "${SSH_CONFIG}.tmp" || true
-  mv "${SSH_CONFIG}.tmp" "$SSH_CONFIG"
+  ' "$SSH_CONFIG" >"${SSH_CONFIG}.tmp" || true
+    mv "${SSH_CONFIG}.tmp" "$SSH_CONFIG"
 fi
 # append fresh block
 {
-  echo
-  echo "$ssh_cfg_content"
-} >> "$SSH_CONFIG"
+    echo
+    echo "$ssh_cfg_content"
+} >>"$SSH_CONFIG"
 chmod 600 "$SSH_CONFIG"
 
 # 3) Git global safety and includes
@@ -94,7 +93,8 @@ git config --global user.useConfigOnly true
 
 # includeIf blocks
 # Note: Git expects trailing slash in gitdir path for directory rules
-include_block=$(cat <<EOF
+include_block=$(
+    cat <<EOF
 [user]
 \tuseConfigOnly = true
 
@@ -109,14 +109,13 @@ EOF
 # If ~/.gitconfig missing, create minimal, else ensure includeIf entries exist
 touch "$CFG_MAIN"
 for block in \
-  "[includeIf \"gitdir:${PERSONAL_ROOT}\"]" \
-  "[includeIf \"gitdir:${WORK_ROOT}\"]"
-do
-  if ! grep -Fq "$block" "$CFG_MAIN"; then
-    printf '\n%s\n\tpath = %s\n' "$block" \
-      "$( [ "$block" = "[includeIf \"gitdir:${PERSONAL_ROOT}\"]" ] && echo "$CFG_PERSONAL" || echo "$CFG_WORK" )" \
-      >> "$CFG_MAIN"
-  fi
+    "[includeIf \"gitdir:${PERSONAL_ROOT}\"]" \
+    "[includeIf \"gitdir:${WORK_ROOT}\"]"; do
+    if ! grep -Fq "$block" "$CFG_MAIN"; then
+        printf '\n%s\n\tpath = %s\n' "$block" \
+            "$([ "$block" = "[includeIf \"gitdir:${PERSONAL_ROOT}\"]" ] && echo "$CFG_PERSONAL" || echo "$CFG_WORK")" \
+            >>"$CFG_MAIN"
+    fi
 done
 
 # 4) Per-scope identities and SSH signing
@@ -148,6 +147,8 @@ append_unique_line "${WORK_EMAIL}  $(cat "${SSH_KEY_WORK}.pub")" "$ALLOWED_SIGNE
 append_unique_line "${PERSONAL_EMAIL}  $(cat "${SSH_KEY_PERSONAL}.pub")" "$ALLOWED_SIGNERS"
 
 # 5) Helpful global defaults
+git config --global user.name "BartSte"
+git config --global user.email "$(bw-cli-get username $MICROSOFT_ACCOUNT)"
 git config --global core.autocrlf "input"
 git config --global diff.tool "nvimdiff"
 git config --global difftool.prompt "false"
@@ -162,9 +163,9 @@ git config --global push.default simple
 
 # 6) Load keys into agent for this session
 if have_cmd ssh-add; then
-  eval "$(ssh-agent -s)" >/dev/null 2>&1 || true
-  ssh-add "${SSH_KEY_PERSONAL}" >/dev/null 2>&1 || true
-  ssh-add "${SSH_KEY_WORK}" >/dev/null 2>&1 || true
+    eval "$(ssh-agent -s)" >/dev/null 2>&1 || true
+    ssh-add "${SSH_KEY_PERSONAL}" >/dev/null 2>&1 || true
+    ssh-add "${SSH_KEY_WORK}" >/dev/null 2>&1 || true
 fi
 
 # 7) Print GitHub configuration steps
