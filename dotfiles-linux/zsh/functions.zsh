@@ -37,24 +37,11 @@ fullsync() {
 ai() {
     local dir
     dir=$HOME/dotfiles-linux/aider
-    save-source $dir/host_settings.zsh
-    save-source $dir/$PROJECTRC.zsh
+    source $dir/host_settings.zsh
 
     if [[ $# -eq 0 ]]; then
         aider
     else
         prompts $@ --action aider
     fi
-}
-
-aibase() {
-    GIT_DIR=$HOME/dotfiles.git \
-        GIT_WORK_TREE=$HOME \
-        ai "$@"
-}
-
-ailin() {
-    GIT_DIR=$HOME/.dotfiles-linux.git \
-        GIT_WORK_TREE=$HOME \
-        ai "$@"
 }

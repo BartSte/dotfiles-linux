@@ -1,4 +1,2 @@
-~/code
-~/dotfiles/
-~/dotfiles-linux/
-$WH/code
+~/code/work/*
+~/code/personal/*

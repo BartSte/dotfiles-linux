@@ -22,7 +22,6 @@ _zshrc_config() {
     save-source "$HOME/.dotfiles_config.sh"
     for file in "${files[@]}"; do
         source "$dir_zsh/$file"
-        # save-source "$dir_zsh/$file" || echo "An error in $file" >&2
     done
 }
 

@@ -1,80 +1,69 @@
-# This file should be sourced from .zshrc. It will load extra zsh configurations
-# based on the name of the current directory. This is useful for loading project
-# specific configurations.
-reload-session() {
-    setopt LOCAL_OPTIONS
-    set -euo pipefail
+# --- centralized projectrc loader (startup-only) ---
+setopt extendedglob
 
-    local dir="$HOME/dotfiles-linux/zsh/projectrc"
-    source "$dir/helpers.zsh"
+# Root directory for all supplementary configs
 
-    PROJECTRC=$(get_project_name)
-    export PROJECTRC
+: ${PROJECTRC_HOME:="${${(%):-%x}:A:h}/projectrc"}
+: ${PROJECTRC_MAP:="$PROJECTRC_HOME/mappings.conf"}
 
-    _pyproject
-    _fr_pyproject
+#------------------------------------------------------------------------------
+# __projectrc_from_map
+# Reads $PROJECTRC_MAP (lines: "<glob> <file>") and returns snippet paths
+# whose <glob> matches the current $PWD. Globs use zsh pattern syntax.
+# Output: newline-separated absolute paths under $PROJECTRC_HOME/projectrc.d/
+# Side effects: none
+#------------------------------------------------------------------------------
+__projectrc_from_map() {
+  local projectrc_dir="$PROJECTRC_HOME/projectrc.d"
+  [[ -r $PROJECTRC_MAP ]] || return 0
 
-    # Load the project specific zsh configuration file if it exists.
-    if [[ -f "$dir/projects/$PROJECTRC.zsh" ]]; then
-        source "$dir/projects/$PROJECTRC.zsh"
+  local line pat file exp_pat matches=()
+  while IFS=$' \t' read -r line; do
+    [[ -z $line || ${line[1]} == "#" ]] && continue
+    pat=${=${(z)line}[1]}
+    file=${=${(z)line}[2]}
+    [[ -z $pat || -z $file ]] && continue
+
+    exp_pat=${~pat}            # expand ~ in patterns
+    if [[ $PWD == ${~exp_pat} ]]; then
+      matches+="$projectrc_dir/$file"
     fi
+  done < "$PROJECTRC_MAP"
+
+  print -r -- ${(u)matches}
 }
 
-# A python project enables the following:
-# - load aider python conventions
-_pyproject() {
-    _activate_venv
-    local pyproject=(
-        bartste-prompts
-        khalorg
-        pygeneral
-    )
-    [[ " ${pyproject[@]} " =~ " $PROJECTRC " ]] && PROJECTRC="pyproject"
+#------------------------------------------------------------------------------
+# __projectrc_is_safe
+# Basic safety: ensures the candidate file is a regular, readable file
+# and lives under $PROJECTRC_HOME. Returns 0 if safe.
+# Side effects: none
+#------------------------------------------------------------------------------
+__projectrc_is_safe() {
+  local f=$1
+  [[ -n $f && -f $f && -r $f && $f == ${PROJECTRC_HOME}/* ]]
 }
 
-# Try to activate a python virtual environment if it exists in a `.venv`
-# directory.
-_activate_venv() {
-    if [[ -f .venv/bin/activate ]]; then
-        source .venv/bin/activate
+#------------------------------------------------------------------------------
+# __projectrc_load_startup
+# Resolves all matching snippets for the initial $PWD and sources each once.
+# De-duplicates the list. No caching or chpwd hooks.
+# Side effects: sources user snippets
+#------------------------------------------------------------------------------
+__projectrc_load_startup() {
+  local files=() f first_file=""
+  files+=($(__projectrc_from_map))
+  files=(${(u)files})  # unique
+  for f in $files; do
+    [[ -z $first_file ]] && first_file="$f"
+    if __projectrc_is_safe "$f"; then
+      source "$f"
     fi
+  done
+
+  export PROJECTRC=$([[ -n $first_file ]] && echo ${first_file:t:r})
 }
 
-# - Same as pyproject but now it loads configurations for projects at Fleet
-# Robotics
-# - call the python windows python interpreter from wsl. See the wpy
-# executable for more info.
-_fr_pyproject() {
-    _activate_venv
-    local fr_pyproject=(
-        automated-reporting
-        fc-data-client
-        fc-deckcam-software
-        fc-deckcam-software
-        fc-pipelines
-        fc-report
-        fc-report
-        fc-sonar-server
-        fcbuild
-        fcenums
-        fcisscore
-        fcissgui
-        fctools
-        fleet-inspector
-        fr-pyqt
-        fr_camera_module
-        fr_logger
-        fr_message_broker
-        fr_qt_material
-        isssdk
-        navigation
-        orders-operations-reports-database
-        quay-detector
-        software-engineering-general
-        fleet-diver-software
-        fr_github
-    )
-    [[ " ${fr_pyproject[@]} " =~ " $PROJECTRC " ]] && PROJECTRC="fr_pyproject"
-}
+# Run once when .zshrc is sourced (initial shell PWD only)
+__projectrc_load_startup
 
-reload-session "$@"
