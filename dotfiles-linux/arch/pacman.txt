@@ -6,7 +6,6 @@ aspell-nl
 base-devel
 bat
 bind-tools
-bitwarden-cli
 btop
 cmake
 dnsmasq
@@ -26,9 +25,7 @@ make
 man-db
 neomutt
 networkmanager
-nodejs
 notmuch
-npm
 ntfs-3g
 odt2txt
 openldap
