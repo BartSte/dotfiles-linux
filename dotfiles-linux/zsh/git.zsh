@@ -62,7 +62,6 @@ indent() {
     sed -e 's/^/    /'
 }
 
-# Dot update: commit, pull, push
 dotu() {
     echo "Commit"
     dotc "Automatic Update" 2>&1 | indent

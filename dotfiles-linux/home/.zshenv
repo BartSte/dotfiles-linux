@@ -30,5 +30,9 @@ zshenv() {
     source ~/dotfiles-linux/zsh/fzf.zsh && _fzfenv
     export HELP_MESSAGE_RC="$HOME/dotfiles-linux/zsh/fzfhelprc.zsh"
     export FZF_OPEN_REGEX_EXTRA=$(~/dotfiles-linux/tmux/tmux-fzf-open/regex-extra)
+
+    # Local variables
+    GITHUB_PERSONAL="git@github.com-personal"
+    GITHUB_WORK="git@github.com-work"
 }
 zshenv
