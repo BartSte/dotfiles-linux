@@ -26,12 +26,6 @@ shorten_stdout() {
     sed 's/(use -u .*)//'
 }
 
-# Mass commit to all dotfiles layers.
-# All command line args are concatinated into a commit message
-#######################################
-# Remove (use -u to show untracked-files)
-# from the sdout
-#######################################
 dotc() {
     message="'$*'"
 
