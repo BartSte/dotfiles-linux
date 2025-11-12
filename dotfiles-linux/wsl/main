@@ -6,4 +6,4 @@ lg "Enable systemd for WSL"
 sudo cp ~/dotfiles-linux/wsl/wsl.conf /etc/wsl.conf
 
 lg "Install wslpy"
-tmpdir=$(mktemp -d) && git clone https://github.com/BartSte/wslpy "$tmpdir/wslpy" && (cd "$tmpdir/wslpy" && ./install.sh) && rm -rf "$tmpdir"
+tmpdir=$(mktemp -d) && git clone https://github.com/BartSte/wslpy "$tmpdir/wslpy" && (cd "$tmpdir/wslpy" && ./install) && rm -rf "$tmpdir"
