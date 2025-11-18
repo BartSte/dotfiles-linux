@@ -13,6 +13,8 @@ reload-wsl() {
     export WH=$(wslpath "$(_winenv USERPROFILE)")
     export APPDATA="$WH/AppData/Roaming"
     export LOCALAPPDATA="$WH/AppData/Local"
+    export WSLBROWSER="$LOCALAPPDATA/Programs/qutebrowser/qutebrowser.exe"
+    export WINWSLBROWSER=$(wslpath -m "$WSLBROWSER")
     export WPY="$APPDATA/uv/python/cpython-3.13.7-windows-x86_64-none/python.exe"
 
     set_tmux="\$Env:TMUX=\"${TMUX:-}\""
