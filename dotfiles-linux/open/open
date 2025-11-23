@@ -44,14 +44,14 @@ while [[ $# -gt 0 ]]; do
         convert2windowspath=true
         ;;
     -l | --log)
-        OPEN_LOG_FILE="$2"
+        export OPEN_LOG_FILE="$2"
         shift
         ;;
     -q | --quiet)
         OPEN_LOG_LEVEL="quiet"
         ;;
     -v | --verbose)
-        OPEN_LOG_LEVEL="verbose"
+        export OPEN_LOG_LEVEL="verbose"
         ;;
     *)
         if [[ -z $to_open ]]; then
