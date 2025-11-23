@@ -36,10 +36,14 @@ elif ! [[ "$1" =~ ^(wsl|arch|raspberry|tmux|ci)$ ]]; then
     exit 1
 fi
 
+# @brief Check if running in Windows Subsystem for Linux (WSL)
+# @return 0 if running in WSL, 1 otherwise
 wsl() {
     grep -iq "microsoft" /proc/version
 }
 
+# @brief Check if running on Arch Linux
+# @return 0 if running on Arch Linux, 1 otherwise
 arch() {
     if [ -f /etc/os-release ]; then
         grep -q "Arch Linux" /etc/os-release
@@ -53,6 +57,8 @@ arch() {
     fi
 }
 
+# @brief Check if running on Raspberry Pi
+# @return 0 if running on Raspberry Pi, 1 otherwise
 raspberry() {
     if [ -f /proc/device-tree/model ]; then
         grep -q "Raspberry Pi" /proc/device-tree/model
@@ -66,10 +72,14 @@ raspberry() {
     fi
 }
 
+# @brief Check if running inside tmux session
+# @return 0 if inside tmux session, 1 otherwise
 tmux() {
     [[ -n $TMUX ]]
 }
 
+# @brief Check if running in CI environment
+# @return 0 if in CI environment, 1 otherwise
 ci() {
     [[ -n "$CI" ]]
 }
