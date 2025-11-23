@@ -1,1 +1,272 @@
-../open/open
+#!/usr/bin/env bash
+set -euo pipefail
+
+USAGE="Usage: $0 <path>
+Opens a url or path in a preferred program. The <path> can also be read from
+stdin. Providing it as an argument take precedence over reading it from stdin.
+
+Options:
+    --linpath       Tries to convert a windows path to a linux path. Turned off 
+                    by default. This option has no effect if: wsl is not 
+                    running, or the path is already a linux path.
+    --winpath       Tries to convert a linux path to a windows path. Turned off
+                    by default. This option has no effect if: wsl is not
+                    running, or the path is already a windows path.
+    -h, --help      Show this message and exit.
+    -l, --log       Send debug messages a file.
+    -q, --quiet     Suppress all output.
+    -v, --verbose   Show more output.
+"
+
+to_open=""
+linpath=false
+winpath=false
+while [[ $# -gt 0 ]]; do
+    case $1 in
+    -h | --help)
+        echo "$USAGE"
+        exit 0
+        ;;
+    --linpath)
+        linpath=true
+        ;;
+    --winpath)
+        winpath=true
+        ;;
+    -l | --log)
+        OPEN_LOG_FILE="$2"
+        shift
+        ;;
+    -q | --quiet)
+        OPEN_LOG_LEVEL="quiet"
+        ;;
+    -v | --verbose)
+        OPEN_LOG_LEVEL="verbose"
+        ;;
+    *)
+        if [[ -z $to_open ]]; then
+            to_open=$1
+        else
+            echo "Unknown option: $1" >&2
+            exit 1
+        fi
+        ;;
+    esac
+    shift
+done
+to_open=${to_open:-$(cat)}
+
+# The main function of the program. It tries to open the input as a url, and if
+# that fails, it tries to open the input as a file.
+main() {
+    log_clear
+    try_url "$1" || try_file "$1" || abort "Could not open $1"
+}
+
+# Tries to open a url in a browser. If the url is not a url, the function returns
+# 1.
+try_url() {
+    log "Try url: $1" -v
+    if is_url "$1"; then
+        open_url "$1"
+    else
+        return 1
+    fi
+}
+
+# Tries to open a file in a preferred program. If the file is not a file that is
+# supported, the function returns 1.
+#
+# The input may be a path to a file, or in the format: path:line:column. The line
+# and column are optional. If the line and column are not provided, the default
+# is 1.
+try_file() {
+    local path_line_column path line column
+    path_line_column=$1
+    log "try_file input is: $path_line_column"
+    # Split the `file_path` string by setting the word separator to a colon
+    # temporarily.
+    IFS=':' read -r path line column <<<"$path_line_column"
+    IFS=' ' # Reset IFS
+    line=${line:-1}
+    column=${column:-1}
+
+    if is_running wsl; then
+        path=$(no_qoutes <<<"$path")
+        log "Trying to open file $path" -v
+        if $linpath; then
+            path=$(backwards_to_forward_slashes <<<"$path")
+            log "Backward slashes replaced with forward slashes: $path" -v
+            path=$(wslpath -ua "$path")
+            log "Converted to linux path: $path" -v
+        elif $winpath; then
+            log "Trying to convert $path to windows path"
+            path=$(wslpath -ma "$path")
+            log "Resulting windows path: $path" -v
+        fi
+    fi
+
+    log "Try file: $path, line: $line, column: $column" -v
+    if has_type "$path" image; then
+        log "Opening image: $path" -v
+        open_img "$path"
+
+    elif has_type "$path" pdf; then
+        log "Opening pdf: $path" -v
+        zathura "$path"
+
+    elif has_type "$path" html; then
+        log "Opening html: $path" -v
+        open_url "$path"
+
+    elif has_type "$path" text; then
+        log "Opening text: $path" -v
+        open_text "$path" "$line"
+
+    else
+        log "Unsupported file type: $path" -v
+        return 1
+    fi
+}
+
+# Opens a url in the preferred browser. If WSL is running, the WSLBROWSER
+# environment variable is used. Otherwise, the BROWSER environment variable is
+# used.
+open_url() {
+    log "Url detected, opening in browser." -v
+    if is_running wsl; then
+        log "Opening url with WSLBROWSER: $WSLBROWSER" -v
+        "$WSLBROWSER" "$1" 2>&1 | log -v &
+    else
+        log "Opening url with BROWSER: $BROWSER" -v
+        $BROWSER "$1" 2>&1 | log -v &
+    fi
+}
+
+# Opens an image with imv.
+open_img() {
+    log "Opening image $1 with imv" -v
+    imv "$1" | log -v &
+}
+
+# Opens <path> in vim at line number that may be appended to the path using a :
+# separator. For example: /path/to/file:10
+#
+# The window 0 and pane 0 are used to open the file in tmux. If tmux is running
+# and we are opening the file in another pane, the key2pane command is used.
+#
+# If the -w or --win option is used, the path is converted to a wsl path if wsl
+# is running.
+open_text() {
+    local file line
+    file=$1
+    line=$2
+    log "Opening text file: $file at line $line" -v
+
+    if is_running tmux && [[ $(tmux display-message -p '#I:#P') != "0:0" ]]; then
+        log "Opening text file via key2pane" -v
+        key2pane --loglevel INFO -w 0 -i 0 "$file" "$line"
+    else
+        log "Opening text file in nvim" -v
+        nvim -c ":e $file | $line"
+    fi
+}
+
+################################################################################
+# Logger
+################################################################################
+
+# The log function has the following usage:
+#
+#     log [-v | --verbose] <message>
+#
+# Together with the following variables:
+# - OPEN_LOG_FILE: If the OPEN_LOG_FILE is set, always log to it.
+# - OPEN_LOG_LEVEL: If set to 'verbose', messages that are logged with the -v
+#     or --verbose option are logged to stderr and the file.
+# - OPEN_LOG_LEVEL: If set to 'quiet' all messages are suppressed.
+log() {
+    local verbose=false
+    local message=""
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+        -v | --verbose)
+            verbose=true
+            ;;
+        *)
+            if [[ -z $message ]]; then
+                message=$1
+            else
+                echo "Unknown option: $1" >&2
+                exit 1
+            fi
+            ;;
+        esac
+        shift
+    done
+
+    if [[ -z $message ]]; then
+        message=$(cat)
+    fi
+
+    if [[ -z $message ]]; then
+        return
+    fi
+
+    if [[ -n ${OPEN_LOG_FILE:-} ]]; then
+        echo "$message" >>"$OPEN_LOG_FILE"
+    fi
+
+    if [[ $verbose == true && ${OPEN_LOG_LEVEL:-""} != "verbose" ]]; then
+        return
+    fi
+
+    echo "$message" >&2
+}
+
+# Clear the log file
+log_clear() {
+    if [[ -n ${OPEN_LOG_FILE:-} ]]; then
+        date >"$OPEN_LOG_FILE"
+    fi
+}
+
+################################################################################
+# Helper functions
+################################################################################
+
+# Checks if a file has a specific extension.
+has_ext() {
+    local file="$1"
+    local ext="${file##*.}"
+    [[ $ext == "$2" ]]
+}
+
+# Checks if a file has a specific mime type.
+has_type() {
+    file --mime-type -b "$1" | grep -q "$2"
+}
+
+# Checks if a string is a url.
+is_url() { [[ $1 =~ ^([a-zA-Z]+://|www\..*) ]]; }
+
+# Converts backward slashes (\) to forward slashes (/). For example:
+# - \\wsl.localhost\Arch\home
+# becomes:
+# - //wsl.localhost/Arch/home
+backwards_to_forward_slashes() {
+    sed 's,\\,/,g'
+}
+
+# Removes quotations from a string. For example:
+# - '\"Hello world\"'
+# becomes:
+# - Hello world
+no_qoutes() {
+    sed 's/"//g'
+}
+
+################################################################################
+# Entry point
+################################################################################
+main "$to_open"
