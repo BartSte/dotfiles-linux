@@ -21,3 +21,24 @@ has_type() {
 # Checks if a string is a url.
 ################################################################################
 is_url() { [[ $1 =~ ^([a-zA-Z]+://|www\..*) ]]; }
+
+################################################################################
+# Converts backward slashes (\) to forward slashes (/). For example:
+# - \\wsl.localhost\Arch\home
+# becomes:
+# - //wsl.localhost/Arch/home
+###############################################################################
+backwards_to_forward_slashes() {
+    sed 's,\\,/,g'
+}
+
+##############################################################################
+# Removes quotations from a string. For example:
+# - '\"Hello world\"'
+# becomes:
+# - Hello world
+no_qoutes() {
+    sed 's/"//g'
+}
+
+

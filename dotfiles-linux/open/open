@@ -19,29 +19,29 @@ Options:
     -l, --log               Send debug messages a file.
     -q, --quiet             Suppress all output.
     -v, --verbose           Show more output.
-    --convert2linuxpath     Tries to convert a windows path to a linux path. 
+    --linpath     Tries to convert a windows path to a linux path. 
                             Turned off by default. This option has no effect if: 
                             wsl is not running, or the path is already a linux 
                             path.
-    --convert2windowspath   Tries to convert a linux path to a windows path. 
+    --winpath   Tries to convert a linux path to a windows path. 
                             Turned off by default. This option has no effect if:
                             wsl is not running, or the path is already a windows
                             path."
 
 to_open=""
-convert2linuxpath=false
-convert2windowspath=false
+linpath=false
+winpath=false
 while [[ $# -gt 0 ]]; do
     case $1 in
     -h | --help)
         echo "$usage"
         exit 0
         ;;
-    --convert2linuxpath)
-        convert2linuxpath=true
+    --linpath)
+        linpath=true
         ;;
-    --convert2windowspath)
-        convert2windowspath=true
+    --winpath)
+        winpath=true
         ;;
     -l | --log)
         OPEN_LOG_FILE="$2"
@@ -80,24 +80,6 @@ try_url() {
     fi
 }
 
-################################################################################
-# Converts backward slashes (\) to forward slashes (/). For example:
-# - \\wsl.localhost\Arch\home
-# becomes:
-# - //wsl.localhost/Arch/home
-###############################################################################
-backwards_to_forward_slashes() {
-    sed 's,\\,/,g'
-}
-
-##############################################################################
-# Removes quotations from a string. For example:
-# - '\"Hello world\"'
-# becomes:
-# - Hello world
-no_qoutes() {
-    sed 's/"//g'
-}
 
 ################################################################################
 # Tries to open a file in a preferred program. If the file is not a file that is
@@ -121,12 +103,12 @@ try_file() {
     if is_running wsl; then
         path=$(no_qoutes <<<"$path")
         log "Trying to open file $path" -v
-        if $convert2linuxpath; then
+        if $linpath; then
             path=$(backwards_to_forward_slashes <<<"$path")
             log "Backward slashes replaced with forward slashes: $path" -v
             path=$(wslpath -ua "$path")
             log "Converted to linux path: $path" -v
-        elif $convert2windowspath; then
+        elif $winpath; then
             log "Trying to convert $path to windows path"
             path=$(wslpath -ma "$path")
             log "Resulting windows path: $path" -v
