@@ -1,0 +1,9 @@
+nmap "<CR>" "j"
+nmap "<BS>" "k"
+nmap "<C-d>" "<C-f>"
+nmap "<C-u>" "<C-b>"
+nmap "ZA" ":wq<CR>"
+nmap "<space>f" ":autofit A:Z<CR>"
+
+vmap "<BS>" "k" 
+

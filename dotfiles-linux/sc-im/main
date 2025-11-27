@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+this_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+
+file="$this_dir/scimrc"
+directory=~/.config/sc-im
+
+lg "Linking ${file} to ${directory}/scimrc"
+mkdir -p "$directory"
+ln -sf "$file" "$directory/scimrc"

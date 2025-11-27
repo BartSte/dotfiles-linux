@@ -4,8 +4,9 @@ tmpdir=$(mktemp -d)
 req="$tmpdir/req.txt"
 trap 'rm -rf "$tmpdir"' EXIT
 
-uv export --format=requirements.txt --no-hashes --no-header --no-annotate --frozen -o "$req"
-sed -i -E '/^ *-e +\.$/d' "$req"
+uv export --format=requirements.txt --no-hashes --no-header --no-annotate --frozen |
+    sed -E '/^ *-e +\.$/d' |
+    sed -E "s/(;)?( *and *)? *sys_platform *== *'[a-zA-Z0-9]+'//" >"$req"
 
 uv venv --clear
 . .venv/bin/activate
