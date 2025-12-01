@@ -1,13 +1,13 @@
+architect: true
+auto-accept-architect: false
 auto-commits: false
 cache-prompts: true
 check-update: true
 dark-mode: true
-edit-format: ask
 editor: nvim
 multiline: true
 show-release-notes: false
 vim: true
-
 ##########################################################
 # Sample .aider.conf.yml
 # This file lists *all* the valid configuration entries.
