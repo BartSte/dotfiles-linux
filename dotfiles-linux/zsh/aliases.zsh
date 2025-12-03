@@ -23,6 +23,7 @@ alias o='open'
 alias oldheadphones='bluetoothctl connect $HEADPHONES'
 alias path='echo -e ${PATH//:/\\n}'
 alias py='python3'
+alias sc-im='TERM=xterm-256color sc-im'
 alias sudo='sudo '
 alias suspend="systemctl suspend"
 alias ta='tmux -u attach'

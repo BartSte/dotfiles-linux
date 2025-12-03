@@ -132,7 +132,7 @@ try_file() {
 
     elif has_type "$path" x-sc; then
         log "Opening spreadsheet: $path" -v
-        sc-im "$path"
+        TERM=xterm-256color sc-im "$path"
 
     else
         log "Unsupported file type: $path" -v
