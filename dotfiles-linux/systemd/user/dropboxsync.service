@@ -3,7 +3,7 @@ Description=Dropbox sync service using rclone
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/rclone bisync dropbox: /home/barts/dropbox --remove-empty-dirs -v --log-file=/home/barts/.local/state/rclone_bisync.log --compare 'size,checksum'
+ExecStart=/usr/bin/rclone bisync dropbox: /home/barts/dropbox --conflict-resolve path1 --conflict-loser num --remove-empty-dirs --log-file=/home/barts/.local/state/rclone_bisync.log
 StandardOutput=journal
 StandardError=journal
 

@@ -11,8 +11,7 @@ alias blueoff='bluetoothctl power off'
 alias blueon='bluetoothctl power on; bluetoothctl discoverable on; bluetoothctl pairable on;'
 alias chrome='google-chrome-stable --ozone-platform=wayland'
 alias dact='deactivate'
-alias dropresync='dropsync --resync --interactive'
-alias dropsync='rclone bisync dropbox: ~/dropbox --remove-empty-dirs --checksum --progress'
+alias dropsync='rclone bisync dropbox: ~/dropbox --conflict-resolve path1 --conflict-loser num --remove-empty-dirs --progress'
 alias dsize='du -h -d1' # use the du command for further inspection
 alias earbuds='bluetoothctl connect $EARBUDS'
 alias fps="ps aux | fzf"
