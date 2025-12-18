@@ -15,7 +15,7 @@ reload-wsl() {
     export LOCALAPPDATA="$WH/AppData/Local"
     export WSLBROWSER="$LOCALAPPDATA/Programs/qutebrowser/qutebrowser.exe"
     export WINWSLBROWSER=$(wslpath -m "$WSLBROWSER")
-    export WPY="$APPDATA/uv/python/cpython-3.13.7-windows-x86_64-none/python.exe"
+    export WIN_PY="$APPDATA/uv/python/cpython-3.13.7-windows-x86_64-none/python.exe"
 
     set_tmux="\$Env:TMUX=\"${TMUX:-}\""
     alias wh="cd $WH"

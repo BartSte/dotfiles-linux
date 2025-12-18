@@ -3,8 +3,8 @@ export AIDER_READ="[$dir/python-work-conventions.md]"
 
 if is_running wsl; then
     name="$(basename $(pwd))"
-    export WVENV=$WH/venvs/$name
-    export WPY=$WVENV/Scripts/python.exe
+    export WIN_VENV=$WH/venvs/$name
+    export WIN_PY=$WIN_VENV/Scripts/python.exe
 
     alias wpip='wpy -m pip'
     alias wipdb='wpy -m ipdb'
