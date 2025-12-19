@@ -8,6 +8,8 @@ editor: nvim
 multiline: true
 show-release-notes: false
 vim: true
+read: 
+  - ~/dotfiles-linux/aider/prompts/system.md
 ##########################################################
 # Sample .aider.conf.yml
 # This file lists *all* the valid configuration entries.
