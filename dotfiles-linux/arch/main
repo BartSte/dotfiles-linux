@@ -22,10 +22,7 @@ sudo pacman -Syu --noconfirm
 lg "# Installing base dependencies pacman"
 sudo pacman -S --noconfirm $(cat "$dir/pacman.txt")
 
-lg "# Installing python packages"
-while read -r pkg; do
-    [ -n "$pkg" ] && pipx install "$pkg"
-done <"$dir/pipx.txt"
+lg "# Setup uv"
 ensure_uv_config_exists
 
 lg "# Installing dependencies AUR"
