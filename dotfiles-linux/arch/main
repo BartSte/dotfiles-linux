@@ -24,6 +24,7 @@ sudo pacman -S --noconfirm $(cat "$dir/pacman.txt")
 
 lg "# Setup uv"
 ensure_uv_config_exists
+echo $(cat $dir/uv.txt) | xargs -n 1 uv tool install
 
 lg "# Installing dependencies AUR"
 install_yay /tmp/yay

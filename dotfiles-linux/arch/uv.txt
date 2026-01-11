@@ -1,3 +1,4 @@
+bartste-prompts
 dnscacher
 icalendar
 ipython
