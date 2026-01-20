@@ -17,7 +17,6 @@ zshenv() {
     export SONY="AC:80:0A:C8:77:2C"
     export TIME_ZONE="Europe/Amsterdam"
     export TMUX_PLUGIN_DIR="$HOME/.tmux/plugins"
-    export UV_CONFIG_FILE=~/.config/uv/config.toml
     export VI_MODE_SET_CURSOR=true
     hash nvim && export EDITOR='nvim' || unset EDITOR
 
