@@ -38,11 +38,8 @@ zshrc() {
     _zshrc_config "$HOME/dotfiles-linux/zsh"
     if [ -d "/usr/share/zsh/plugins" ]; then
         _zshrc_plugins "/usr/share/zsh/plugins"
-    elif [ -d "usr/share/zsh" ]; then
-        _zshrc_plugins "usr/share/zsh"
     else
-        echo "ERROR: Zsh plugins directory not found" >&2
-        exit 1
+        _zshrc_plugins "/usr/share"
     fi
     _zshrc_p10k
 }

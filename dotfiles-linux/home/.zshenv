@@ -18,6 +18,7 @@ zshenv() {
     export TIME_ZONE="Europe/Amsterdam"
     export TMUX_PLUGIN_DIR="$HOME/.tmux/plugins"
     export VI_MODE_SET_CURSOR=true
+    export IP_PI=192.168.1.248
     hash nvim && export EDITOR='nvim' || unset EDITOR
 
     export HISTFILE=$HOME/.histfile
