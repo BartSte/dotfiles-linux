@@ -41,3 +41,4 @@ zshrc() {
 }
 
 zshrc "$@"
+export PATH="$HOME/.npm-global/bin:$PATH"
