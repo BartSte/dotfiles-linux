@@ -36,7 +36,14 @@ zshrc() {
     source "$HOME/dotfiles-linux/zsh/bootstrap.zsh"
 
     _zshrc_config "$HOME/dotfiles-linux/zsh"
-    _zshrc_plugins /usr/share/zsh/plugins
+    if [ -d "/usr/share/zsh/plugins" ]; then
+        _zshrc_plugins "/usr/share/zsh/plugins"
+    elif [ -d "usr/share/zsh" ]; then
+        _zshrc_plugins "usr/share/zsh"
+    else
+        echo "ERROR: Zsh plugins directory not found" >&2
+        exit 1
+    fi
     _zshrc_p10k
 }
 

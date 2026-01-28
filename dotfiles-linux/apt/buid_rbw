@@ -1,0 +1,108 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Installs rbw on Raspberry Pi OS (Debian-based).
+# Strategy:
+#   1) Try apt install rbw (works when the rbw package exists in your repos)
+#   2) Fallback to building/installing via cargo (Rust toolchain from apt)
+
+log() { printf '%s\n' "$*" >&2; }
+die() { log "ERROR: $*"; exit 1; }
+
+need_cmd() { command -v "$1" >/dev/null 2>&1 || die "Missing required command: $1"; }
+
+need_cmd bash
+need_cmd dpkg
+need_cmd apt-get
+need_cmd apt-cache
+
+# sudo handling
+SUDO=""
+if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
+  need_cmd sudo
+  SUDO="sudo"
+fi
+
+# Determine which user should own the cargo install
+INSTALL_USER="${SUDO_USER:-$(id -un)}"
+INSTALL_HOME="$(getent passwd "$INSTALL_USER" | cut -d: -f6 || true)"
+[[ -n "$INSTALL_HOME" ]] || INSTALL_HOME="$HOME"
+
+apt_update() {
+  $SUDO apt-get update -y
+}
+
+apt_install() {
+  # shellcheck disable=SC2086
+  $SUDO apt-get install -y --no-install-recommends "$@"
+}
+
+rbw_candidate() {
+  # Returns empty if rbw isn't available from configured APT sources.
+  apt-cache policy rbw 2>/dev/null | awk '/Candidate:/ {print $2}' | head -n1
+}
+
+try_apt_rbw() {
+  local cand
+  cand="$(rbw_candidate || true)"
+  if [[ -n "${cand:-}" && "${cand}" != "(none)" ]]; then
+    log "rbw appears available via apt (Candidate: ${cand}). Installing..."
+    apt_update
+    apt_install rbw pinentry-curses
+    return 0
+  fi
+  return 1
+}
+
+install_via_cargo() {
+  log "rbw not available via apt. Installing build dependencies and using cargo..."
+
+  apt_update
+  apt_install ca-certificates curl build-essential pkg-config libssl-dev rustc cargo pinentry-curses
+
+  # Run cargo install as the non-root user (preferred).
+  local cargo_cmd
+  cargo_cmd="cargo install --locked rbw"
+
+  if [[ "$INSTALL_USER" != "root" ]]; then
+    log "Running cargo as user: $INSTALL_USER"
+    $SUDO -u "$INSTALL_USER" bash -lc "$cargo_cmd"
+  else
+    log "Running cargo as root"
+    bash -lc "$cargo_cmd"
+  fi
+
+  # Optionally make it available system-wide (copies from ~/.cargo/bin to /usr/local/bin).
+  local cargo_bin_dir
+  if [[ "$INSTALL_USER" != "root" ]]; then
+    cargo_bin_dir="${INSTALL_HOME}/.cargo/bin"
+  else
+    cargo_bin_dir="/root/.cargo/bin"
+  fi
+
+  if [[ -d "$cargo_bin_dir" ]]; then
+    log "Copying rbw binaries from ${cargo_bin_dir} to /usr/local/bin ..."
+    $SUDO mkdir -p /usr/local/bin
+
+    shopt -s nullglob
+    for f in "${cargo_bin_dir}"/rbw*; do
+      if [[ -f "$f" && -x "$f" ]]; then
+        $SUDO install -m 0755 "$f" /usr/local/bin/
+      fi
+    done
+    shopt -u nullglob
+  fi
+}
+
+if try_apt_rbw; then
+  :
+else
+  install_via_cargo
+fi
+
+if command -v rbw >/dev/null 2>&1; then
+  log "Installed: $(rbw --version)"
+else
+  die "rbw installation finished, but 'rbw' is not on PATH. If installed via cargo, ensure ~/.cargo/bin is on PATH (or use /usr/local/bin/rbw)."
+fi
+
