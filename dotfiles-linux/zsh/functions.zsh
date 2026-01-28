@@ -40,7 +40,7 @@ ai() {
     source $dir/host_settings.zsh
 
     if [[ $# -eq 0 ]]; then
-        aider
+        uvx --from aider-chat --python 3.12 aider
     else
         prompts $@ --action aider
     fi
