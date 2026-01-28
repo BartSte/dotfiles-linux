@@ -36,9 +36,14 @@ zshrc() {
     source "$HOME/dotfiles-linux/zsh/bootstrap.zsh"
 
     _zshrc_config "$HOME/dotfiles-linux/zsh"
-    _zshrc_plugins /usr/share/zsh/plugins
+    if [ -d "/usr/share/zsh/plugins" ]; then
+        _zshrc_plugins "/usr/share/zsh/plugins"
+    else
+        _zshrc_plugins "/usr/share"
+    fi
     _zshrc_p10k
 }
 
 zshrc "$@"
 export PATH="$HOME/.npm-global/bin:$PATH"
+

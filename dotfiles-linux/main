@@ -123,10 +123,11 @@ main_arch_ci() {
 ### Executes core modules for Raspberry Pi environment
 main_raspberry() {
     ~/dotfiles-linux/apt/main
-    ~/dotfiles-linux/git/main
+    ~/dotfiles-linux/git/auth
     ~/dotfiles-linux/home/main
     ~/dotfiles-linux/zsh/main
     ~/dotfiles-linux/tmux/main
+    ~/dotfiles-linux/bitwarden/main
 }
 
 ### WSL installation routine for Arch Linux
