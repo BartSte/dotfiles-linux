@@ -1,2 +1,1 @@
-dir="$HOME/dotfiles-linux/aider/prompts"
-export AIDER_READ="[$dir/python-conventions.md]"
+export AIDER_READ="[$HOME/dotfiles-linux/aider/prompts/python-conventions.md]"
