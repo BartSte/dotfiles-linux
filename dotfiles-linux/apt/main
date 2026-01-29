@@ -9,3 +9,7 @@ sudo apt update -y
 sudo apt upgrade -y
 cat $dir/apt.txt | xargs sudo apt install -y
 $dir/build_rbw
+
+lg "Creating fd symlink"
+mkdir -p ~/.local/bin
+ln -s "$(command -v fdfind)" ~/.local/bin/fd

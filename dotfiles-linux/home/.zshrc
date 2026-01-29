@@ -40,6 +40,21 @@ zshrc() {
         _zshrc_plugins "/usr/share/zsh/plugins"
     else
         _zshrc_plugins "/usr/share"
+<<<<<<< HEAD
+=======
+=======
+<<<<<<< HEAD
+    else
+        _zshrc_plugins "/usr/share"
+=======
+    elif [ -d "usr/share/zsh" ]; then
+        _zshrc_plugins "usr/share/zsh"
+    else
+        echo "ERROR: Zsh plugins directory not found" >&2
+        exit 1
+>>>>>>> fd77d827a5e2abd11219557a647394062b344732
+>>>>>>> 2149ab82aaeecc67c6e504d71e46244c2c3ffe83
+>>>>>>> 48d9350a532fdecb8224f3e02e84ddc6cf9a5930
     fi
     _zshrc_p10k
 }
