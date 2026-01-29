@@ -128,6 +128,7 @@ main_raspberry() {
     ~/dotfiles-linux/zsh/main
     ~/dotfiles-linux/tmux/main
     ~/dotfiles-linux/bitwarden/main
+    ~/dotfiles-linux/tailscale/main
 }
 
 ### WSL installation routine for Arch Linux

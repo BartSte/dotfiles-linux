@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -eo pipefail
+
+# Install Tailscale on Debian/Raspberry Pi and optionally bring it up.
+# If TS_AUTHKEY is set, it will auto-authenticate.
+
+if ! command -v tailscale >/dev/null 2>&1; then
+  curl -fsSL https://tailscale.com/install.sh | sh
+fi
+
+if systemctl is-enabled tailscaled >/dev/null 2>&1; then
+  sudo systemctl restart tailscaled
+fi
+
+if [[ -n "${TS_AUTHKEY:-}" ]]; then
+  sudo tailscale up --ssh --authkey "${TS_AUTHKEY}"
+else
+  echo "Tailscale installed. Run: sudo tailscale up --ssh"
+fi
