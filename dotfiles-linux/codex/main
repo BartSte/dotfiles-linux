@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SOURCE_CONFIG="$SCRIPT_DIR/config.toml"
+SOURCE_AGENTS="$SCRIPT_DIR/AGENTS.md"
+TARGET_DIR="$HOME/.codex"
+TARGET_CONFIG="$TARGET_DIR/config.toml"
+TARGET_AGENTS="$TARGET_DIR/AGENTS.md"
+
+mkdir -p "$TARGET_DIR"
+
+if [[ -e "$TARGET_CONFIG" && ! -L "$TARGET_CONFIG" ]]; then
+  rm -f "$TARGET_CONFIG"
+fi
+ln -sfn "$SOURCE_CONFIG" "$TARGET_CONFIG"
+
+if [[ -e "$TARGET_AGENTS" && ! -L "$TARGET_AGENTS" ]]; then
+  rm -f "$TARGET_AGENTS"
+fi
+ln -sfn "$SOURCE_AGENTS" "$TARGET_AGENTS"
+
+SOURCE_CODE_DIR="$SCRIPT_DIR/code"
+TARGET_CODE_DIR="$HOME/code"
+
+if [[ -d "$SOURCE_CODE_DIR" ]]; then
+  while IFS= read -r source_agent; do
+    rel_path="${source_agent#"$SOURCE_CODE_DIR/"}"
+    target_agent="$TARGET_CODE_DIR/$rel_path"
+    target_dir="$(dirname "$target_agent")"
+
+    mkdir -p "$target_dir"
+    if [[ -e "$target_agent" && ! -L "$target_agent" ]]; then
+      rm -f "$target_agent"
+    fi
+    ln -sfn "$source_agent" "$target_agent"
+  done < <(find "$SOURCE_CODE_DIR" -type f -name AGENTS.md)
+fi

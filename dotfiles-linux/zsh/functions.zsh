@@ -34,14 +34,14 @@ fullsync() {
 # Aider environment variables are set based on the `PROJECTRC` variable and the
 # hostname.
 # ###############################################################################
-ai() {
-    local dir
-    dir=$HOME/dotfiles-linux/aider
-    source $dir/host_settings.zsh
-
-    if [[ $# -eq 0 ]]; then
-        uvx --from aider-chat --python 3.12 aider
-    else
-        prompts $@ --action aider
-    fi
-}
+# ai() {
+#     local dir
+#     dir=$HOME/dotfiles-linux/aider
+#     source $dir/host_settings.zsh
+#
+#     if [[ $# -eq 0 ]]; then
+#         uvx --from aider-chat --python 3.12 aider
+#     else
+#         prompts $@ --action aider
+#     fi
+# }
