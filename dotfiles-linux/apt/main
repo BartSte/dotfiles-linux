@@ -5,6 +5,11 @@ set -eo pipefail
 dir=~/dotfiles-linux/apt
 
 lg "Installing apt dependencies"
-sudo apt-get update -y
-sudo apt-get upgrade -y
-cat $dir/apt.txt | xargs sudo apt-get install -y
+sudo apt update -y
+sudo apt upgrade -y
+cat $dir/apt.txt | xargs sudo apt install -y
+$dir/build_rbw
+
+lg "Creating fd symlink"
+mkdir -p ~/.local/bin
+ln -s "$(command -v fdfind)" ~/.local/bin/fd
