@@ -9,6 +9,7 @@ python3-pip
 python3-pynvim 
 silversearcher-ag
 snapd
+rclone
 zsh
 zsh-autosuggestions
 zsh-syntax-highlighting
