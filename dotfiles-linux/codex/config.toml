@@ -24,10 +24,10 @@ experimental_use_unified_exec_tool = false
 experimental_use_freeform_apply_patch = false
 
 [sandbox_workspace_write]
-writable_roots = []
-network_access = false
-exclude_tmpdir_env_var = false
 exclude_slash_tmp = false
+exclude_tmpdir_env_var = false
+network_access = false
+writable_roots = ["/home/barts/code"]
 
 [shell_environment_policy]
 inherit = "all"
@@ -77,7 +77,3 @@ log_user_prompt = false
 environment = "dev"
 exporter = "none"
 trace_exporter = "none"
-
-[sandbox_workspace_write]
-writable_roots = ["/home/barts/code"]
-network_access = true
