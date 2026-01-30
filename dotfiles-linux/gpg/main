@@ -1,27 +1,32 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
-set -eo pipefail
+# Refuse to run as root
+if [[ "$(id -u)" -eq 0 ]]; then
+    echo "Do not run this script as root." >&2
+    exit 1
+fi
 
 MS_EMAIL=$(bw-cli-get username "$MICROSOFT_ACCOUNT")
 MS_REALNAME=$(bw-cli-get name "$MICROSOFT_ACCOUNT")
+export MS_EMAIL MS_REALNAME
 
-export MS_EMAIL
-export MS_REALNAME
+tmpfile="$(mktemp)"
+trap 'rm -f "$tmpfile"' EXIT
 
-script="Key-Type: 1
+cat >"$tmpfile" <<EOF
+Key-Type: RSA
 Key-Length: 2048
-Subkey-Type: 1
+Subkey-Type: RSA
 Subkey-Length: 2048
-Name-Real: $MS_REALNAME
-Name-Email: $MS_EMAIL
-Expire-Date: 0"
+Name-Real: ${MS_REALNAME}
+Name-Email: ${MS_EMAIL}
+Expire-Date: 0
+EOF
 
-echo "$script" > /tmp/gen-key-script
-gpg --batch --gen-key /tmp/gen-key-script || lg "Failed to generate GPG key"
-rm /tmp/gen-key-script
+gpg --batch --gen-key "$tmpfile" || lg "Failed to generate GPG key"
+unset MS_EMAIL MS_REALNAME
 
-unset MS_EMAIL
-unset MS_REALNAME
-
-mkdir -p ~/.gnupg/
-ln -sf ~/dotfiles-linux/gpg/gpg-agent.conf ~/.gnupg/gpg-agent.conf
+mkdir -p "$HOME/.gnupg"
+chmod 700 "$HOME/.gnupg"
+ln -sf "$HOME/dotfiles-linux/gpg/gpg-agent.conf" "$HOME/.gnupg/gpg-agent.conf"

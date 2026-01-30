@@ -33,14 +33,21 @@ echo "# Setup the environment variables" >&2
 source "$HOME"/dotfiles-linux/home/.zshenv
 
 touch "$HOME"/.dotfiles_config.sh
-echo "export MICROSOFT_ACCOUNT=" >>"$HOME"/.dotfiles_config.sh >&2
+~/.dotfiles_config.sh <<EOF
+export BWEMAIL=
+export MICROSOFT_ACCOUNT=
+EOF
 
 echo "
 Please complete the file '$HOME/.dotfiles_config.sh' by setting the following
 environment variables:
 
 - BWEMAIL: the email use for bitwarden password manager. This is always you
-    personal email since work paswords are also stored here.
+    personal email since work paswords are also stored here. You have 3 with the
+    following emails:
+    - work -> your work email
+    - personal -> your personal email
+    - RpiBot -> the sudo...@gmail.com email used by the RpiBot.
 
 - MICROSOFT_ACCOUNT: the bitwarden key (MicrosoftPersonal or MicrosoftWork)
     that holds the credentials to your microsft account. The microsft account
