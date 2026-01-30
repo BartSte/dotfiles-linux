@@ -40,30 +40,12 @@ main() {
 
     lg "All the main files are executed. User interaction is required at the start (bitwarden)."
 
-    if is_running arch; then
-        if is_running wsl; then
-            lg "Running on Arch Linux WSL"
-            main_arch_wsl
-        elif is_running ci; then
-            lg "Running on Arch Linux CI"
-            main_arch_ci
-        else
-            lg "Running on Arch Linux"
-            main_arch
-        fi
-    elif is_running raspberry; then
-        lg "Running on Raspberry Pi"
-        main_raspberry
+    if is_running wsl; then
+        lg "Running on WSL"
+        execute_exclude
     else
-        lg "Unknown system"
-        exit 1
+        execute_exclude wsl
     fi
-}
-
-### Arch Linux installation routine
-### Excludes WSL-specific modules from execution
-main_arch() {
-    execute_exclude apt wsl
 }
 
 ### Execute all module main scripts except those specified as arguments
@@ -111,31 +93,6 @@ execute_exclude() {
             "$DIR/$module/main"
         fi
     done
-}
-
-### CI environment installation routine for Arch Linux
-### Excludes modules requiring user interaction or systemd dependencies
-main_arch_ci() {
-    execute_exclude apt bitwarden systemd dns firewall kmonad
-}
-
-### Raspberry Pi installation routine
-### Executes core modules for Raspberry Pi environment
-main_raspberry() {
-    ~/dotfiles-linux/apt/main
-    ~/dotfiles-linux/git/auth
-    ~/dotfiles-linux/home/main
-    ~/dotfiles-linux/zsh/main
-    ~/dotfiles-linux/tmux/main
-    ~/dotfiles-linux/bitwarden/main
-    ~/dotfiles-linux/tailscale/main
-    ~/dotfiles-linux/moltbot/main
-}
-
-### WSL installation routine for Arch Linux
-### Excludes GUI and Windows-handled modules from execution
-main_arch_wsl() {
-    execute_exclude apt sway kmonad dns proxy
 }
 
 main

@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-
-set -eo pipefail
-
-dir=~/dotfiles-linux/sway
-
-mkdir -p ~/Screenshots
-sudo pacman -S --noconfirm - < $dir/pacman.txt

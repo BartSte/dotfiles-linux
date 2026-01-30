@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-set -eo pipefail
-
-# Custom moltbot setup for Raspberry Pi.
-# NOTE: Do not store secrets here (public repo).
-# Use rbw or environment variables at runtime.
-
-echo "moltbot: placeholder setup (no secrets stored)"
