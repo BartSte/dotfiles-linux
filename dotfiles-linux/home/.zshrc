@@ -26,7 +26,11 @@ _zshrc_config() {
 }
 
 _zshrc_p10k() {
-    save-source "/usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme"
+    if [[ -f "/usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme" ]]; then
+        source "/usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme"
+    elif [[ -f "$HOME/.local/share/powerlevel10k/powerlevel10k.zsh-theme" ]]; then
+        source "$HOME/.local/share/powerlevel10k/powerlevel10k.zsh-theme"
+    fi
     save-source "$HOME/.p10k.zsh" # must be after _zshrc_load
 }
 
