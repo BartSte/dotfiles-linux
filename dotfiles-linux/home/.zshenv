@@ -10,11 +10,9 @@ zshenv() {
     export EARBUDS='30:53:C1:B8:CE:F6'
     export ESCDELAY=0
     export GPG_TTY=$(tty)
-    export HEADPHONES="28:11:A5:A4:3A:CF"
     export IPDB_CONTEXT_SIZE=10
     export MANPAGER="nvim +Man!"
     export PYTHONBREAKPOINT='ipdb.set_trace'
-    export SONY="AC:80:0A:C8:77:2C"
     export TIME_ZONE="Europe/Amsterdam"
     export TMUX_PLUGIN_DIR="$HOME/.tmux/plugins"
     export VI_MODE_SET_CURSOR=true
@@ -31,7 +29,7 @@ zshenv() {
     export FZF_OPEN_REGEX_EXTRA=$(~/dotfiles-linux/tmux/tmux-fzf-open/regex-extra)
 
     # Local variables
-    GITHUB_PERSONAL="git@github.com-personal"
-    GITHUB_WORK="git@github.com-work"
+    HEADPHONES="28:11:A5:A4:3A:CF"
+    SONY="AC:80:0A:C8:77:2C"
 }
 zshenv

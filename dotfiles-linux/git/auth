@@ -19,8 +19,11 @@ SSH_KEY_PERSONAL="$SSH_DIR/id_ed25519_personal"
 SSH_KEY_WORK="$SSH_DIR/id_ed25519_work"
 SSH_CONFIG="$SSH_DIR/config"
 
-HOST_ALIAS_PERSONAL="github.com-personal"
-HOST_ALIAS_WORK="github.com-work"
+HOST_ALIAS_PERSONAL="github-personal"
+HOST_ALIAS_WORK="github-work"
+
+SSH_MANAGED_BEGIN="# Managed by setup_git_identities.sh (begin)"
+SSH_MANAGED_END="# Managed by setup_git_identities.sh (end)"
 
 mkdir -p "$SSH_DIR" "$(dirname "$ALLOWED_SIGNERS")" "$PERSONAL_ROOT" "$WORK_ROOT"
 chmod 700 "$SSH_DIR"
@@ -57,7 +60,7 @@ fi
 chmod 600 "${SSH_KEY_PERSONAL}" "${SSH_KEY_PERSONAL}.pub" "${SSH_KEY_WORK}" "${SSH_KEY_WORK}.pub"
 
 # 2) SSH config with host aliases
-ssh_cfg_content="# Managed by setup_git_identities.sh
+ssh_cfg_content="${SSH_MANAGED_BEGIN}
 Host ${HOST_ALIAS_PERSONAL}
   HostName github.com
   User git
@@ -69,23 +72,34 @@ Host ${HOST_ALIAS_WORK}
   User git
   IdentityFile ${SSH_KEY_WORK}
   IdentitiesOnly yes
-"
+${SSH_MANAGED_END}"
 # Merge safely: keep existing config, add or replace our block
 if [ -f "$SSH_CONFIG" ]; then
-    # remove prior managed block if present
-    awk '
+    # remove prior managed block if present (handles legacy single-line marker too)
+    awk -v begin="$SSH_MANAGED_BEGIN" -v end="$SSH_MANAGED_END" '
     BEGIN{skip=0}
-    /^# Managed by setup_git_identities.sh/{skip=1; next}
-    skip && NF==0 {skip=0; next}
+    $0==begin {skip=1; next}
+    $0==end {skip=0; next}
+    $0=="# Managed by setup_git_identities.sh" {skip=1; legacy=1; next}
+    legacy && NF==0 {skip=0; legacy=0; next}
     !skip {print}
   ' "$SSH_CONFIG" >"${SSH_CONFIG}.tmp" || true
-    mv "${SSH_CONFIG}.tmp" "$SSH_CONFIG"
+    # trim trailing blank lines for idempotency
+    awk '
+    NF { last=NR }
+    { lines[NR]=$0 }
+    END { for (i=1; i<=last; i++) print lines[i] }
+  ' "${SSH_CONFIG}.tmp" >"${SSH_CONFIG}.tmp2" || true
+    mv "${SSH_CONFIG}.tmp2" "$SSH_CONFIG"
+    rm -f "${SSH_CONFIG}.tmp"
+else
+    : >"$SSH_CONFIG"
 fi
 # append fresh block
-{
-    echo
-    echo "$ssh_cfg_content"
-} >>"$SSH_CONFIG"
+if [ -s "$SSH_CONFIG" ]; then
+    printf '\n' >>"$SSH_CONFIG"
+fi
+printf '%s\n' "$ssh_cfg_content" >>"$SSH_CONFIG"
 chmod 600 "$SSH_CONFIG"
 
 # 3) Git global safety and includes
@@ -127,6 +141,10 @@ signingkey = ${SSH_KEY_PERSONAL}.pub
 
 [gpg]
 format = ssh
+
+[url "git@${HOST_ALIAS_PERSONAL}:"]
+insteadOf = git@github.com:
+insteadOf = https://github.com/
 EOF
 
 write_file_if_changed "$CFG_WORK" <<EOF
@@ -137,6 +155,10 @@ signingkey = ${SSH_KEY_WORK}.pub
 
 [gpg]
 format = ssh
+
+[url "git@${HOST_ALIAS_WORK}:"]
+insteadOf = git@github.com:
+insteadOf = https://github.com/
 EOF
 
 git config --global gpg.format ssh
