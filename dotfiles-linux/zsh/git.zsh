@@ -14,12 +14,38 @@ lins() {
     lin status --untracked-files=no --short
 }
 
+arch() {
+    git --git-dir=$HOME/dotfiles-arch.git/ --work-tree=$HOME "$@"
+}
+
+archs() {
+    arch status --untracked-files=no --short
+}
+
+pi() {
+    git --git-dir=$HOME/dotfiles-pi.git/ --work-tree=$HOME "$@"
+}
+
+pis() {
+    pi status --untracked-files=no --short
+}
+
 dot() {
     echo "Base:"
     git --git-dir=$HOME/dotfiles.git/ --work-tree=$HOME "$@"
     echo -e
     echo -e "Linux:"
     git --git-dir=$HOME/dotfiles-linux.git/ --work-tree=$HOME "$@"
+    if [[ -d $HOME/dotfiles-arch.git ]]; then
+        echo -e
+        echo -e "Arch:"
+        git --git-dir=$HOME/dotfiles-arch.git/ --work-tree=$HOME "$@"
+    fi
+    if [[ -d $HOME/dotfiles-pi.git ]]; then
+        echo -e
+        echo -e "Pi:"
+        git --git-dir=$HOME/dotfiles-pi.git/ --work-tree=$HOME "$@"
+    fi
 }
 
 shorten_stdout() {
@@ -47,6 +73,20 @@ dotc() {
     lin add ~/dotfiles-linux
     lins
     lin commit --untracked-files=no -a -m "$message" | shorten_stdout
+
+    if [[ -d ~/dotfiles-arch ]]; then
+        echo $'\nArch'
+        arch add ~/dotfiles-arch
+        archs
+        arch commit --untracked-files=no -a -m "$message" | shorten_stdout
+    fi
+
+    if [[ -d ~/dotfiles-pi ]]; then
+        echo $'\nPi'
+        pi add ~/dotfiles-pi
+        pis
+        pi commit --untracked-files=no -a -m "$message" | shorten_stdout
+    fi
 }
 
 dots() {
@@ -56,6 +96,16 @@ dots() {
 
     echo $'\nLinux':
     lins
+
+    if [[ -d $HOME/dotfiles-arch.git ]]; then
+        echo $'\nArch':
+        archs
+    fi
+
+    if [[ -d $HOME/dotfiles-pi.git ]]; then
+        echo $'\nPi':
+        pis
+    fi
 }
 
 indent() {
