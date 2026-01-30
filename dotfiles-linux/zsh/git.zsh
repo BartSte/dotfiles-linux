@@ -14,20 +14,20 @@ lins() {
     lin status --untracked-files=no --short
 }
 
-arch() {
+linarch() {
     git --git-dir=$HOME/dotfiles-arch.git/ --work-tree=$HOME "$@"
 }
 
-archs() {
-    arch status --untracked-files=no --short
+linarchs() {
+    linarch status --untracked-files=no --short
 }
 
-pi() {
+linpi() {
     git --git-dir=$HOME/dotfiles-pi.git/ --work-tree=$HOME "$@"
 }
 
-pis() {
-    pi status --untracked-files=no --short
+linpis() {
+    linpi status --untracked-files=no --short
 }
 
 dot() {
@@ -39,12 +39,12 @@ dot() {
     if [[ -d $HOME/dotfiles-arch.git ]]; then
         echo -e
         echo -e "Arch:"
-        git --git-dir=$HOME/dotfiles-arch.git/ --work-tree=$HOME "$@"
+        linarch "$@"
     fi
     if [[ -d $HOME/dotfiles-pi.git ]]; then
         echo -e
         echo -e "Pi:"
-        git --git-dir=$HOME/dotfiles-pi.git/ --work-tree=$HOME "$@"
+        linpi "$@"
     fi
 }
 
@@ -76,16 +76,16 @@ dotc() {
 
     if [[ -d ~/dotfiles-arch ]]; then
         echo $'\nArch'
-        arch add ~/dotfiles-arch
-        archs
-        arch commit --untracked-files=no -a -m "$message" | shorten_stdout
+        linarch add ~/dotfiles-arch
+        linarchs
+        linarch commit --untracked-files=no -a -m "$message" | shorten_stdout
     fi
 
     if [[ -d ~/dotfiles-pi ]]; then
         echo $'\nPi'
-        pi add ~/dotfiles-pi
-        pis
-        pi commit --untracked-files=no -a -m "$message" | shorten_stdout
+        linpi add ~/dotfiles-pi
+        linpis
+        linpi commit --untracked-files=no -a -m "$message" | shorten_stdout
     fi
 }
 
@@ -99,12 +99,12 @@ dots() {
 
     if [[ -d $HOME/dotfiles-arch.git ]]; then
         echo $'\nArch':
-        archs
+        linarchs
     fi
 
     if [[ -d $HOME/dotfiles-pi.git ]]; then
         echo $'\nPi':
-        pis
+        linpis
     fi
 }
 
