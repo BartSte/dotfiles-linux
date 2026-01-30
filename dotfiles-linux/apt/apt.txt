@@ -1,4 +1,7 @@
 eza
+tmux
+bat
+tailscale
 fd-find
 fzf
 git
