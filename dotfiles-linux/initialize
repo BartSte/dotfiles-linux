@@ -32,8 +32,7 @@ checkout "$lin_dir"
 echo "# Setup the environment variables" >&2
 source "$HOME"/dotfiles-linux/home/.zshenv
 
-touch "$HOME"/.dotfiles_config.sh
-~/.dotfiles_config.sh <<EOF
+cat <<EOF > "$HOME"/.dotfiles_config.sh
 export BWEMAIL=
 export MICROSOFT_ACCOUNT=
 EOF

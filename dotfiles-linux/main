@@ -52,7 +52,7 @@ main() {
 ### @param $@ List of modules to exclude from execution
 ### Modules are processed in specific order: 'front' modules first, followed by others
 execute_exclude() {
-    local exclude=("$@") front=(bitwarden arch systemd home)
+    local exclude=("$@") front=(bitwarden home)
     local all_dirs dir module
     local -A excluded_map
 
