@@ -1,16 +1,15 @@
-for p in \
-  /usr/share/fzf/key-bindings.zsh \
-  /usr/share/doc/fzf/examples/key-bindings.zsh \
-  /usr/share/doc/fzf/examples/key-bindings.zsh.gz \
-  /usr/share/fzf/shell/key-bindings.zsh; do
-  if [[ -f "$p" ]]; then
-    source "$p"
-    break
-  elif [[ -f "$p.gz" ]]; then
-    source <(gzip -cd "$p.gz")
-    break
-  fi
-done
+if [[ -f "$HOME/.fzf/shell/key-bindings.zsh" ]]; then
+  source "$HOME/.fzf/shell/key-bindings.zsh"
+else
+  for p in \
+    /usr/share/fzf/key-bindings.zsh \
+    /usr/share/fzf/shell/key-bindings.zsh; do
+    if [[ -f "$p" ]]; then
+      source "$p"
+      break
+    fi
+  done
+fi
 
 _fzfenv() {
     _BASE_COMMAND="fd --hidden --no-ignore-vcs --ignore-file $HOME/.ignore"
