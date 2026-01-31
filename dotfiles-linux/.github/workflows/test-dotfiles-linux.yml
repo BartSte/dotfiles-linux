@@ -24,3 +24,14 @@ jobs:
         run: |
           set -euo pipefail
           ~/dotfiles-linux/main
+
+      - name: Assertions
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f "$HOME/.dotfiles_config.sh"
+          command -v zsh
+          command -v tmux
+          command -v git
+          test -e "$HOME/.zshrc"
+          test -e "$HOME/.zshenv"
