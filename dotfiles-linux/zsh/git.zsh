@@ -74,14 +74,14 @@ dotc() {
     lins
     lin commit --untracked-files=no -a -m "$message" | shorten_stdout
 
-    if [[ -d ~/dotfiles-arch ]]; then
+    if [[ -d ~/dotfiles-arch.git ]]; then
         echo $'\nArch'
         linarch add ~/dotfiles-arch
         linarchs
         linarch commit --untracked-files=no -a -m "$message" | shorten_stdout
     fi
 
-    if [[ -d ~/dotfiles-pi ]]; then
+    if [[ -d ~/dotfiles-pi.git ]]; then
         echo $'\nPi'
         linpi add ~/dotfiles-pi
         linpis
