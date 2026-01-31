@@ -39,7 +39,34 @@ main() {
 }
 
 execute() {
-    # TODO: execute the auth files in dotfiles-linux in a specific order.
+    local front=(bitwarden git vdirsyncer)
+    local -A seen
+
+    mapfile -t all_dirs < <(find "$DIR" -maxdepth 1 -mindepth 1 -type d -printf '%f\n' | sort)
+
+    for module in "${front[@]}"; do
+        if [[ -x "$DIR/$module/auth" ]]; then
+            seen["$module"]=1
+            if $DRY; then
+                lg "(dry) $DIR/$module/auth"
+            else
+                lg "Auth: $module"
+                "$DIR/$module/auth"
+            fi
+        fi
+    done
+
+    for module in "${all_dirs[@]}"; do
+        [[ -n ${seen[$module]+x} ]] && continue
+        if [[ -x "$DIR/$module/auth" ]]; then
+            if $DRY; then
+                lg "(dry) $DIR/$module/auth"
+            else
+                lg "Auth: $module"
+                "$DIR/$module/auth"
+            fi
+        fi
+    done
 }
 
 main
