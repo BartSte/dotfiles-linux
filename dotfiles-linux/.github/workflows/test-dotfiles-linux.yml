@@ -1,0 +1,26 @@
+name: test-dotfiles-linux
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run base initialize (curl)
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -O https://raw.githubusercontent.com/BartSte/dotfiles/master/dotfiles/initialize
+          bash ./initialize
+          rm ./initialize
+
+      - name: Run dotfiles-linux main (dry)
+        shell: bash
+        run: |
+          set -euo pipefail
+          ~/dotfiles-linux/main --dry
