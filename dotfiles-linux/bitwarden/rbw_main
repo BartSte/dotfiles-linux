@@ -2,19 +2,12 @@
 
 set -eo pipefail
 
-if rbw unlocked; then
-    lg "Rbw is already setup."
+if [ -z "$BWEMAIL" ]; then
+    lg "BWEMAIL is not set (skipping rbw config)"
     exit 0
-elif [ -z "$BWEMAIL" ]; then
-    lg "BWEMAIL is not set"
-    exit 1
 fi
 
-lg "Setting up bitwarden cli."
+lg "Setting up bitwarden cli (non-interactive)."
 # Always use my personal bitwarden account as this also contains a work section
 rbw config set email "$BWEMAIL"
 rbw config set lock_timeout 86400
-
-lg "Logging into bitwarden."
-rbw login
-rbw sync

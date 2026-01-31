@@ -19,8 +19,8 @@ jobs:
           bash ./initialize
           rm ./initialize
 
-      - name: Run dotfiles-linux main (dry)
+      - name: Run dotfiles-linux main
         shell: bash
         run: |
           set -euo pipefail
-          ~/dotfiles-linux/main --dry
+          ~/dotfiles-linux/main

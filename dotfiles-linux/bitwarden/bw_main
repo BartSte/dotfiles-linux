@@ -2,12 +2,10 @@
 
 set -eo pipefail
 
-if bw login --check; then
-    lg "Already logged in"
+if [ -z "$BWEMAIL" ]; then
+    lg "BWEMAIL is not set (skipping bw login)"
     exit 0
-elif [ -z "$BWEMAIL" ]; then
-    lg "BWEMAIL is not set"
-    exit 1
-else
-    bw login "$BWEMAIL"
 fi
+
+# Non-interactive in main; login lives in bitwarden/auth
+lg "Bitwarden CLI configured (login via bitwarden/auth)"

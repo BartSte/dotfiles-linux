@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -eo pipefail
+
+this_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+
+if [[ -n $USE_BW_CLI ]]; then
+  # Official Bitwarden CLI (interactive)
+  if [ -z "$BWEMAIL" ]; then
+    lg "BWEMAIL is not set"
+    exit 1
+  fi
+  bw login "$BWEMAIL"
+else
+  # rbw (interactive)
+  if [ -z "$BWEMAIL" ]; then
+    lg "BWEMAIL is not set"
+    exit 1
+  fi
+  rbw login
+  rbw sync
+fi
