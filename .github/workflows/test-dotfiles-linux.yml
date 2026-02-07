@@ -1,8 +1,9 @@
 name: test-dotfiles-linux
 
 on:
-  push:
-  pull_request:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
 
 jobs:
   linux:
