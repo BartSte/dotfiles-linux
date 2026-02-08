@@ -2,6 +2,11 @@
 
 set -eo pipefail
 
+# ensure lg exists for non-interactive shells
+if ! command -v lg &>/dev/null; then
+  lg() { echo "$@"; }
+fi
+
 # check if safe-rm is installed
 if ! command -v safe-rm &>/dev/null; then
     lg "safe-rm could not be found (skipping)"
