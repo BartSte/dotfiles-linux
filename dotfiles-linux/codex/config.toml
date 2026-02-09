@@ -1,27 +1,30 @@
-model = "gpt-5.2-codex"
+approval_policy = "untrusted"
+chatgpt_base_url = "https://chatgpt.com/backend-api/"
+check_for_update_on_startup = true
+cli_auth_credentials_store = "file"
+disable_paste_burst = false
+file_opener = "vscode"
+hide_agent_reasoning = false
+mcp_oauth_credentials_store = "auto"
+model = "gpt-5.3-codex"
 model_provider = "openai"
 model_reasoning_effort = "medium"
 model_reasoning_summary = "auto"
-model_verbosity = "medium"
 model_supports_reasoning_summaries = false
+model_verbosity = "medium"
 notify = [ ]
-approval_policy = "untrusted"
-sandbox_mode = "workspace-write"
-cli_auth_credentials_store = "file"
-chatgpt_base_url = "https://chatgpt.com/backend-api/"
-mcp_oauth_credentials_store = "auto"
-project_doc_max_bytes = 32768
+personality = "pragmatic"
 project_doc_fallback_filenames = []
-file_opener = "vscode"
-hide_agent_reasoning = false
+project_doc_max_bytes = 32768
+sandbox_mode = "workspace-write"
 show_raw_agent_reasoning = false
-disable_paste_burst = false
+suppress_unstable_features_warning = true
+web_search = "live"
 windows_wsl_setup_acknowledged = false
-check_for_update_on_startup = true
 
-[[skills.config]]
-experimental_use_unified_exec_tool = false
-experimental_use_freeform_apply_patch = false
+# [[skills.config]]
+# experimental_use_unified_exec_tool = false
+# experimental_use_freeform_apply_patch = false
 
 [sandbox_workspace_write]
 exclude_slash_tmp = false
@@ -52,7 +55,6 @@ enabled = true
 
 [features]
 shell_tool = true
-web_search_request = true
 unified_exec = false
 shell_snapshot = false
 apply_patch_freeform = false
