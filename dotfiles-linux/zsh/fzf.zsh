@@ -1,14 +1,16 @@
-if [[ -f "$HOME/.fzf/shell/key-bindings.zsh" ]]; then
-  source "$HOME/.fzf/shell/key-bindings.zsh"
-else
-  for p in \
-    /usr/share/fzf/key-bindings.zsh \
-    /usr/share/fzf/shell/key-bindings.zsh; do
-    if [[ -f "$p" ]]; then
-      source "$p"
-      break
+if [[ -n "$ZSH_VERSION" ]]; then
+    if [[ -f "$HOME/.fzf/shell/key-bindings.zsh" ]]; then
+      source "$HOME/.fzf/shell/key-bindings.zsh"
+    else
+      for p in \
+        /usr/share/fzf/key-bindings.zsh \
+        /usr/share/fzf/shell/key-bindings.zsh; do
+        if [[ -f "$p" ]]; then
+          source "$p"
+          break
+        fi
+      done
     fi
-  done
 fi
 
 _fzfenv() {
