@@ -4,7 +4,7 @@ zshenv() {
     source "$HOME/dotfiles-linux/zsh/bootstrap.zsh"
     source "$HOME/dotfiles-linux/zsh/fzf.zsh"
 
-    add_to_path "$HOME/dotfiles-linux/bin" "$HOME/.local/bin" "$HOME/.cargo/bin" "$HOME/go/bin" /usr/bin/vendor_perl
+    add_to_path "$HOME/dotfiles-arch/bin" "$HOME/dotfiles-pi/bin" "$HOME/dotfiles-linux/bin" "$HOME/.local/bin" "$HOME/.cargo/bin" "$HOME/go/bin" /usr/bin/vendor_perl
 
     export BROWSER='qutebrowser'
     export EARBUDS='30:53:C1:B8:CE:F6'
