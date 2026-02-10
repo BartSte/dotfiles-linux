@@ -1,6 +1,6 @@
 #!/bin/bash
 
-usage="Usage: $(basename "$0") [-h | --help] <davmail-config> 
+usage="Usage: $(basename "$0") [-h | --help] [-v | --verbose] <davmail-config> 
 
 Sychronize all \`mbsyncer\` channels and index them with \`notmuch\` using an
 imap connection with \`davmail\`. If no davmail config is provided, ignore
@@ -9,14 +9,26 @@ davmail, and only run \`mbsyncer\` and \`notmuch\`.
 where:
     options
     -q --quiet  suppress /dev/stderr and /dev/stdout 
+    -v --verbose  also log to /dev/stderr
     -h --help   shows this help messages
 
     positional
     <davmail-config> your davmailconfig"
 
-error=/dev/stderr
+state_dir="${XDG_STATE_HOME:-$HOME/.local/state}"
+mkdir -p "$state_dir"
+log_file="$state_dir/mailsync.log"
+if [[ -f $log_file ]]; then
+    size=$(wc -c <"$log_file")
+    if ((size > 1048576)); then
+        tail -c 1048576 "$log_file" >"$log_file.tmp" && mv "$log_file.tmp" "$log_file"
+    fi
+fi
+error="$log_file"
 output=/dev/stdout
-options=$(getopt -o qh --long quiet,help -- "$@")
+verbose=0
+use_verbose_tee=0
+options=$(getopt -o qvh --long quiet,verbose,help -- "$@")
 
 [ $? -eq 0 ] || {
     echo "Incorrect options provided"
@@ -26,25 +38,33 @@ options=$(getopt -o qh --long quiet,help -- "$@")
 eval set -- "$options"
 while true; do
     case "$1" in
-        -q | --quiet)
-            output=/dev/null
-            error=/dev/null
-            shift
-            ;;
-        -h | --help)
-            echo "$usage"
-            exit
-            ;;
-        --)
-            shift
-            break
-            ;;
-        *)
-            echo "Internal error"
-            exit 1
-            ;;
+    -q | --quiet)
+        output=/dev/null
+        error=/dev/null
+        shift
+        ;;
+    -v | --verbose)
+        verbose=1
+        shift
+        ;;
+    -h | --help)
+        echo "$usage"
+        exit 0
+        ;;
+    --)
+        shift
+        break
+        ;;
+    *)
+        echo "Internal error"
+        exit 1
+        ;;
     esac
 done
+
+if [[ $output != /dev/null && $error != /dev/null && $verbose -eq 1 ]]; then
+    use_verbose_tee=1
+fi
 
 [[ $1 ]] && davmailconfig=$1
 
@@ -56,17 +76,16 @@ done
 main() {
     is_logged_in || {
         echo "$USER not logged in; sync will not run."
-        exit
+        exit 1
     }
     has_internet || {
         echo "No internet connection detected."
-        exit
+        exit 1
     }
     start_davmail
     start_mbsyncer
     start_notmuch
     kill_davmail
-    echo 'Email sync done.'
 }
 
 ##############################################################################
@@ -74,7 +93,7 @@ main() {
 # user has a process with the same name as the user id.
 ##############################################################################
 is_logged_in() {
-    pgrep -u "${USER:=$LOGNAME}" 1>$output 2>$error
+    pgrep -u "${USER:=$LOGNAME}" >/dev/null
 }
 
 ##############################################################################
@@ -82,7 +101,7 @@ is_logged_in() {
 # pinging a known ip address.
 ##############################################################################
 has_internet() {
-    ping -q -c 1 1.1.1.1 1>$output 2>$error
+    ping -q -c 1 1.1.1.1 >/dev/null
 }
 
 ##############################################################################
@@ -90,11 +109,16 @@ has_internet() {
 # checking if there is a process with the name 'davmail.jar'.
 ##############################################################################
 start_davmail() {
-    [[ $davmailconfig ]] || return
-    pgrep -f davmail\.jar 1>$output 2>$error && return
-    davmail $davmailconfig 1>$output 2>$error &
-    pid_davmail=$!
-    sleep 1
+    if [[ -z $davmailconfig ]]; then
+        return
+    elif pgrep -f davmail\.jar; then
+        echo "davmail is already running."
+        return
+    else
+        davmail "$davmailconfig" &
+        pid_davmail=$!
+        sleep 1
+    fi
 }
 
 ##############################################################################
@@ -102,15 +126,15 @@ start_davmail() {
 # checking if there is a process with the name 'mbsync'.
 ##############################################################################
 start_mbsyncer() {
-    pgrep -x mbsync 1>$output 2>$error && {
+    pgrep -x mbsync && {
         echo "mbsync is already running."
         kill_davmail
-        exit
+        exit 0
     }
-    mbsync -a -q -q 1>$output 2>$error || {
+    mbsync -a -q -q || {
         echo 'Email sync failed.'
         kill_davmail
-        exit
+        exit 1
     }
 }
 
@@ -119,15 +143,15 @@ start_mbsyncer() {
 # checking if there is a process with the name 'notmuch'.
 ##############################################################################
 start_notmuch() {
-    pgrep -x notmuch 1>$output 2>$error && {
+    pgrep -x notmuch && {
         echo "notmuch is already running."
         kill_davmail
-        exit
+        exit 0
     }
-    notmuch new --quiet 1>$output 2>$error || {
+    notmuch new --quiet || {
         echo 'Email sync failed.'
         kill_davmail
-        exit
+        exit 1
     }
 }
 
@@ -136,8 +160,13 @@ start_notmuch() {
 # is a process with the name 'davmail.jar'.
 ##############################################################################
 kill_davmail() {
-    [[ $davmailconfig ]] || return
-    [[ $pid_davmail ]] && kill $pid_davmail
+    if [[ -z $davmailconfig ]]; then
+        return
+    elif [[ -n $pid_davmail ]]; then
+        kill "$pid_davmail"
+    elif pgrep -f davmail\.jar; then
+        pkill -f davmail\.jar
+    fi
 }
 
 ##############################################################################
@@ -146,11 +175,15 @@ kill_davmail() {
 # message in the tmux status bar. If not, it prints the start message to the
 # terminal.
 ##############################################################################
-start_message='Email sync started'
 if [[ $TMUX ]]; then
-    tmux display -d 1000 "$start_message"
-    tmux display -d 2000 "$(main)"
+    tmux display -d 1000 'email sync started'
+fi
+message='email sync done'
+if [[ $use_verbose_tee -eq 1 ]]; then
+    main 2> >(tee -a "$log_file" >&2) 1>>"$output" || message="email sync failed with exit code $?"
 else
-    echo "$start_message"
-    main
+    main 2>>"$error" 1>>"$output" || message="email sync failed with exit code $?"
+fi
+if [[ $TMUX ]]; then
+    tmux display -d 2000 "$message"
 fi
