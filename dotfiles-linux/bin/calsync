@@ -1,6 +1,6 @@
 #!/bin/bash
 
-usage="Usage: $(basename "$0") [-q | --quiet] [-h | --help] <davmail-config> <org file> <khalorg list arg>
+usage="Usage: $(basename "$0") [-q | --quiet] [-v | --verbose] [-h | --help] <davmail-config> <org file> <khalorg list arg>
 
 Sychronize all \`vdirsyncer\` calendars and export them to org with \`khalorg\`.
 Davmail is used as the CalDav server. If it is not already running, it will be
@@ -9,6 +9,7 @@ activated temporarly.
 where:
 options
 -q --quiet  suppress /dev/stderr and /dev/stdout
+-v --verbose  also log to /dev/stderr
 -h --help   shows this help messages
 
 positional
@@ -16,9 +17,19 @@ positional
 <org file>              the output file
 <khalorg list arg>    see \`khalorg list -h\`
 "
-error=/dev/stderr
+state_dir="${XDG_STATE_HOME:-$HOME/.local/state}"
+mkdir -p "$state_dir"
+log_file="$state_dir/calsync.log"
+if [[ -f $log_file ]]; then
+    size=$(wc -c < "$log_file")
+    if (( size > 1048576 )); then
+        tail -c 1048576 "$log_file" > "$log_file.tmp" && mv "$log_file.tmp" "$log_file"
+    fi
+fi
+error="$log_file"
 output=/dev/stdout
-options=$(getopt -o qh --long quiet,help -- "$@")
+verbose=0
+options=$(getopt -o qvh --long quiet,verbose,help -- "$@")
 
 [ $? -eq 0 ] || {
     echo "Incorrect options provided"
@@ -31,6 +42,10 @@ while true; do
     -q | --quiet)
         output=/dev/null
         error=/dev/null
+        shift
+        ;;
+    -v | --verbose)
+        verbose=1
         shift
         ;;
     -h | --help)
@@ -47,6 +62,10 @@ while true; do
         ;;
     esac
 done
+
+if [[ $output != /dev/null && $error != /dev/null && $verbose -eq 1 ]]; then
+    error=>(tee -a "$log_file" >&2)
+fi
 
 [ $# -eq 0 ] && {
     echo "$usage"
@@ -96,7 +115,7 @@ main() {
 # user has a process with the same name as the user id.
 ##############################################################################
 is_logged_in() {
-    pgrep -u "${USER:=$LOGNAME}" 1>$output 2>$error
+    pgrep -u "${USER:=$LOGNAME}" >/dev/null
 }
 
 ##############################################################################
@@ -104,7 +123,7 @@ is_logged_in() {
 # pinging a known ip address.
 ##############################################################################
 has_internet() {
-    ping -q -c 1 1.1.1.1 1>$output 2>$error
+    ping -q -c 1 1.1.1.1 >/dev/null
 }
 
 ##############################################################################
@@ -112,8 +131,8 @@ has_internet() {
 # checking if there is a process with the name 'davmail.jar'.
 ##############################################################################
 start_davmail() {
-    pgrep -f davmail\.jar 1>$output 2>$error && return
-    davmail $davmailconfig 1>$output 2>$error &
+    pgrep -f davmail\.jar && return
+    davmail "$davmailconfig" &
     pid_davmail=$!
     sleep 0.5
 }
@@ -152,4 +171,10 @@ tmux_display() {
 # will be displayed in a tmux message.
 ##############################################################################
 tmux_display "Calendar sync started"
-main | tmux_display
+if [[ $output == /dev/null && $error == /dev/null ]]; then
+    main 1>/dev/null 2>/dev/null | tmux_display
+elif [[ $verbose -eq 1 ]]; then
+    main 1>"$output" 2> >(tee -a "$log_file" >&2) | tmux_display
+else
+    main 1>"$output" 2>"$error" | tmux_display
+fi
