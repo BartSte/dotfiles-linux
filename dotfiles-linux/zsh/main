@@ -4,6 +4,12 @@ set -eo pipefail
 
 source ~/.zshenv
 
+# Ensure zsh is installed
+if ! command -v zsh &>/dev/null; then
+  sudo apt-get update -y
+  sudo apt-get install -y zsh
+fi
+
 # Set user shell to zsh
 sudo chsh -s /usr/bin/zsh "$(whoami)"
 
