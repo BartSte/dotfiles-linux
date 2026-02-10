@@ -44,4 +44,8 @@ qhash exa && alias ls='exa -h --icons'
 qhash exa && alias lsa='exa -ah --icons'
 qhash exa && alias tree='exa -T --icons'
 qhash safe-rm && alias rm='/usr/lib/safe-rm/rm'
-qhash uvx && alias dl='uvx --from trash-cli trash-put'
+if qhash trash-put; then 
+    alias dl='trash-put' 
+elif qhash uvx; then
+    alias dl='uvx --from trash-cli trash-put' 
+fi
