@@ -1,7 +1,15 @@
 #!/bin/bash
 
 calsync \
-    $HOME/.config/davmail/davmail.properties \
-    $HOME/dropbox/org/outlook.org \
-    outlook_local today 180d \
+    $HOME/.config/davmail/davmail.work.properties \
+    outlook_work \
+    $HOME/dropbox/org/outlook_work.org \
+    today 180d \
+    $@
+
+calsync \
+    $HOME/.config/davmail/davmail.personal.properties \
+    outlook_personal \
+    $HOME/dropbox/org/outlook_personal.org \
+    today 180d \
     $@
