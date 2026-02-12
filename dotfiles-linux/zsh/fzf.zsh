@@ -1,5 +1,7 @@
 if [[ -n "$ZSH_VERSION" ]]; then
-  save-source /usr/share/fzf-help/fzf-help.zsh
+  if [[ -f /usr/share/fzf-help/fzf-help.zsh ]]; then
+    save-source /usr/share/fzf-help/fzf-help.zsh
+  fi
   for p in \
     "$HOME/.fzf/shell/key-bindings.zsh" \
     /usr/share/fzf/key-bindings.zsh \
