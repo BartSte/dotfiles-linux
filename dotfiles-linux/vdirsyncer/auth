@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Ensure dotfiles helper scripts are available when running non-interactively
+export PATH="${HOME}/dotfiles-linux/bin:${PATH}"
+
 display_help() {
     cat <<EOF
 Usage: ${0##*/} [OPTION]
@@ -23,18 +26,62 @@ cleanup_davmail() {
     fi
 }
 
-run_davmail() {
-    local config="$1"
-    alacritty -e bash -c "davmail ${HOME}/.config/davmail/${config}" &
-    DAVMAIL_PID=$!
-    sleep 3
+get_prop() {
+    # Usage: get_prop <file> <key>
+    local file="$1" key="$2"
+    awk -F= -v k="$key" '
+        $0 ~ "^[[:space:]]*#" { next }
+        $1 ~ "^[[:space:]]*"k"[[:space:]]*$" {
+            sub(/^[[:space:]]+/, "", $2)
+            sub(/[[:space:]]+$/, "", $2)
+            print $2
+            exit
+        }
+    ' "$file"
 }
 
-PROMPT="This script tries to authenticate for vdirsyncer using
-davmail. It will open a new shell where davmail is executed. Next, in this
-shell, 'vdirsyncer discover' and 'vdirsyncer sync' will be called for each
-calendar pair. If davmail is not yet authenticated, it will provide you with
-an instruction for authentication."
+wait_for_port() {
+    # Usage: wait_for_port <port> [timeout_seconds]
+    local port="$1" timeout="${2:-20}"
+    local i
+    for ((i = 0; i < timeout; i++)); do
+        (echo >"/dev/tcp/127.0.0.1/${port}") >/dev/null 2>&1 && return 0
+        sleep 1
+    done
+    return 1
+}
+
+run_davmail() {
+    # Start davmail temporarily in the background for a specific config file.
+    local config="$1"
+    local cfg_path="${HOME}/.config/davmail/${config}"
+
+    if [[ ! -f "$cfg_path" ]]; then
+        echo "Missing DavMail config: $cfg_path" >&2
+        return 1
+    fi
+
+    local caldav_port
+    caldav_port="$(get_prop "$cfg_path" "davmail.caldavPort")"
+    caldav_port="${caldav_port:-1080}"
+
+    echo "Starting DavMail with $cfg_path (CalDAV port ${caldav_port})..."
+    davmail "$cfg_path" &
+    DAVMAIL_PID=$!
+
+    if ! wait_for_port "$caldav_port" 20; then
+        echo "DavMail didn't open port ${caldav_port} in time. Check /tmp/davmail.log" >&2
+        return 1
+    fi
+}
+
+PROMPT="This script authenticates vdirsyncer using DavMail and then syncs calendars.
+
+It will start DavMail temporarily in the background for each config file, run:
+  - vdirsyncer discover
+  - vdirsyncer sync
+
+If DavMail needs authentication, it will print a Microsoft login URL and ask for a code in this terminal."
 
 main() {
     case "$1" in
