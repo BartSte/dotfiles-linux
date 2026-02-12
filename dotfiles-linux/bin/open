@@ -67,7 +67,7 @@ to_open=${to_open:-$(cat)}
 # that fails, it tries to open the input as a file.
 main() {
     log_clear
-    try_url "$1" || try_file "$1" || abort "Could not open $1"
+    try_url "$1" || try_file "$1" || exit "Could not open $1"
 }
 
 # Tries to open a url in a browser. If the url is not a url, the function returns
@@ -144,17 +144,19 @@ try_file() {
 # Openers
 ################################################################################
 
-# Opens a url in the preferred browser. If WSL is running, the WSLBROWSER
-# environment variable is used. Otherwise, the BROWSER environment variable is
-# used.
+# Opens a url in the preferred browser. If WSLBROWSER is set, it is used.
+# Otherwise, LINBROWSER is used. If neither are set, an error is raised.
 open_url() {
     log "Url detected, opening in browser." -v
-    if is_running wsl; then
+    if [[ -n ${WSLBROWSER:-} ]]; then
         log "Opening url with WSLBROWSER: $WSLBROWSER" -v
         "$WSLBROWSER" "$1" 2>&1 | log -v &
+    elif [[ -n ${LINBROWSER:-} ]]; then
+        log "Opening url with LINBROWSER: $LINBROWSER" -v
+        "$LINBROWSER" "$1" 2>&1 | log -v &
     else
-        log "Opening url with BROWSER: $BROWSER" -v
-        $BROWSER "$1" 2>&1 | log -v &
+        log "No browser set. Please set WSLBROWSER or LINBROWSER." -v
+        return 1
     fi
 }
 
