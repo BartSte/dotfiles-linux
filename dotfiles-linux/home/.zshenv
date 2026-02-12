@@ -2,7 +2,6 @@
 
 zshenv() {
     source "$HOME/dotfiles-linux/zsh/bootstrap.zsh"
-    source "$HOME/dotfiles-linux/zsh/fzf.zsh"
 
     add_to_path "$HOME/dotfiles-arch/bin" "$HOME/dotfiles-pi/bin" "$HOME/dotfiles-linux/bin" "$HOME/.local/bin" "$HOME/.cargo/bin" "$HOME/go/bin" /usr/bin/vendor_perl
 
@@ -16,7 +15,6 @@ zshenv() {
     export TIME_ZONE="Europe/Amsterdam"
     export TMUX_PLUGIN_DIR="$HOME/.tmux/plugins"
     export VI_MODE_SET_CURSOR=true
-    export IP_PI=192.168.1.248
     hash nvim && export EDITOR='nvim' || unset EDITOR
 
     export HISTFILE=$HOME/.histfile

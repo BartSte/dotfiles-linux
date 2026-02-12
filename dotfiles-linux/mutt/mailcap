@@ -1,5 +1,6 @@
 application/gpg; gpg -d %s; copiousoutput
-application/ics; ~/dotfiles-arch/mutt/mutt-viewical; copiousoutput;
+application/ics; ~/dotfiles-linux/mutt/mutt-viewical; copiousoutput;
+text/calendar; ~/dotfiles-linux/mutt/mutt-viewical; copiousoutput;
 application/msword; antiword -w 96 %s; copiousoutput
 application/vnd.oasis.opendocument.presentation-template; odt2txt --width=96 %s; copiousoutput
 application/vnd.oasis.opendocument.presentation; odt2txt --width=96 %s; copiousoutput

@@ -33,6 +33,7 @@ alias ts='tmux-session'
 alias unl='rbw unlock'
 alias v='nvim'
 alias yay='export MAKEFLAGS="-j$(nproc)" && yay'
+alias sshpi='ssh barts@192.168.1.248'
 
 qhash() {
     hash $1 2>/dev/null
@@ -44,8 +45,8 @@ qhash exa && alias ls='exa -h --icons'
 qhash exa && alias lsa='exa -ah --icons'
 qhash exa && alias tree='exa -T --icons'
 qhash safe-rm && alias rm='/usr/lib/safe-rm/rm'
-if qhash trash-put; then 
-    alias dl='trash-put' 
+if qhash trash-put; then
+    alias dl='trash-put'
 elif qhash uvx; then
-    alias dl='uvx --from trash-cli trash-put' 
+    alias dl='uvx --from trash-cli trash-put'
 fi
