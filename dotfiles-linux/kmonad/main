@@ -11,7 +11,7 @@ sudo killall kmonad || true
 sudo systemctl disable kmonad.service || true
 
 pushd .
-cd ~/dotfiles-arch/kmonad
+cd ~/dotfiles-linux/kmonad
 sudo cp kmonad.service /etc/systemd/system
 sudo cp home_row_modifiers.kbd /etc/systemd/system
 

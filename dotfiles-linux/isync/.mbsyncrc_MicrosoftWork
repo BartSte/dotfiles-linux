@@ -2,7 +2,7 @@ IMAPAccount work
 Host outlook.office365.com
 Port 993
 UserCmd "bw-cli-get Username $MICROSOFT_ACCOUNT"
-PassCmd "~/dotfiles-arch/mutt/mutt_oauth2_with_token"
+PassCmd "~/dotfiles-linux/mutt/mutt_oauth2_with_token"
 AuthMechs XOAUTH2
 TLSType IMAPS
 
