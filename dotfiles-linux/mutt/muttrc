@@ -44,8 +44,6 @@ set timeout=0 # This variable controls the number of seconds Mutt will wait for 
 set tmpdir="/tmp"
 set wait_key = no # Controls whether Mutt will ask you to press a key after shell- escape, pipe-message, pipe-entry, print-message, and print-entry commands.
 set wrap=0  # email view width
-set sidebar_visible
-set sidebar_new_mail_only = no
 unset collapse_unread
 unset mark_old
 
