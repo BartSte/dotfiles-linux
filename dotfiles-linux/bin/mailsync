@@ -75,12 +75,10 @@ fi
 ##############################################################################
 main() {
     is_logged_in || {
-        echo "$USER not logged in; sync will not run."
-        exit 1
+        abort "$USER not logged in; sync will not run."
     }
     has_internet || {
-        echo "No internet connection detected."
-        exit 1
+        abort "No internet connection detected."
     }
     start_davmail
     start_mbsyncer
@@ -127,15 +125,27 @@ start_davmail() {
 ##############################################################################
 start_mbsyncer() {
     pgrep -x mbsync && {
-        echo "mbsync is already running."
         kill_davmail
-        exit 0
+        abort "mbsync is already running."
     }
     mbsync -a -q -q || {
-        echo 'Email sync failed.'
         kill_davmail
-        exit 1
+        abort 'Email sync failed.'
     }
+}
+
+###############################################################################
+# This function displays an error message and exits the script. If the script is
+# running in a tmux session, it displays the error message in the tmux status
+# bar.
+###############################################################################
+abort() {
+    if [[ $TMUX ]]; then
+        tmux display -d 2000 "$1"
+    else
+        echo "$1" >&2
+    fi
+    exit 1
 }
 
 ##############################################################################
@@ -144,14 +154,12 @@ start_mbsyncer() {
 ##############################################################################
 start_notmuch() {
     pgrep -x notmuch && {
-        echo "notmuch is already running."
         kill_davmail
-        exit 0
+        abort "notmuch is already running."
     }
     notmuch new --quiet || {
-        echo 'Email sync failed.'
         kill_davmail
-        exit 1
+        abort 'Email sync failed.'
     }
 }
 
@@ -176,13 +184,13 @@ kill_davmail() {
 # terminal.
 ##############################################################################
 if [[ $TMUX ]]; then
-    tmux display -d 1000 'email sync started'
+    tmux display -d 1000 'Email sync started'
 fi
-message='email sync done'
+message='Email sync done'
 if [[ $use_verbose_tee -eq 1 ]]; then
-    main 2> >(tee -a "$log_file" >&2) 1>>"$output" || message="email sync failed with exit code $?"
+    main 2> >(tee -a "$log_file" >&2) 1>>"$output" || message="Email sync failed with exit code $?"
 else
-    main 2>>"$error" 1>>"$output" || message="email sync failed with exit code $?"
+    main 2>>"$error" 1>>"$output" || message="Email sync failed with exit code $?"
 fi
 if [[ $TMUX ]]; then
     tmux display -d 2000 "$message"

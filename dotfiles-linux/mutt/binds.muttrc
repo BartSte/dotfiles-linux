@@ -5,24 +5,9 @@ bind    index,pager   g   noop
 bind    index   <esc>V noop
 bind    index   <esc>v noop
 
-# Mailboxes
+# Index
 bind    index   - collapse-thread
 bind    index   _ collapse-all
-
-# Sidebar
-# sidebar-first                
-# sidebar-last                 
-# sidebar-next-new            
-# sidebar-page-down            
-# sidebar-page-up              
-# sidebar-prev-new             
-# sidebar-toggle-virtual       
-# sidebar-toggle-visible        
-bind    index,pager \Cn sidebar-next
-bind    index,pager \Cp sidebar-prev
-bind    index,pager gf sidebar-open
-
-# Index
 bind    index   <up>        previous-entry
 bind    index   <down>      next-entry
 bind    index   <delete>    delete-message
