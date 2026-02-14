@@ -100,6 +100,12 @@ dotc() {
         linpis
         linpi commit --untracked-files=no -a -m "$message" | shorten_stdout
     fi
+
+    if [[ -d ~/dotfiles-secret.git ]]; then
+        echo $'\nSecret'
+        secrets
+        secret commit --untracked-files=no -a -m "$message" | shorten_stdout
+    fi
 }
 
 dots() {
@@ -118,6 +124,11 @@ dots() {
     if [[ -d $HOME/dotfiles-pi.git ]]; then
         echo $'\nPi':
         linpis
+    fi
+
+    if [[ -d $HOME/dotfiles-secret.git ]]; then
+        echo $'\nSecret':
+        secrets
     fi
 }
 
