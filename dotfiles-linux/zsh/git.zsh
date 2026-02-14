@@ -30,6 +30,14 @@ linpis() {
     linpi status --untracked-files=no --short
 }
 
+secret() {
+    git --git-dir=$HOME/dotfiles-secret.git/ --work-tree=$HOME "$@"
+}
+
+secrets() {
+    secret status --untracked-files=no --short
+}
+
 dot() {
     echo "Base:"
     git --git-dir=$HOME/dotfiles.git/ --work-tree=$HOME "$@"
@@ -45,6 +53,11 @@ dot() {
         echo -e
         echo -e "Pi:"
         linpi "$@"
+    fi
+    if [[ -d $HOME/dotfiles-secret.git ]]; then
+        echo -e
+        echo -e "Secret:"
+        secret "$@"
     fi
 }
 
