@@ -103,6 +103,7 @@ dotc() {
 
     if [[ -d ~/dotfiles-secret.git ]]; then
         echo $'\nSecret'
+        secret add ~/dotfiles-secret
         secrets
         secret commit --untracked-files=no -a -m "$message" | shorten_stdout
     fi
