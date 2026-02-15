@@ -1,4 +1,4 @@
-approval_policy = "untrusted"
+approval_policy = "never"
 chatgpt_base_url = "https://chatgpt.com/backend-api/"
 check_for_update_on_startup = true
 cli_auth_credentials_store = "file"
@@ -6,7 +6,7 @@ disable_paste_burst = false
 file_opener = "vscode"
 hide_agent_reasoning = false
 mcp_oauth_credentials_store = "auto"
-model = "gpt-5.2-codex"
+model = "gpt-5.3-codex"
 model_provider = "openai"
 model_reasoning_effort = "xhigh"
 model_reasoning_summary = "auto"
