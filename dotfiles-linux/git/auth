@@ -72,6 +72,17 @@ Host ${HOST_ALIAS_WORK}
   User git
   IdentityFile ${SSH_KEY_WORK}
   IdentitiesOnly yes
+
+Host pi pi-ts
+  User barts
+  ServerAliveInterval 5
+  ServerAliveCountMax 3
+
+Host pi
+  HostName 192.168.1.24
+
+Host pi-ts
+  HostName 100.1.1.1
 ${SSH_MANAGED_END}"
 # Merge safely: keep existing config, add or replace our block
 if [ -f "$SSH_CONFIG" ]; then

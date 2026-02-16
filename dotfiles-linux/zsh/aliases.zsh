@@ -33,7 +33,6 @@ alias ts='tmux-session'
 alias unl='rbw unlock'
 alias v='nvim'
 alias yay='export MAKEFLAGS="-j$(nproc)" && yay'
-alias sshpi='ssh barts@192.168.1.248'
 
 qhash() {
     hash $1 2>/dev/null
