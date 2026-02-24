@@ -4,7 +4,7 @@ check_for_update_on_startup = true
 cli_auth_credentials_store = "file"
 disable_paste_burst = false
 file_opener = "vscode"
-forced_login_method = "chatgpt" # api
+# forced_login_method = "chatgpt" # api
 hide_agent_reasoning = false
 mcp_oauth_credentials_store = "auto"
 model = "gpt-5.2-codex"
@@ -48,11 +48,15 @@ persistence = "save-all"
 notifications = false
 animations = true
 show_tooltips = true
+status_line = ["model-with-reasoning", "git-branch", "context-used", "five-hour-limit", "weekly-limit", "used-tokens", "total-input-tokens", "total-output-tokens"]
 
 [feedback]
 enabled = true
 
 [notice]
+
+[notice.model_migrations]
+"gpt-5.2" = "gpt-5.2-codex"
 
 [features]
 shell_tool = true
