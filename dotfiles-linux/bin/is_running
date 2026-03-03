@@ -11,6 +11,7 @@ Check if the machien is running one of the following systems:
 - raspberry OS
 - tmux
 - CI environment
+- codex
 
 where:
     <type>  the type of the distro to check"
@@ -30,7 +31,7 @@ elif [ "$2" != "" ]; then
     log "Error: too many arguments"
     echo "$usage"
     exit 1
-elif ! [[ "$1" =~ ^(wsl|arch|raspberry|tmux|ci)$ ]]; then
+elif ! [[ "$1" =~ ^(wsl|arch|raspberry|tmux|ci|codex)$ ]]; then
     log "Error: unknown argument"
     echo "$usage"
     exit 1
@@ -83,4 +84,9 @@ tmux() {
 ci() {
     [[ -n "$CI" ]]
 }
+
+codex() {
+    [[ "${CODEX_THREAD_ID:-}" ]]
+}
+
 eval "$1"

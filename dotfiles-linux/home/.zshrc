@@ -48,4 +48,6 @@ zshrc() {
     _zshrc_p10k
 }
 
-zshrc "$@"
+if ! is_running codex; then
+    zshrc "$@"
+fi
