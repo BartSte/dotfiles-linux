@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+# install claude
+curl -fsSL https://claude.ai/install.sh | bash
