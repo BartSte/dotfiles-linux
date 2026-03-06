@@ -51,3 +51,6 @@ zshrc() {
 if ! is_running codex; then
     zshrc "$@"
 fi
+if is_running raspberry; then
+    save-source ~/dotfiles-pi/.zshrc
+fi
