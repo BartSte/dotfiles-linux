@@ -30,7 +30,7 @@ windows_wsl_setup_acknowledged = false
 [sandbox_workspace_write]
 exclude_slash_tmp = false
 exclude_tmpdir_env_var = false
-network_access = false
+network_access = true
 writable_roots = ["/home/barts/code"]
 
 [shell_environment_policy]
@@ -45,7 +45,7 @@ experimental_use_profile = false
 persistence = "save-all"
 
 [tui]
-notifications = false
+notifications = true
 animations = true
 show_tooltips = true
 status_line = ["model-with-reasoning", "git-branch", "context-used", "five-hour-limit", "weekly-limit", "used-tokens", "total-input-tokens", "total-output-tokens"]
@@ -54,9 +54,6 @@ status_line = ["model-with-reasoning", "git-branch", "context-used", "five-hour-
 enabled = true
 
 [notice]
-
-[notice.model_migrations]
-"gpt-5.2" = "gpt-5.2-codex"
 
 [features]
 shell_tool = true
