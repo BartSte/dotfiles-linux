@@ -1,17 +1,203 @@
 #!/usr/bin/env bash
 
-tmpdir=$(mktemp -d)
-req="$tmpdir/req.txt"
-trap 'rm -rf "$tmpdir"' EXIT
+set -Eeuo pipefail
 
-uv export --format=requirements.txt --no-hashes --no-header --no-annotate --frozen |
-    sed -E '/^ *-e +\.$/d' |
-    sed -E "s/(;)?( *and *)? *sys_platform *== *'[a-zA-Z0-9]+'//" >"$req"
+usage="Usage: try-uv-install [options]
 
-uv venv --clear
-. .venv/bin/activate
+Create (or refresh) a local virtual environment and best-effort install
+dependencies exported from uv.lock, targeting another platform marker set.
 
-while IFS= read -r line; do
-    case "$line" in "" | \#*) continue ;; esac
-    uv pip install "$line" || printf 'skip: %s\n' "$line"
-done <"$tmpdir/req.txt"
+Options:
+  --project <dir>      Project directory to export from (default: .)
+  --venv <path>        Virtual environment path, relative to project if not absolute (default: .venv)
+  --python <spec>      Python interpreter/spec to use for venv creation
+  --platform <name>    Target platform for marker evaluation (default: windows)
+  --no-clear           Keep existing venv contents instead of clearing it
+  --strict             Exit non-zero if any requirement fails to install
+  --dry-run            Resolve/install in dry-run mode
+  --keep-temp          Keep temp files (requirements export + failure lists)
+  -h, --help           Show this message and exit
+"
+
+log() {
+    printf 'try-uv-install: %s\n' "$*" >&2
+}
+
+die() {
+    printf 'try-uv-install: error: %s\n' "$*" >&2
+    exit 1
+}
+
+require_cmd() {
+    command -v "$1" >/dev/null 2>&1 || die "missing required command: $1"
+}
+
+project_dir="."
+venv_arg=".venv"
+target_platform="${TRY_UV_PLATFORM:-windows}"
+python_spec="${TRY_UV_PYTHON:-}"
+clear_venv=1
+strict_mode=0
+dry_run=0
+keep_temp=0
+
+while (($#)); do
+    case "$1" in
+    --project)
+        [[ $# -ge 2 ]] || die "--project requires a value"
+        project_dir="$2"
+        shift 2
+        ;;
+    --venv)
+        [[ $# -ge 2 ]] || die "--venv requires a value"
+        venv_arg="$2"
+        shift 2
+        ;;
+    --python)
+        [[ $# -ge 2 ]] || die "--python requires a value"
+        python_spec="$2"
+        shift 2
+        ;;
+    --platform)
+        [[ $# -ge 2 ]] || die "--platform requires a value"
+        target_platform="$2"
+        shift 2
+        ;;
+    --no-clear)
+        clear_venv=0
+        shift
+        ;;
+    --strict)
+        strict_mode=1
+        shift
+        ;;
+    --dry-run)
+        dry_run=1
+        shift
+        ;;
+    --keep-temp)
+        keep_temp=1
+        shift
+        ;;
+    -h | --help)
+        printf '%s' "$usage"
+        exit 0
+        ;;
+    *)
+        die "unknown option: $1"
+        ;;
+    esac
+done
+
+require_cmd uv
+[[ -d "$project_dir" ]] || die "project directory does not exist: $project_dir"
+
+if [[ "$venv_arg" = /* ]]; then
+    venv_path="$venv_arg"
+else
+    venv_path="$project_dir/$venv_arg"
+fi
+
+tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/try-uv-install.XXXXXX")"
+req_file="$tmpdir/requirements.txt"
+failed_file="$tmpdir/failed.txt"
+ignored_file="$tmpdir/ignored.txt"
+line_log="$tmpdir/install.log"
+
+cleanup() {
+    if ((keep_temp)); then
+        log "temporary files kept at: $tmpdir"
+    else
+        rm -rf "$tmpdir"
+    fi
+}
+trap cleanup EXIT
+
+export_cmd=(
+    uv export
+    --project "$project_dir"
+    --format=requirements.txt
+    --no-hashes
+    --no-header
+    --no-annotate
+    --frozen
+)
+
+if uv export --help 2>/dev/null | grep -q -- "--no-emit-project"; then
+    export_cmd+=(--no-emit-project)
+fi
+
+log "exporting requirements from: $project_dir"
+"${export_cmd[@]}" >"$req_file" || die "uv export failed (lock file missing or out of date)"
+
+venv_cmd=(uv venv "$venv_path")
+if ((clear_venv)); then
+    venv_cmd+=(--clear)
+else
+    venv_cmd+=(--allow-existing)
+fi
+if [[ -n "$python_spec" ]]; then
+    venv_cmd+=(--python "$python_spec")
+fi
+
+log "creating venv at: $venv_path"
+"${venv_cmd[@]}" >/dev/null
+
+venv_python="$venv_path/bin/python"
+[[ -x "$venv_python" ]] || die "expected interpreter not found at: $venv_python"
+
+install_prefix=(
+    uv pip install
+    --python "$venv_python"
+    --python-platform "$target_platform"
+    --no-deps
+)
+if ((dry_run)); then
+    install_prefix+=(--dry-run)
+fi
+
+attempted=0
+installed=0
+failed=0
+ignored=0
+
+while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line%$'\r'}"
+    [[ -z "${line//[[:space:]]/}" ]] && continue
+    [[ "$line" =~ ^[[:space:]]*# ]] && continue
+
+    if [[ "$line" =~ ^[[:space:]]*(-e|--editable)[[:space:]]+ ]]; then
+        ((ignored += 1))
+        printf '%s\n' "$line" >>"$ignored_file"
+        continue
+    fi
+
+    if [[ "$line" =~ ^[[:space:]]*- ]]; then
+        ((ignored += 1))
+        printf '%s\n' "$line" >>"$ignored_file"
+        continue
+    fi
+
+    ((attempted += 1))
+    if "${install_prefix[@]}" "$line" >"$line_log" 2>&1; then
+        ((installed += 1))
+    else
+        ((failed += 1))
+        printf '%s\n' "$line" >>"$failed_file"
+        printf 'skip: %s\n' "$line" >&2
+        tail -n 3 "$line_log" >&2 || true
+    fi
+done <"$req_file"
+
+log "summary: attempted=$attempted installed=$installed failed=$failed ignored=$ignored target-platform=$target_platform"
+
+if [[ -s "$failed_file" ]]; then
+    log "failed requirements list: $failed_file"
+fi
+if [[ -s "$ignored_file" ]]; then
+    log "ignored requirements list: $ignored_file"
+fi
+
+if ((strict_mode && failed > 0)); then
+    die "strict mode enabled and some requirements failed"
+fi

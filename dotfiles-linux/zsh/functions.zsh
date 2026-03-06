@@ -28,20 +28,9 @@ fullsync() {
 }
 
 ################################################################################
-# Runs `aider` if no arguments are provided, or `prompts-aider` with arguments
-# otherwise.
-#
-# Aider environment variables are set based on the `PROJECTRC` variable and the
-# hostname.
-# ###############################################################################
-# ai() {
-#     local dir
-#     dir=$HOME/dotfiles-linux/aider
-#     source $dir/host_settings.zsh
-#
-#     if [[ $# -eq 0 ]]; then
-#         uvx --from aider-chat --python 3.12 aider
-#     else
-#         prompts $@ --action aider
-#     fi
-# }
+# Sync all programs
+################################################################################
+urlencode() {
+    printf '%s' "$1" | jq -sRr @uri
+}
+
