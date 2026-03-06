@@ -51,6 +51,3 @@ zshrc() {
 if ! is_running codex; then
     zshrc "$@"
 fi
-
-# OpenClaw Completion
-source "/home/barts/.openclaw/completions/openclaw.zsh"
