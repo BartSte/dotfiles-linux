@@ -26,7 +26,6 @@ zshenv() {
     source ~/dotfiles-linux/zsh/fzf.zsh && _fzfenv
     export HELP_MESSAGE_RC="$HOME/dotfiles-linux/zsh/fzfhelprc.zsh"
     export FZF_OPEN_REGEX_EXTRA=$(~/dotfiles-linux/tmux/tmux-fzf-open/regex-extra)
-    export OPENCLAW_CONFIG_PATH="/home/barts/dotfiles-pi/openclaw/config/openclaw.json"
 
     # Local variables
     HEADPHONES="28:11:A5:A4:3A:CF"
