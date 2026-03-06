@@ -32,3 +32,7 @@ zshenv() {
     SONY="AC:80:0A:C8:77:2C"
 }
 zshenv
+
+if is_running raspberry; then
+    save-source ~/dotfiles-pi/.zshenv
+fi
