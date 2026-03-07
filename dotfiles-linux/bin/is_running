@@ -6,12 +6,13 @@ usage="Usage: $0 <type>
 
 Check if the machien is running one of the following systems:
 
+- zsh
 - wsl
 - arch
 - raspberry OS
 - tmux
 - CI environment
-- codex
+- ai
 
 where:
     <type>  the type of the distro to check"
@@ -31,7 +32,7 @@ elif [ "$2" != "" ]; then
     log "Error: too many arguments"
     echo "$usage"
     exit 1
-elif ! [[ "$1" =~ ^(wsl|arch|raspberry|tmux|ci|codex)$ ]]; then
+elif ! [[ "$1" =~ ^(wsl|arch|raspberry|tmux|ci|ai)$ ]]; then
     log "Error: unknown argument"
     echo "$usage"
     exit 1
@@ -85,8 +86,10 @@ ci() {
     [[ -n "$CI" ]]
 }
 
-codex() {
-    [[ "${CODEX_THREAD_ID:-}" ]]
+# @brief Check if running in Codex or Claude Code.
+# @return 0 if in Codex or Claude Code, 1 otherwise
+ai() {
+    [[ -n "${CODEX_THREAD_ID:-}" ]] || [[ -n "${CLAUDE_CODE_SESSION:-}" ]]
 }
 
 eval "$1"
