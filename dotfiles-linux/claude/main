@@ -1,4 +1,15 @@
 #!/usr/bin/env bash
 
+this_dir=$(dirname "$(readlink -f "$0")")
+
 # install claude
-curl -fsSL https://claude.ai/install.sh | bash
+if ! command -v claude &>/dev/null; then
+    echo "Installing Claude CLI..."
+    curl -fsSL https://claude.ai/install.sh | bash
+else
+    echo "Claude CLI is already installed."
+fi
+
+echo "Linking settings.json..."
+rm -rf ~/.claude/settings.json
+ln -sf "$this_dir"/settings.json ~/.claude/settings.json
