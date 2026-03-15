@@ -6,7 +6,12 @@
             "Bash(uv run ruff check *)",
             "Bash(uv run pytest *)",
             "Bash(git status)",
-            "Bash(git diff -- *)"
+            "Bash(git diff *)",
+            "Bash(git add *)",
+            "Bash(git log *)",
+            "Bash(git -C *)",
+            "Bash(find *)",
+            "Bash(ls *)"
         ],
         "deny": [
             "Read(./.env)",

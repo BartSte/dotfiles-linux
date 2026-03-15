@@ -7,7 +7,7 @@ file_opener = "vscode"
 # forced_login_method = "chatgpt" # api
 hide_agent_reasoning = false
 mcp_oauth_credentials_store = "auto"
-model = "gpt-5.3-codex"
+model = "gpt-5.4"
 model_provider = "openai"
 model_reasoning_effort = "xhigh"
 model_reasoning_summary = "auto"
@@ -54,6 +54,9 @@ status_line = ["model-with-reasoning", "git-branch", "context-used", "five-hour-
 enabled = true
 
 [notice]
+
+[notice.model_migrations]
+"gpt-5.3-codex" = "gpt-5.4"
 
 [features]
 shell_tool = true
