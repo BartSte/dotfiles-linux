@@ -9,7 +9,7 @@ hide_agent_reasoning = false
 mcp_oauth_credentials_store = "auto"
 model = "gpt-5.4"
 model_provider = "openai"
-model_reasoning_effort = "xhigh"
+model_reasoning_effort = "high"
 model_reasoning_summary = "auto"
 model_supports_reasoning_summaries = false
 model_verbosity = "medium"
@@ -78,6 +78,18 @@ child_agents_md = false
 [profiles]
 
 [projects]
+
+[projects."/home/barts/code/work/python/operational-database"]
+trust_level = "trusted"
+
+[projects."/home/barts/code/work/python/fleet-diver"]
+trust_level = "trusted"
+
+[projects."/home/barts/code/work/python/fleet-inspector"]
+trust_level = "trusted"
+
+[projects."/home/barts/code/work/yml/.github"]
+trust_level = "trusted"
 
 [otel]
 log_user_prompt = false
