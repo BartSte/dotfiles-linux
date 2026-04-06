@@ -7,3 +7,6 @@ if ! is_running ai; then
     fi
 
 fi
+
+# OpenClaw Completion
+source "/home/barts/.openclaw/completions/openclaw.zsh"
