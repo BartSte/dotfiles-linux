@@ -23,6 +23,7 @@ suppress_unstable_features_warning = true
 web_search = "live"
 windows_wsl_setup_acknowledged = false
 approvals_reviewer = "user"
+plan_mode_reasoning_effort = "xhigh"
 
 # [[skills.config]]
 # experimental_use_unified_exec_tool = false
@@ -114,6 +115,18 @@ trust_level = "trusted"
 trust_level = "trusted"
 
 [projects."/home/barts/code/personal/python/wslpy"]
+trust_level = "trusted"
+
+[projects."/home/barts/code/personal/python/garmin-connect-screens"]
+trust_level = "trusted"
+
+[projects."/home/barts/code/architecture/cloud_sales_repos"]
+trust_level = "trusted"
+
+[projects."/home/barts/code/work/python/python-package-fr-report"]
+trust_level = "trusted"
+
+[projects."/home/barts/code/personal/python/garmin-connect-iq"]
 trust_level = "trusted"
 
 [otel]
