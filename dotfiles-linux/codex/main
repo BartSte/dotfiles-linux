@@ -2,11 +2,24 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SOURCE_CONFIG="$SCRIPT_DIR/config.toml"
+SECRET_DOTFILES_DIR="${DOTFILES_SECRET_DIR:-$HOME/dotfiles-secret}"
+SECRET_SOURCE_CONFIG="$SECRET_DOTFILES_DIR/codex/config.toml"
+LEGACY_SOURCE_CONFIG="$SCRIPT_DIR/config.toml"
 SOURCE_AGENTS="$SCRIPT_DIR/AGENTS.md"
 TARGET_DIR="$HOME/.codex"
 TARGET_CONFIG="$TARGET_DIR/config.toml"
 TARGET_AGENTS="$TARGET_DIR/AGENTS.md"
+
+if [[ -f "$SECRET_SOURCE_CONFIG" ]]; then
+  SOURCE_CONFIG="$SECRET_SOURCE_CONFIG"
+elif [[ -f "$LEGACY_SOURCE_CONFIG" ]]; then
+  SOURCE_CONFIG="$LEGACY_SOURCE_CONFIG"
+else
+  echo "Missing Codex config. Expected one of:" >&2
+  echo "  $SECRET_SOURCE_CONFIG" >&2
+  echo "  $LEGACY_SOURCE_CONFIG" >&2
+  exit 1
+fi
 
 mkdir -p "$TARGET_DIR"
 
