@@ -1,0 +1,5 @@
+[projects."/home/barts/code/personal/python/wslpy"]
+trust_level = "trusted"
+
+[projects."/home/barts/code/work/python/python-package-fr-report"]
+trust_level = "trusted"
