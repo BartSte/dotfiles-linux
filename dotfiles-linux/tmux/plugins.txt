@@ -1,1 +1,2 @@
 https://github.com/BartSte/tmux-fzf-open
+https://github.com/BartSte/tjump
