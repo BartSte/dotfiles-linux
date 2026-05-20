@@ -15,18 +15,25 @@ if [[ -f "$SECRET_SOURCE_CONFIG" ]]; then
 elif [[ -f "$LEGACY_SOURCE_CONFIG" ]]; then
   SOURCE_CONFIG="$LEGACY_SOURCE_CONFIG"
 else
-  echo "Missing Codex config. Expected one of:" >&2
-  echo "  $SECRET_SOURCE_CONFIG" >&2
-  echo "  $LEGACY_SOURCE_CONFIG" >&2
-  exit 1
+  if [[ "${CI:-}" == "true" || "${GITHUB_ACTIONS:-}" == "true" ]]; then
+    echo "Missing Codex config in CI; skipping config symlink"
+    SOURCE_CONFIG=""
+  else
+    echo "Missing Codex config. Expected one of:" >&2
+    echo "  $SECRET_SOURCE_CONFIG" >&2
+    echo "  $LEGACY_SOURCE_CONFIG" >&2
+    exit 1
+  fi
 fi
 
 mkdir -p "$TARGET_DIR"
 
-if [[ -e "$TARGET_CONFIG" && ! -L "$TARGET_CONFIG" ]]; then
-  rm -f "$TARGET_CONFIG"
+if [[ -n "${SOURCE_CONFIG:-}" ]]; then
+  if [[ -e "$TARGET_CONFIG" && ! -L "$TARGET_CONFIG" ]]; then
+    rm -f "$TARGET_CONFIG"
+  fi
+  ln -sfn "$SOURCE_CONFIG" "$TARGET_CONFIG"
 fi
-ln -sfn "$SOURCE_CONFIG" "$TARGET_CONFIG"
 
 if [[ -e "$TARGET_AGENTS" && ! -L "$TARGET_AGENTS" ]]; then
   rm -f "$TARGET_AGENTS"
