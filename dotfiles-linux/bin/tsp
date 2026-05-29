@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+layout_hook='/home/barts/dotfiles-linux/bin/tmux-project-layout "$name" "$directory"'
+tmux_session_args=()
+extra_hooks=()
+
+while (($#)); do
+    case "$1" in
+        --hook)
+            if [[ $# -lt 2 ]]; then
+                printf 'tsp: --hook requires an argument\n' >&2
+                exit 2
+            fi
+            extra_hooks+=("$2")
+            shift 2
+            ;;
+        --hook=*)
+            extra_hooks+=("${1#--hook=}")
+            shift
+            ;;
+        *)
+            tmux_session_args+=("$1")
+            shift
+            ;;
+    esac
+done
+
+combined_hook=
+if ((${#extra_hooks[@]})); then
+    for extra_hook in "${extra_hooks[@]}"; do
+        if [[ -z "$combined_hook" ]]; then
+            combined_hook="$extra_hook"
+        else
+            combined_hook="$combined_hook; $extra_hook"
+        fi
+    done
+    combined_hook="$combined_hook; $layout_hook"
+else
+    combined_hook="$layout_hook"
+fi
+
+exec tmux-session "${tmux_session_args[@]}" --hook "$combined_hook"

@@ -34,3 +34,13 @@ urlencode() {
     printf '%s' "$1" | jq -sRr @uri
 }
 
+################################################################################
+# Print the contents of multiple files with headers
+################################################################################
+ctx() {
+    for file in "$@"; do
+        echo
+        echo "===== $file ====="
+        cat "$file"
+    done
+}
