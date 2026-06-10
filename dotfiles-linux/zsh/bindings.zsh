@@ -10,6 +10,14 @@ zle -N _fzf-rbw-widget
 zle -N _fzf-prompts-widget
 zle -N fzf-help-widget
 
+# Run the current command line as a calc expression.
+_calc-line-widget() {
+    [[ -z "$BUFFER" ]] && return
+    BUFFER="calc ${(q)BUFFER}"
+    zle accept-line
+}
+zle -N _calc-line-widget
+
 bindkey -M vicmd "\ef" fzf-file-widget
 bindkey -M viins "\ef" fzf-file-widget
 bindkey -M vicmd "\eF" _fzf-file-widget-home
@@ -29,6 +37,8 @@ bindkey -M vicmd "\eo" _fzf-file-widget-open
 bindkey -M viins "\eo" _fzf-file-widget-open
 bindkey -M vicmd "\eO" _fzf-file-widget-open-home
 bindkey -M viins "\eO" _fzf-file-widget-open-home
+bindkey -M vicmd "\e=" _calc-line-widget
+bindkey -M viins "\e=" _calc-line-widget
 
 bindkey "^H" backward-kill-word
 bindkey '^?' backward-delete-char
