@@ -23,7 +23,7 @@ zshenv() {
     export SAVEHIST=100000
     export KEYTIMEOUT=1
 
-    source ~/dotfiles-linux/zsh/fzf.zsh && _fzfenv
+    source ~/dotfiles-linux/zsh/fzf-env.zsh && _fzfenv
     export HELP_MESSAGE_RC="$HOME/dotfiles-linux/zsh/fzfhelprc.zsh"
     export FZF_OPEN_REGEX_EXTRA=$(~/dotfiles-linux/tmux/tmux-fzf-open/regex-extra)
 

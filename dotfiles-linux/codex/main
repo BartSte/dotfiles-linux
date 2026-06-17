@@ -6,9 +6,16 @@ SECRET_DOTFILES_DIR="${DOTFILES_SECRET_DIR:-$HOME/dotfiles-secret}"
 SECRET_SOURCE_CONFIG="$SECRET_DOTFILES_DIR/codex/config.toml"
 LEGACY_SOURCE_CONFIG="$SCRIPT_DIR/config.toml"
 SOURCE_AGENTS="$SCRIPT_DIR/AGENTS.md"
+SOURCE_SKILLS="$SCRIPT_DIR/skills"
+OBSOLETE_PROFILES=(
+  read_only.config.toml
+  cheap.config.toml
+  deep.config.toml
+)
 TARGET_DIR="$HOME/.codex"
 TARGET_CONFIG="$TARGET_DIR/config.toml"
 TARGET_AGENTS="$TARGET_DIR/AGENTS.md"
+TARGET_SKILLS="$TARGET_DIR/skills"
 
 if [[ -f "$SECRET_SOURCE_CONFIG" ]]; then
   SOURCE_CONFIG="$SECRET_SOURCE_CONFIG"
@@ -35,12 +42,37 @@ if [[ -n "${SOURCE_CONFIG:-}" ]]; then
   ln -sfn "$SOURCE_CONFIG" "$TARGET_CONFIG"
 fi
 
+for profile_name in "${OBSOLETE_PROFILES[@]}"; do
+  target_profile="$TARGET_DIR/$profile_name"
+  if [[ -L "$target_profile" ]]; then
+    rm -f "$target_profile"
+  fi
+done
+
 if [[ -e "$TARGET_AGENTS" && ! -L "$TARGET_AGENTS" ]]; then
   rm -f "$TARGET_AGENTS"
 fi
 ln -sfn "$SOURCE_AGENTS" "$TARGET_AGENTS"
 
-SOURCE_CODE_DIR="$SCRIPT_DIR/code"
+if [[ -d "$SOURCE_SKILLS" ]]; then
+  if [[ -L "$TARGET_SKILLS" ]]; then
+    rm -f "$TARGET_SKILLS"
+  fi
+  mkdir -p "$TARGET_SKILLS"
+
+  while IFS= read -r source_skill; do
+    skill_name="$(basename "$source_skill")"
+    target_skill="$TARGET_SKILLS/$skill_name"
+
+    if [[ -e "$target_skill" && ! -L "$target_skill" ]]; then
+      echo "Refusing to replace non-symlink Codex skill: $target_skill" >&2
+      exit 1
+    fi
+    ln -sfn "$source_skill" "$target_skill"
+  done < <(find "$SOURCE_SKILLS" -mindepth 1 -maxdepth 1 -type d ! -name '.*')
+fi
+
+SOURCE_CODE_DIR="$SCRIPT_DIR/agents_files/code"
 TARGET_CODE_DIR="$HOME/code"
 
 if [[ -d "$SOURCE_CODE_DIR" ]]; then
@@ -51,7 +83,8 @@ if [[ -d "$SOURCE_CODE_DIR" ]]; then
 
     mkdir -p "$target_dir"
     if [[ -e "$target_agent" && ! -L "$target_agent" ]]; then
-      rm -f "$target_agent"
+      echo "Refusing to replace non-symlink project AGENTS.md: $target_agent" >&2
+      exit 1
     fi
     ln -sfn "$source_agent" "$target_agent"
   done < <(find "$SOURCE_CODE_DIR" -type f -name AGENTS.md)

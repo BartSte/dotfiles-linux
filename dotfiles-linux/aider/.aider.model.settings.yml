@@ -1,0 +1,4 @@
+- name: gpt-5-codex
+  use_temperature: false
+- name: gpt-5.2-codex
+  use_temperature: false
