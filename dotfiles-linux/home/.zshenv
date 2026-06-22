@@ -16,7 +16,7 @@ zshenv() {
     export TIME_ZONE="Europe/Amsterdam"
     export TMUX_PLUGIN_DIR="$HOME/.tmux/plugins"
     export VI_MODE_SET_CURSOR=true
-    hash nvim && export EDITOR='nvim' || unset EDITOR
+    hash nvim && export EDITOR='/usr/sbin/nvim' || unset EDITOR
 
     export HISTFILE=$HOME/.histfile
     export HISTSIZE=1000000000
