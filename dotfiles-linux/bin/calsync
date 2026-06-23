@@ -1,4 +1,5 @@
 #!/bin/bash
+set -o pipefail
 
 usage="Usage: $(basename "$0") [-q | --quiet] [-v | --verbose] [-h | --help] <davmail-config> <calendar-name> <org file> <khalorg list args...>
 
@@ -91,22 +92,22 @@ khalorg_args=$@
 main() {
     is_logged_in || {
         echo "$USER not logged in; sync will not run."
-        exit
+        exit 1
     }
     has_internet || {
         echo "No internet connection detected."
-        exit
+        exit 1
     }
     start_davmail
     vdirsyncer -v CRITICAL sync $calendar || {
         echo "vdirsyncer failed"
-        kill_davmail
-        exit
+        kill_davmail || true
+        exit 1
     }
     khalorg_list || {
         echo "khalorg failed"
-        kill_davmail
-        exit
+        kill_davmail || true
+        exit 1
     }
     kill_davmail
     echo 'Calendar sync done.'
@@ -133,7 +134,7 @@ has_internet() {
 # checking if there is a process with the name 'davmail.jar'.
 ##############################################################################
 start_davmail() {
-    pgrep -f davmail\.jar && return
+    pgrep -f davmail\.jar >/dev/null && return
     davmail "$davmailconfig" &
     pid_davmail=$!
     sleep 0.5
