@@ -1,6 +1,6 @@
 board_manager:
   additional_urls:
-  - https://raw.githubusercontent.com/keyboardio/arduino-kaleidoscope-master/main/package_kaleidoscope_master_index.json
+    - https://raw.githubusercontent.com/keyboardio/arduino-kaleidoscope-master/main/package_kaleidoscope_master_index.json
 daemon:
   port: "50051"
 directories:
@@ -10,7 +10,7 @@ directories:
 library:
   enable_unsafe_install: false
 logging:
-  file: 
+  file: ""
   format: text
   level: debug
 metrics:

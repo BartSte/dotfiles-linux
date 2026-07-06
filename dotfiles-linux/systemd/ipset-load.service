@@ -1,0 +1,14 @@
+[Unit]
+Description=Restore ipset sets at boot
+Before=iptables.service
+
+[Service]
+Type=oneshot
+Environment=HOME=/home/barts
+Environment=XDG_CACHE_HOME=/home/barts/.cache
+Environment=XDG_STATE_HOME=/home/barts/.local/state
+Environment=PATH=/usr/lib/safe-rm:/usr/bin/vendor_perl:/home/barts/go/bin:/home/barts/.cargo/bin:/home/barts/.local/bin:/home/barts/dotfiles-linux/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/lib/jvm/default/bin:/usr/bin/site_perl:/usr/bin/core_perl
+ExecStart=/home/barts/dotfiles-linux/bin/ipset-load blocked
+
+[Install]
+WantedBy=multi-user.target

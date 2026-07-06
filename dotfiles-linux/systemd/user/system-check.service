@@ -1,0 +1,7 @@
+[Unit]
+Description=Run Arch system health check
+
+[Service]
+Type=oneshot
+Environment=SYSTEM_CHECK_SKIP_SUDO=1
+ExecStart=/home/barts/dotfiles-linux/codex/skills/system-check/scripts/run-scheduled-system-check.sh
