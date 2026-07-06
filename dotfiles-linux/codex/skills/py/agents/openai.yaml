@@ -1,0 +1,4 @@
+interface:
+  display_name: "Python"
+  short_description: "Apply Python style conventions"
+  default_prompt: "Use $py when editing Python code in this repository."

@@ -71,21 +71,3 @@ if [[ -d "$SOURCE_SKILLS" ]]; then
     ln -sfn "$source_skill" "$target_skill"
   done < <(find "$SOURCE_SKILLS" -mindepth 1 -maxdepth 1 -type d ! -name '.*')
 fi
-
-SOURCE_CODE_DIR="$SCRIPT_DIR/agents_files/code"
-TARGET_CODE_DIR="$HOME/code"
-
-if [[ -d "$SOURCE_CODE_DIR" ]]; then
-  while IFS= read -r source_agent; do
-    rel_path="${source_agent#"$SOURCE_CODE_DIR/"}"
-    target_agent="$TARGET_CODE_DIR/$rel_path"
-    target_dir="$(dirname "$target_agent")"
-
-    mkdir -p "$target_dir"
-    if [[ -e "$target_agent" && ! -L "$target_agent" ]]; then
-      echo "Refusing to replace non-symlink project AGENTS.md: $target_agent" >&2
-      exit 1
-    fi
-    ln -sfn "$source_agent" "$target_agent"
-  done < <(find "$SOURCE_CODE_DIR" -type f -name AGENTS.md)
-fi

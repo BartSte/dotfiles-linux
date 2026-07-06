@@ -1,0 +1,4 @@
+interface:
+  display_name: "Commit"
+  short_description: "Write Conventional Commit messages"
+  default_prompt: "Use $commit to write a concise Conventional Commit message."
