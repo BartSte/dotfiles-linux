@@ -12,5 +12,6 @@ description: Write and review commit messages using Conventional Commits. Use wh
 - Use lowercase after the prefix unless a proper noun requires capitalization.
 - Omit the trailing period.
 - Keep the subject concise.
+- Each commit should represent a single logical change. If necessary, break up large changes into multiple commits, each with its own subject and body.
 
 If more context is needed, add a blank line after the subject and explain the why in the body.
