@@ -18,3 +18,5 @@ Prefer **single-responsibility, modular, self-explanatory Python code**.
 - Use descriptive names so developers can understand intent without reading all implementation details.
 - Use module/package structure to clarify the repository design.
 - Split code only when the extracted unit has a clear name and responsibility.
+
+Avoid using the typehint `Any` unless it is unavoidable. Use more specific types whenever possible.

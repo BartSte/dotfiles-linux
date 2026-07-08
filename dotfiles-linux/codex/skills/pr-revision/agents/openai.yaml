@@ -1,0 +1,9 @@
+interface:
+  display_name: "PR Revision"
+  short_description: "Plan and apply PR review revisions"
+  default_prompt: "Use $pr-revision to review unresolved comments for /pr-revision PR."
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "github"
+      description: "GitHub plugin for pull request metadata, review comments, and response writes."
