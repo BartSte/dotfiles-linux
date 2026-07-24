@@ -15,6 +15,19 @@ calc() {
 }
 
 ################################################################################
+# Create or attach to the local tmux session used to access the Raspberry Pi
+################################################################################
+tpi() {
+    "$HOME/dotfiles-linux/bin/tmux-pi-layout" pi
+
+    if [[ -n "$TMUX" ]]; then
+        tmux switch-client -t '=pi'
+    else
+        tmux attach-session -t '=pi'
+    fi
+}
+
+################################################################################
 # Sync all programs
 ################################################################################
 fullsync() {

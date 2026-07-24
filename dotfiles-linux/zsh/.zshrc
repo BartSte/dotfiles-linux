@@ -1,13 +1,17 @@
 _zshrc_plugins() {
     local dir_plugins=$1
     save-source "$dir_plugins/zsh-autosuggestions/zsh-autosuggestions.zsh"
+}
+
+_zshrc_syntax_highlighting() {
+    local dir_plugins=$1
+    # zsh-syntax-highlighting must be sourced after all other widgets/plugins.
     save-source "$dir_plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
 }
 
 _zshrc_config() {
     local dir_zsh=$1
     local files=(
-        "p10k_init.zsh" # must be first
         "git.zsh"
         "wsl.zsh"
         "fzf.zsh"
@@ -40,12 +44,15 @@ zshrc() {
     source "$HOME/dotfiles-linux/zsh/bootstrap.zsh"
 
     _zshrc_config "$HOME/dotfiles-linux/zsh"
+    local plugin_dir
     if [ -d "/usr/share/zsh/plugins" ]; then
-        _zshrc_plugins "/usr/share/zsh/plugins"
+        plugin_dir="/usr/share/zsh/plugins"
     else
-        _zshrc_plugins "/usr/share"
+        plugin_dir="/usr/share"
     fi
+    _zshrc_plugins "$plugin_dir"
     _zshrc_p10k
+    _zshrc_syntax_highlighting "$plugin_dir"
 }
 
 zshrc
