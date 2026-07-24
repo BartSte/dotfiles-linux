@@ -39,30 +39,30 @@ secrets() {
 }
 
 dot() {
-    local status=0
+    local exit_status=0
 
     echo "Base:"
-    base "$@" || status=$?
+    base "$@" || exit_status=$?
     echo -e
     echo -e "Linux:"
-    lin "$@" || status=$?
+    lin "$@" || exit_status=$?
     if [[ -d $HOME/dotfiles-arch.git ]]; then
         echo -e
         echo -e "Arch:"
-        linarch "$@" || status=$?
+        linarch "$@" || exit_status=$?
     fi
     if [[ -d $HOME/dotfiles-pi.git ]]; then
         echo -e
         echo -e "Pi:"
-        linpi "$@" || status=$?
+        linpi "$@" || exit_status=$?
     fi
     if [[ -d $HOME/dotfiles-secret.git ]]; then
         echo -e
         echo -e "Secret:"
-        secret "$@" || status=$?
+        secret "$@" || exit_status=$?
     fi
 
-    return $status
+    return $exit_status
 }
 
 shorten_stdout() {
