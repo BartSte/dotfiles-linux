@@ -1,4 +1,4 @@
 interface:
   display_name: "Commit"
-  short_description: "Write Conventional Commit messages"
-  default_prompt: "Use $commit to write a concise Conventional Commit message."
+  short_description: "Create focused Git commits"
+  default_prompt: "Use $commit to commit all staged changes, splitting independent logical changes into focused commits."
