@@ -32,6 +32,7 @@ codex-commit() {
     codex exec \
         --ephemeral \
         --model "$CODEX_LUNA_MODEL" \
+        --config model_reasoning_effort=low \
         '$commit Commit the complete set of currently staged changes using git. Split it into multiple focused commits when it contains independently reversible logical changes. Include every initially staged change, include no initially unstaged or untracked content, and do not push.'
     return $?
 }

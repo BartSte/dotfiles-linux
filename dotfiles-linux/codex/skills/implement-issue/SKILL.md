@@ -1,11 +1,12 @@
 ---
 name: implement-issue
-description: Implement a software issue from a plain-text description, GitHub issue, Jira ticket, or accessible issue reference. Use when Codex is asked to inspect a repository, create an appropriate Git branch, produce an approval-gated implementation plan in Plan Mode, execute the approved changes, validate them, create one or more commits, and open a GitHub draft pull request.
+description: Implement a software issue from a plain-text description, GitHub issue, Jira ticket, or accessible issue reference. Use when Codex is asked to inspect a repository, create an appropriate Git branch, assess whether planning or approval is warranted, implement the change, validate it, create one or more commits, and open a GitHub draft pull request.
 ---
 
 # Implement Issue
 
-Implement an issue end to end while preserving user work and requiring plan approval before editing.
+Implement an issue end to end while preserving user work. Decide whether the issue needs a plan or
+explicit approval before editing; do not require either for a clear, bounded, low-risk request.
 
 ## 1. Resolve the issue
 
@@ -41,12 +42,18 @@ Before changing the repository:
 Determine the problem or feature, expected behavior, acceptance criteria, constraints, likely
 affected components, test requirements, and material ambiguities.
 
-Inspect enough of the repository to ground the plan. Locate relevant source files, abstractions,
+Inspect enough of the repository to ground the work. Locate relevant source files, abstractions,
 related tests, configuration, documentation, reusable implementations, and potential compatibility,
 migration, security, or deployment concerns. Do not modify files during this phase.
 
 Ask a focused question only when missing information materially changes scope or makes proceeding
-unsafe. Otherwise record a clearly labeled assumption in the plan.
+unsafe. Otherwise record a clearly labeled assumption in the final report or, when planning, in the
+plan.
+
+Decide whether to plan before changing files. Use a plan and request approval when the requirements
+are materially ambiguous, the implementation has significant risk or irreversible effects, the scope
+spans multiple components or plausible approaches, or the user asks for a plan. For a clear, bounded,
+low-risk task, proceed directly without entering Plan Mode or waiting for approval.
 
 ## 4. Create the branch
 
@@ -64,12 +71,14 @@ Otherwise use `<TICKET-KEY>/<type>-<short-kebab-case-summary>`, or
 `docs`, `test`, or `chore` as appropriate. Ensure the name is valid for Git and contains no spaces.
 Examples: `DATC-123/fix-invalid-release-tag`, `FL-231/feat-add-grid-construction`.
 
-Create the branch, then make no further repository mutation until the plan is approved.
+Create the branch. When a plan and approval are warranted, make no further repository mutation until
+the plan is approved. Otherwise continue directly with the implementation.
 
-## 5. Enter Plan Mode and request approval
+## 5. Plan and request approval when warranted
 
-Enter Codex Plan Mode using the product's mode control before presenting the implementation plan.
-If Plan Mode is unavailable, report that limitation and stop rather than implying it was used.
+When the assessment in step 3 calls for planning, decide whether Codex Plan Mode would help the
+task and enter it only when it would. Otherwise present the plan in the normal interaction. If Plan
+Mode is unavailable, continue with the normal interaction and do not claim it was used.
 
 Present a reviewable plan containing:
 
@@ -89,15 +98,21 @@ Stop after the plan and require explicit user approval. Accept clear statements 
 dependencies, run repository-modifying commands, commit, push, or create a pull request. If the user
 requests plan changes, revise it and wait again.
 
-## 6. Execute the approved plan
+When no plan is warranted, skip this section and execute directly. State in the final report that the
+request was assessed as clear, bounded, and low risk, and therefore did not require a plan or
+approval.
 
-After explicit approval, implement only the approved scope. Follow repository architecture and
+## 6. Execute the work
+
+After plan approval, implement only the approved scope. When working without a plan, implement only
+the stated request and any clearly necessary supporting changes. Follow repository architecture and
 conventions, make the smallest coherent change that satisfies the issue, avoid unrelated refactors,
 add or update tests, and update documentation or configuration when required.
 
 If new findings require a material change in scope or approach, explain why, present the revised
 portion of the plan, and wait for approval. Do not require renewed approval for minor implementation
-details that preserve the approved scope.
+details that preserve the approved scope. If the work began without a plan and a material ambiguity or
+risk emerges, stop, present a plan, and request approval before continuing.
 
 ## 7. Update the changelog
 
