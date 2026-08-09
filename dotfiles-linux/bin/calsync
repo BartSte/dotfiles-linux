@@ -1,183 +1,248 @@
-#!/bin/bash
-set -o pipefail
+#!/usr/bin/env bash
+set -euo pipefail
 
-usage="Usage: $(basename "$0") [-q | --quiet] [-v | --verbose] [-h | --help] <davmail-config> <calendar-name> <org file> <khalorg list args...>
+usage="Usage: $(basename "$0") [-q | --quiet] [-v | --verbose] [-h | --help] <davmail-config> <calendar-name> <org-file> <start> <stop>
 
-Sychronize all \`vdirsyncer\` calendars and export them to org with \`khalorg\`.
-Davmail is used as the CalDav server. If it is not already running, it will be
-activated temporarly.
+Synchronize one vdirsyncer calendar with Outlook through DavMail and synchronize
+that local calendar bidirectionally with an Org file through khalorg.
 
-where:
-options
--q --quiet  suppress /dev/stderr and /dev/stdout
--v --verbose  also log to /dev/stderr
--h --help   shows this help messages
-
-positional
-<davmail-config>        your davmailconfig
-<calendar-name>         the name of the calendar to sync, as defined in vdirsyncer
-<org file>              the output file
-<khalorg list args...>  extra args passed to \`khalorg list\` (calendar name is implied)
+Options:
+  -q, --quiet    suppress stdout and stderr
+  -v, --verbose  also write errors to stderr
+  -h, --help     show this help message
 "
-state_dir="${XDG_STATE_HOME:-$HOME/.local/state}"
-mkdir -p "$state_dir"
-log_file="$state_dir/calsync.log"
-if [[ -f $log_file ]]; then
-    size=$(wc -c < "$log_file")
-    if (( size > 1048576 )); then
-        tail -c 1048576 "$log_file" > "$log_file.tmp" && mv "$log_file.tmp" "$log_file"
-    fi
-fi
-error="$log_file"
-output=/dev/stdout
+
+quiet=0
 verbose=0
-options=$(getopt -o qvh --long quiet,verbose,help -- "$@")
-
-[ $? -eq 0 ] || {
-    echo "Incorrect options provided"
-    exit 1
+options=$(getopt -o qvh --long quiet,verbose,help -- "$@") || {
+    echo "Incorrect options provided" >&2
+    exit 2
 }
-
 eval set -- "$options"
 while true; do
     case "$1" in
-    -q | --quiet)
-        output=/dev/null
-        error=/dev/null
-        shift
-        ;;
-    -v | --verbose)
-        verbose=1
-        shift
-        ;;
-    -h | --help)
-        echo "$usage"
-        exit
-        ;;
-    --)
-        shift
-        break
-        ;;
-    *)
-        echo "Internal error"
-        exit 1
-        ;;
+        -q | --quiet)
+            quiet=1
+            shift
+            ;;
+        -v | --verbose)
+            verbose=1
+            shift
+            ;;
+        -h | --help)
+            echo "$usage"
+            exit 0
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            echo "Internal option parser error" >&2
+            exit 2
+            ;;
     esac
 done
 
-if [[ $output != /dev/null && $error != /dev/null && $verbose -eq 1 ]]; then
-    error=>(tee -a "$log_file" >&2)
+if [[ $# -ne 5 ]]; then
+    echo "Expected exactly five positional arguments." >&2
+    echo "$usage" >&2
+    exit 2
 fi
 
-[ $# -eq 0 ] && {
-    echo "$usage"
-    exit
-}
-[ $# -lt 4 ] && {
-    echo "Missing positional arguments"
-    exit
-}
-
-davmailconfig=$1
+davmail_config=$1
 calendar=$2
-orgfile=$3
-shift 3
-khalorg_args=$@
+org_file=$3
+start=$4
+stop=$5
 
-##############################################################################
-# This function is the main function of the script. It checks if the user is
-# logged in, if there is an internet connection, starts davmail, runs the
-# synchronization and kills davmail afterwards.
-##############################################################################
-main() {
-    is_logged_in || {
-        echo "$USER not logged in; sync will not run."
-        exit 1
-    }
-    has_internet || {
-        echo "No internet connection detected."
-        exit 1
-    }
-    start_davmail
-    vdirsyncer -v CRITICAL sync $calendar || {
-        echo "vdirsyncer failed"
-        kill_davmail || true
-        exit 1
-    }
-    khalorg_list || {
-        echo "khalorg failed"
-        kill_davmail || true
-        exit 1
-    }
-    kill_davmail
-    echo 'Calendar sync done.'
+if [[ ! $calendar =~ ^[A-Za-z0-9_][A-Za-z0-9_.-]*$ ]]; then
+    echo "Invalid calendar name: $calendar" >&2
+    exit 2
+fi
+if [[ $org_file == -* || $davmail_config == -* || $start == -* || $stop == -* ]]; then
+    echo "Option-like positional values are not allowed." >&2
+    exit 2
+fi
+
+state_home=${XDG_STATE_HOME:-$HOME/.local/state}
+data_home=${XDG_DATA_HOME:-$HOME/.local/share}
+khalorg_state_dir=$data_home/khalorg
+mkdir -p "$state_home"
+log_file=$state_home/calsync.log
+if [[ -f $log_file ]] && (( $(wc -c < "$log_file") > 1048576 )); then
+    tail -c 1048576 "$log_file" > "$log_file.tmp"
+    mv "$log_file.tmp" "$log_file"
+fi
+
+lock_fd=
+
+davmail_pid=
+active_pid=
+
+process_group_alive() {
+    local pid=$1
+    kill -0 -- "-$pid" 2>/dev/null
 }
 
-##############################################################################
-# This function checks if the user is logged in. It does so by checking if the
-# user has a process with the same name as the user id.
-##############################################################################
-is_logged_in() {
-    pgrep -u "${USER:=$LOGNAME}" >/dev/null
+terminate_group_bounded() {
+    local pid=$1
+    [[ -n $pid ]] || return 0
+    if process_group_alive "$pid"; then
+        kill -TERM -- "-$pid" 2>/dev/null || true
+        for _ in {1..20}; do
+            process_group_alive "$pid" || break
+            sleep 0.1
+        done
+    fi
+    if process_group_alive "$pid"; then
+        kill -KILL -- "-$pid" 2>/dev/null || true
+    fi
+    wait "$pid" 2>/dev/null || true
 }
 
-##############################################################################
-# This function checks if the user has an internet connection. It does so by
-# pinging a known ip address.
-##############################################################################
-has_internet() {
-    ping -q -c 1 1.1.1.1 >/dev/null
+cleanup_children() {
+    local stage_pid=$active_pid
+    active_pid=
+    terminate_group_bounded "$stage_pid"
+    terminate_group_bounded "$davmail_pid"
+    davmail_pid=
 }
 
-##############################################################################
-# This function starts davmail if it is not already running. It does so by
-# checking if there is a process with the name 'davmail.jar'.
-##############################################################################
-start_davmail() {
-    pgrep -f davmail\.jar >/dev/null && return
-    davmail "$davmailconfig" &
-    pid_davmail=$!
-    sleep 0.5
+on_exit() {
+    local status=$?
+    trap - EXIT HUP INT TERM
+    cleanup_children
+    exit "$status"
 }
 
-##############################################################################
-# This function kills davmail if it is running. It does so by checking if there
-# is a process with the name 'davmail.jar'.
-##############################################################################
-kill_davmail() {
-    [[ $pid_davmail ]] && kill $pid_davmail
+on_signal() {
+    local status=$1
+    trap - EXIT HUP INT TERM
+    cleanup_children
+    exit "$status"
 }
 
-##############################################################################
-# This function runs khalorg list.
-##############################################################################
-khalorg_list() {
-    khalorg list "$calendar" $khalorg_args >$orgfile
-}
+trap on_exit EXIT
+trap 'on_signal 129' HUP
+trap 'on_signal 130' INT
+trap 'on_signal 143' TERM
 
-#############################################################################
-# This function is used to display a message in a tmux session. The message can
-# be provided as an argument, or through stdin. If tmux is not running, the
-# message will be printed to stderr.
-##############################################################################
-tmux_display() {
-    msg=${1:-$(cat)}
-    if [[ $TMUX ]]; then
-        tmux display -p -d 2000 "$msg" >&2
+run_stage() {
+    local status
+    setsid "$@" &
+    active_pid=$!
+    if wait "$active_pid"; then
+        status=0
     else
-        echo "$msg" >&2
+        status=$?
+    fi
+    active_pid=
+    return "$status"
+}
+
+acquire_lock() {
+    exec {lock_fd}> "$state_home/calsync.lock"
+    if ! flock -n "$lock_fd"; then
+        echo "Another calendar sync is already running." >&2
+        return 1
     fi
 }
 
-##############################################################################
-# Execute the main function. If the script is run in a tmux session, the output
-# will be displayed in a tmux message.
-##############################################################################
-tmux_display "Calendar sync started"
-if [[ $output == /dev/null && $error == /dev/null ]]; then
-    main 1>/dev/null 2>/dev/null | tmux_display
-elif [[ $verbose -eq 1 ]]; then
-    main 1>"$output" 2> >(tee -a "$log_file" >&2) | tmux_display
+caldav_port() {
+    local key value
+    while IFS='=' read -r key value; do
+        if [[ $key == davmail.caldavPort ]]; then
+            [[ $value =~ ^[0-9]+$ ]] || return 1
+            (( value >= 1 && value <= 65535 )) || return 1
+            printf '%s\n' "$value"
+            return 0
+        fi
+    done < "$davmail_config"
+    return 1
+}
+
+port_has_listener() {
+    local port=$1
+    [[ -n $(ss -H -ltn "sport = :$port") ]]
+}
+
+owned_listener_ready() {
+    local port=$1 socket_pid pgid pids
+    pids=$(ss -H -ltnp "sport = :$port" 2>/dev/null \
+        | grep -oE 'pid=[0-9]+' | cut -d= -f2 || true)
+    for socket_pid in $pids; do
+        pgid=$(ps -o pgid= -p "$socket_pid" 2>/dev/null) || continue
+        pgid=${pgid//[[:space:]]/}
+        [[ $pgid == "$davmail_pid" ]] && return 0
+    done
+    return 1
+}
+
+start_davmail() {
+    local current_uid=$1 port
+    if pgrep -u "$current_uid" -f 'davmail\.jar' >/dev/null; then
+        echo "An unverified DavMail process is already running; refusing to reuse it." >&2
+        return 1
+    fi
+    port=$(caldav_port) || {
+        echo "Cannot read a valid davmail.caldavPort from $davmail_config" >&2
+        return 1
+    }
+    if port_has_listener "$port"; then
+        echo "DavMail port $port is already occupied; refusing to continue." >&2
+        return 1
+    fi
+
+    setsid davmail "$davmail_config" &
+    davmail_pid=$!
+    for _ in {1..50}; do
+        if ! kill -0 "$davmail_pid" 2>/dev/null; then
+            echo "DavMail exited during startup." >&2
+            return 1
+        fi
+        if owned_listener_ready "$port" \
+            && nc -z -w 1 127.0.0.1 "$port" >/dev/null 2>&1; then
+            return 0
+        fi
+        sleep 0.1
+    done
+    echo "DavMail listener on port $port did not become ready." >&2
+    return 1
+}
+
+sync_calendar() {
+    local current_uid
+    acquire_lock
+    current_uid=$(id -u) || return 1
+    if ! ping -q -c 1 1.1.1.1 >/dev/null; then
+        echo "No internet connection detected." >&2
+        return 1
+    fi
+
+    start_davmail "$current_uid"
+    run_stage vdirsyncer -v CRITICAL sync "$calendar"
+    run_stage khalorg sync \
+        --start "$start" \
+        --stop "$stop" \
+        --state-dir "$khalorg_state_dir" \
+        --conflict-resolution khal \
+        "$calendar" \
+        "$org_file"
+    run_stage vdirsyncer -v CRITICAL sync "$calendar"
+    echo "Calendar sync done."
+}
+
+if [[ -n ${TMUX:-} ]] && command -v tmux >/dev/null; then
+    tmux display-message -d 2000 "Calendar sync started"
 else
-    main 1>"$output" 2>"$error" | tmux_display
+    echo "Calendar sync started" >&2
+fi
+
+if (( quiet )); then
+    sync_calendar >/dev/null 2>/dev/null
+elif (( verbose )); then
+    sync_calendar 2> >(tee -a "$log_file" >&2)
+else
+    sync_calendar 2>>"$log_file"
 fi

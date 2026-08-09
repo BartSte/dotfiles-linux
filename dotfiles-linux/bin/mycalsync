@@ -1,15 +1,26 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+for option in "$@"; do
+    case "$option" in
+        -q | --quiet | -v | --verbose | -h | --help) ;;
+        *)
+            echo "Unsupported mycalsync option: $option" >&2
+            exit 2
+            ;;
+    esac
+done
 
 calsync \
-    $HOME/.config/davmail/davmail.work.properties \
+    "$HOME/.config/davmail/davmail.work.properties" \
     outlook_work \
-    $HOME/dropbox/org/outlook_work.org \
+    "$HOME/dropbox/org/outlook_work.org" \
     today 365d \
-    $@
+    "$@"
 
 calsync \
-    $HOME/.config/davmail/davmail.personal.properties \
+    "$HOME/.config/davmail/davmail.personal.properties" \
     outlook_personal \
-    $HOME/dropbox/org/outlook_personal.org \
+    "$HOME/dropbox/org/outlook_personal.org" \
     today 365d \
-    $@
+    "$@"
