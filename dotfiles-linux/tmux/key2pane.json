@@ -1,6 +1,0 @@
-{
-    "bash|zsh|fish": [
-        "echo 'Hello, World!'",
-        "Enter"
-    ]
-}
