@@ -1,4 +1,0 @@
-interface:
-  display_name: "Tempo Timesheets"
-  short_description: "Create and audit Tempo worklogs by API"
-  default_prompt: "Use $tempo to create and verify my Tempo timesheet through the Jira and Tempo APIs."

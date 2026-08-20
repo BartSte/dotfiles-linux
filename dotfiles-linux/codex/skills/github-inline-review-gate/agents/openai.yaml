@@ -1,0 +1,4 @@
+interface:
+  display_name: "GitHub Inline Review Gate"
+  short_description: "Prepare inline PR review comments with a manual approval gate."
+  default_prompt: "Prepare inline GitHub PR review comments, show me the exact draft first, and only submit after I approve."

@@ -1,8 +1,7 @@
-if [[ -z ${WSL_DISTRO_NAME:-}${WSL_INTEROP:-} ]] &&
-    ! [[ -r /proc/device-tree/model && "$(</proc/device-tree/model)" == *"Raspberry Pi"* ]]; then
-    if [[ $TTY = /dev/tty1 ]]; then
+if ! is_running wsl && ! is_running raspberry; then
+    if [[ $(tty) = /dev/tty1 ]]; then
         exec sway -c ~/dotfiles-arch/sway/wayland
-    elif [[ $TTY = /dev/tty2 ]]; then
+    elif [[ $(tty) = /dev/tty2 ]]; then
         exec sway -c ~/dotfiles-arch/sway/xwayland
     fi
 fi

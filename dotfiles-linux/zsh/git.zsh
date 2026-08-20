@@ -39,90 +39,73 @@ secrets() {
 }
 
 dot() {
-    local exit_status=0
-
     echo "Base:"
-    base "$@" || exit_status=$?
+    git --git-dir=$HOME/dotfiles.git/ --work-tree=$HOME "$@"
     echo -e
     echo -e "Linux:"
-    lin "$@" || exit_status=$?
+    git --git-dir=$HOME/dotfiles-linux.git/ --work-tree=$HOME "$@"
     if [[ -d $HOME/dotfiles-arch.git ]]; then
         echo -e
         echo -e "Arch:"
-        linarch "$@" || exit_status=$?
+        linarch "$@"
     fi
     if [[ -d $HOME/dotfiles-pi.git ]]; then
         echo -e
         echo -e "Pi:"
-        linpi "$@" || exit_status=$?
+        linpi "$@"
     fi
     if [[ -d $HOME/dotfiles-secret.git ]]; then
         echo -e
         echo -e "Secret:"
-        secret "$@" || exit_status=$?
+        secret "$@"
     fi
-
-    return $exit_status
 }
 
 shorten_stdout() {
     sed 's/(use -u .*)//'
 }
 
-_dot_commit_repo() {
-    setopt localoptions pipefail
-
-    local label=$1
-    local git_command=$2
-    local status_command=$3
-    local worktree=$4
-    local message=$5
-
-    echo "$label"
-    "$git_command" add "$worktree" || return
-    "$status_command" || return
-
-    if "$git_command" diff --cached --quiet; then
-        echo "Nothing to commit"
-        return 0
-    fi
-
-    "$git_command" commit --untracked-files=no -m "$message" | shorten_stdout
-}
-
 dotc() {
-    local message="$*"
-    if [[ -z $message ]]; then
-        echo "Usage: dotc <commit message>" >&2
-        return 2
-    fi
+    message="'$*'"
 
-    /usr/bin/find "$HOME/dotfiles" -type f \
-        \( -name nvim.shada -o -name Session.vim \) -delete || return
+    echo 'Base:'
+    /usr/bin/rm $(fd nvim.shada ~/dotfiles --type f) &>/dev/null
+    /usr/bin/rm $(fd Session.vim ~/dotfiles --type f) &>/dev/null
 
     # Cannot be linked as it is being replaced by Lazy instead of altered.
-    cp -u "$HOME/.config/nvim/lazy-lock.json" "$HOME/dotfiles/nvim/lazy-lock.json" || return
+    cp -u ~/.config/nvim/lazy-lock.json ~/dotfiles/nvim/lazy-lock.json
 
-    _dot_commit_repo 'Base:' base bases "$HOME/dotfiles" "$message" || return
+    base add ~/dotfiles
+    bases
+    base commit --untracked-files=no -a -m "$message" | shorten_stdout
 
-    /usr/bin/find "$HOME/dotfiles-linux" -type f \
-        \( -name nvim.shada -o -name Session.vim \) -delete || return
-    echo
-    _dot_commit_repo 'Linux:' lin lins "$HOME/dotfiles-linux" "$message" || return
+    echo $'\nLinux'
+    /usr/bin/rm $(fd nvim.shada ~/dotfiles-linux --type f) &>/dev/null
+    /usr/bin/rm $(fd Session.vim ~/dotfiles-linux --type f) &>/dev/null
+
+    lin add ~/dotfiles-linux
+    lins
+    lin commit --untracked-files=no -a -m "$message" | shorten_stdout
 
     if [[ -d ~/dotfiles-arch.git ]]; then
-        echo
-        _dot_commit_repo 'Arch:' linarch linarchs "$HOME/dotfiles-arch" "$message" || return
+        echo $'\nArch'
+        linarch add ~/dotfiles-arch
+        linarchs
+        linarch commit --untracked-files=no -a -m "$message" | shorten_stdout
     fi
 
     if [[ -d ~/dotfiles-pi.git ]]; then
-        echo
-        _dot_commit_repo 'Pi:' linpi linpis "$HOME/dotfiles-pi" "$message" || return
+        echo $'\nPi'
+        linpi add ~/dotfiles-pi
+        linpis
+        linpi commit --untracked-files=no -a -m "$message" | shorten_stdout
     fi
 
     if [[ -d ~/dotfiles-secret.git ]]; then
-        echo
-        _dot_commit_repo 'Secret:' secret secrets "$HOME/dotfiles-secret" "$message" || return
+        echo $'\nSecret'
+        secret add ~/dotfiles-secret
+        secrets
+        secret commit --untracked-files=no -a -m "$message" | shorten_stdout
     fi
 }
 
@@ -155,12 +138,10 @@ indent() {
 }
 
 dotu() {
-    setopt localoptions pipefail
-
     echo "Commit"
-    dotc "Automatic Update" 2>&1 | indent || return
+    dotc "Automatic Update" 2>&1 | indent
     echo "\nPull"
-    dot pull 2>&1 | indent || return
+    dot pull 2>&1 | indent
     echo "\nPush"
     dot push 2>&1 | indent
 }
