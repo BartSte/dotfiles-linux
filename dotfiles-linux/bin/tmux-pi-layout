@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+session="${1:-pi}"
+directory="$HOME"
+
+window_exists() {
+    local window_name="$1"
+    tmux list-windows -t "=$session" -F '#{window_name}' |
+        grep -Fxq "$window_name"
+}
+
+window_id() {
+    local window_name="$1"
+    tmux list-windows -t "=$session" -F '#{window_id} #{window_name}' |
+        awk -v name="$window_name" '$2 == name { print $1; exit }'
+}
+
+create_window() {
+    local window_name="$1"
+    local command="$2"
+    local id
+
+    id=$(
+        tmux new-window \
+            -d \
+            -P \
+            -F '#{window_id}' \
+            -t "$session:" \
+            -n "$window_name" \
+            -c "$directory"
+    )
+    tmux set-window-option -q -t "$id" automatic-rename off
+    tmux send-keys -t "$id" "$command" C-m
+}
+
+if ! tmux has-session -t "=$session" 2>/dev/null; then
+    nvim_id=$(
+        tmux new-session \
+            -d \
+            -P \
+            -F '#{window_id}' \
+            -s "$session" \
+            -n nvim \
+            -c "$directory"
+    )
+    tmux set-window-option -q -t "$nvim_id" automatic-rename off
+    tmux send-keys -t "$nvim_id" 'ssh -t pi nvim' C-m
+fi
+
+# Preserve the original SSH connection when upgrading an existing Pi session.
+if ! window_exists shell && window_exists ssh; then
+    ssh_id=$(window_id ssh)
+    tmux rename-window -t "$ssh_id" shell
+    tmux set-window-option -q -t "$ssh_id" automatic-rename off
+fi
+
+if ! window_exists nvim; then
+    create_window nvim 'ssh -t pi nvim'
+fi
+
+if ! window_exists shell; then
+    create_window shell 'ssh pi'
+fi
+
+if ! window_exists hermes; then
+    create_window hermes 'ssh -t pi hermes chat'
+fi
+
+# Match the standard project layout: nvim first, then shell and the agent.
+base_index=$(tmux show-options -gv base-index)
+nvim_id=$(window_id nvim)
+nvim_index=$(tmux display-message -p -t "$nvim_id" '#{window_index}')
+if [[ "$nvim_index" != "$base_index" ]]; then
+    tmux swap-window -d -s "$nvim_id" -t "$session:$base_index"
+fi
