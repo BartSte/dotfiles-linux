@@ -27,6 +27,8 @@ reload-wsl() {
     alias powc="pwsh.exe -NoLogo -Command $@"
     alias powh="pwsh.exe -NoLogo -NoExit -Command 'cd ~;$set_tmux'"
     alias powm="pwsh.exe -NoLogo -NoExit -Command 'cd $(winmirror);$set_tmux'"
+    alias zones="fd -I -t f -g '*:Zone.Identifier'"
+    alias rmzones="fd -I -t f -g '*:Zone.Identifier' -X rm"
 
     alias wjava="/mnt/c/Program\\ Files/Eclipse\\ Adoptium/jre-*-hotspot/bin/java.exe"
     alias plantuml='wjava -jar C:\\ProgramData\\chocolatey\\lib\\plantuml\\tools\\plantuml.jar'

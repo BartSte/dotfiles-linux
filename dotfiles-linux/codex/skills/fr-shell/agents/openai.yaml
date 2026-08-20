@@ -1,0 +1,4 @@
+interface:
+  display_name: "FR Shell"
+  short_description: "Write safe, modular shell code"
+  default_prompt: "Use $fr-shell to implement or review shell code."
