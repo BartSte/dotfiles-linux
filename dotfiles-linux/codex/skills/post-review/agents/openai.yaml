@@ -1,0 +1,4 @@
+interface:
+  display_name: "Post PR Review"
+  short_description: "Curate, stage, or submit a GitHub PR review"
+  default_prompt: "Use $post-review to curate review findings and either submit them or keep them in a pending GitHub PR review."

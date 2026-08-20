@@ -1,0 +1,4 @@
+interface:
+  display_name: "Commit"
+  short_description: "Create focused Git commits"
+  default_prompt: "Use $commit to commit all staged changes, splitting independent logical changes into focused commits."

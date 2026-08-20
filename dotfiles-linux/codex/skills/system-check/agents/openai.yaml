@@ -1,0 +1,4 @@
+interface:
+  display_name: "System Check"
+  short_description: "Audit and maintain an Arch Linux system"
+  default_prompt: "Use $system-check to audit this Arch Linux system and report maintenance issues."
