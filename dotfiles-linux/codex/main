@@ -60,6 +60,13 @@ if [[ -d "$SOURCE_SKILLS" ]]; then
   fi
   mkdir -p "$TARGET_SKILLS"
 
+  while IFS= read -r target_skill; do
+    source_skill="$(readlink "$target_skill")"
+    if [[ "$source_skill" == "$SOURCE_SKILLS"/* && ! -d "$source_skill" ]]; then
+      rm -f "$target_skill"
+    fi
+  done < <(find "$TARGET_SKILLS" -mindepth 1 -maxdepth 1 -type l)
+
   while IFS= read -r source_skill; do
     skill_name="$(basename "$source_skill")"
     target_skill="$TARGET_SKILLS/$skill_name"

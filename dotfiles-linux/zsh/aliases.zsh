@@ -28,11 +28,19 @@ alias suspend="systemctl suspend"
 alias ta='tmux -u attach'
 alias tm='tmux-session ~ --hook "tmux neww $EDITOR; tmux swap-window -t 0"'
 alias tmka='tmux kill-server'
-alias tmks='tmux kill-session'
 alias ts='tmux-session'
 alias unl='rbw unlock'
 alias v='nvim'
-alias yay='export MAKEFLAGS="-j$(nproc)" && yay'
+
+tmks() {
+    local session
+    session=$(tmux display-message -p '#S') || return
+    tmux switch-client -n \; kill-session -t "$session"
+}
+
+yay() {
+    MAKEFLAGS="-j$(nproc)" command yay "$@"
+}
 
 qhash() {
     hash $1 2>/dev/null

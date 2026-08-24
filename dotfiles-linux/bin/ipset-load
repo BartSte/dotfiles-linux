@@ -19,6 +19,12 @@ fi
 
 ipset=$1
 
+if [[ $EUID -eq 0 ]]; then
+    sudo=()
+else
+    sudo=(sudo)
+fi
+
 echo "Reset ipset $ipset using dnscacher"
-sudo ipset create "$ipset" hash:ip &>/dev/null || sudo ipset flush "$ipset"
-dnscacher -i "$ipset" -o ipset get | sudo ipset restore
+"${sudo[@]}" ipset create "$ipset" hash:ip &>/dev/null || "${sudo[@]}" ipset flush "$ipset"
+dnscacher -i "$ipset" -o ipset get | "${sudo[@]}" ipset restore

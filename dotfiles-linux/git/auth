@@ -17,6 +17,7 @@ CFG_WORK="$HOME/.gitconfig-work"
 ALLOWED_SIGNERS="$HOME/.config/git/allowed_signers"
 SSH_KEY_PERSONAL="$SSH_DIR/id_ed25519_personal"
 SSH_KEY_WORK="$SSH_DIR/id_ed25519_work"
+SSH_KEY_PI="$SSH_DIR/id_ed25519_pi"
 SSH_CONFIG="$SSH_DIR/config"
 
 HOST_ALIAS_PERSONAL="github-personal"
@@ -57,7 +58,13 @@ fi
 if ! [ -f "${SSH_KEY_WORK}" ]; then
     ssh-keygen -t ed25519 -C "$WORK_EMAIL" -f "$SSH_KEY_WORK" -N ""
 fi
-chmod 600 "${SSH_KEY_PERSONAL}" "${SSH_KEY_PERSONAL}.pub" "${SSH_KEY_WORK}" "${SSH_KEY_WORK}.pub"
+if ! [ -f "${SSH_KEY_PI}" ]; then
+    ssh-keygen -t ed25519 -C "laptop-to-pi" -f "$SSH_KEY_PI" -N ""
+fi
+chmod 600 \
+    "${SSH_KEY_PERSONAL}" "${SSH_KEY_PERSONAL}.pub" \
+    "${SSH_KEY_WORK}" "${SSH_KEY_WORK}.pub" \
+    "${SSH_KEY_PI}" "${SSH_KEY_PI}.pub"
 
 # 2) SSH config with host aliases
 ssh_cfg_content="${SSH_MANAGED_BEGIN}
@@ -75,6 +82,8 @@ Host ${HOST_ALIAS_WORK}
 
 Host pi pi-ts
   User barts
+  IdentityFile ${SSH_KEY_PI}
+  IdentitiesOnly yes
   ServerAliveInterval 5
   ServerAliveCountMax 3
 

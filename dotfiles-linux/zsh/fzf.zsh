@@ -1,5 +1,12 @@
 if [[ -z ${__DOTFILES_FZF_ENV_LOADED:-} ]]; then
-  source "$HOME/dotfiles-linux/zsh/fzf-env.zsh"
+    source "$HOME/dotfiles-linux/zsh/fzf-env.zsh"
+fi
+_fzfenv
+export HELP_MESSAGE_RC="$HOME/dotfiles-linux/zsh/fzfhelprc.zsh"
+if [[ -x $HOME/dotfiles-linux/tmux/tmux-fzf-open/regex-extra ]]; then
+    export FZF_OPEN_REGEX_EXTRA=$(
+        "$HOME/dotfiles-linux/tmux/tmux-fzf-open/regex-extra"
+    )
 fi
 
 if [[ -n "$ZSH_VERSION" && -z ${__DOTFILES_FZF_BINDINGS_LOADED:-} ]]; then
@@ -88,12 +95,15 @@ _fzf-rbw-widget() {
 }
 
 _fzf-prompts-widget() {
+    local filetype cmd args arg ret
     filetype="${$(echo ${(z)BUFFER})%.[^.]*}"
     cmd="prompts {} -f $filetype 2>/dev/null || prompts {}"
     args="docstrings typehints refactor fix unittests"
-    arg=$(echo $args | tr ' ' '\n' | fzf --preview $cmd)
+    arg=$(echo $args | tr ' ' '\n' | fzf --preview "$cmd")
+    ret=$?
     if [[ -n $arg ]]; then
         prompts $arg -f $filetype 2>/dev/null || prompts $arg
+        ret=$?
     fi
     zle reset-prompt
     return $ret

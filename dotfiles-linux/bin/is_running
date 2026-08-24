@@ -4,7 +4,7 @@ set -eo pipefail
 
 usage="Usage: $0 <type> 
 
-Check if the machien is running one of the following systems:
+Check if the machine is running one of the following systems:
 
 - zsh
 - wsl
@@ -32,7 +32,7 @@ elif [ "$2" != "" ]; then
     log "Error: too many arguments"
     echo "$usage"
     exit 1
-elif ! [[ "$1" =~ ^(wsl|arch|raspberry|tmux|ci|ai)$ ]]; then
+elif ! [[ "$1" =~ ^(zsh|wsl|arch|raspberry|tmux|ci|ai)$ ]]; then
     log "Error: unknown argument"
     echo "$usage"
     exit 1
@@ -41,7 +41,13 @@ fi
 # @brief Check if running in Windows Subsystem for Linux (WSL)
 # @return 0 if running in WSL, 1 otherwise
 wsl() {
-    grep -iq "microsoft" /proc/version
+    [[ -n "${WSL_DISTRO_NAME:-}${WSL_INTEROP:-}" ]] || grep -iq "microsoft" /proc/version
+}
+
+# @brief Check whether the parent process is Zsh
+# @return 0 if invoked directly from Zsh, 1 otherwise
+zsh() {
+    [[ -r "/proc/$PPID/comm" ]] && [[ "$(<"/proc/$PPID/comm")" == zsh ]]
 }
 
 # @brief Check if running on Arch Linux
@@ -92,4 +98,12 @@ ai() {
     [[ -n "${CODEX_THREAD_ID:-}" ]] || [[ -n "${CLAUDE_CODE_SESSION:-}" ]]
 }
 
-eval "$1"
+case "$1" in
+zsh) zsh ;;
+wsl) wsl ;;
+arch) arch ;;
+raspberry) raspberry ;;
+tmux) tmux ;;
+ci) ci ;;
+ai) ai ;;
+esac

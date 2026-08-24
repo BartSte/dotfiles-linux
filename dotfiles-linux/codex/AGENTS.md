@@ -1,8 +1,5 @@
 ## Communication
 
-<<<<<<< HEAD
-- Direct, efficient responses. No filler or sugar-coating.
-=======
 - Always communicate with the user in English, unless the user explicitly requests another language.
 - Give direct and efficient responses.
 - Do not add filler or sugar-coating.
@@ -26,4 +23,3 @@
 - After you add or change a skill, run `/home/barts/dotfiles-linux/codex/main` to install the per-skill symlink.
 - Do not create standalone copies under `~/.codex/skills`.
 - Keep project-specific, plugin-managed, and Codex-managed system skills in their existing locations.
->>>>>>> 45dbebc4455c112df54a837a5fd3b66c2ca5e24b

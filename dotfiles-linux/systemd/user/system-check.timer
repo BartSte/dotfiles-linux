@@ -1,0 +1,10 @@
+[Unit]
+Description=Run Arch system health check weekly
+
+[Timer]
+OnCalendar=weekly
+Persistent=true
+RandomizedDelaySec=30m
+
+[Install]
+WantedBy=timers.target

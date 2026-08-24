@@ -1,0 +1,218 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+config=${TMUX_SESSION_DIRS_CONFIG:-"$HOME/.config/tmux-session/dirs"}
+resolve_only=false
+
+usage() {
+    cat <<'EOF'
+Usage: tsp-pr [--config FILE] [--resolve-only] OWNER/REPO PR BASE_BRANCH HEAD_BRANCH
+
+Resolve a GitHub repository through the tmux-session dirs config, update the
+pull request's base branch, check out its head branch, and open it with tsp.
+EOF
+}
+
+die() {
+    printf 'tsp-pr: %s\n' "$*" >&2
+    exit 1
+}
+
+while (($#)); do
+    case "$1" in
+        -c | --config)
+            (($# >= 2)) || die "$1 requires a file"
+            config=$2
+            shift 2
+            ;;
+        --resolve-only)
+            resolve_only=true
+            shift
+            ;;
+        -h | --help)
+            usage
+            exit 0
+            ;;
+        --)
+            shift
+            break
+            ;;
+        -*)
+            die "unknown option: $1"
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+(($# == 4)) || {
+    usage >&2
+    exit 2
+}
+
+repo=$1
+pr_number=$2
+base_branch=$3
+head_branch=$4
+
+[[ "$repo" == */* && "$repo" != */*/* ]] || die "repository must have the form OWNER/REPO"
+[[ "$pr_number" =~ ^[0-9]+$ ]] || die "PR number must be numeric"
+git check-ref-format --branch "$base_branch" >/dev/null 2>&1 || die "invalid base branch: $base_branch"
+git check-ref-format --branch "$head_branch" >/dev/null 2>&1 || die "invalid head branch: $head_branch"
+[[ -f "$config" ]] || die "tmux-session dirs config not found: $config"
+
+normalize_repo() {
+    local remote_url=$1
+    local owner
+    local owner_path
+    local repository
+
+    remote_url=${remote_url%/}
+    remote_url=${remote_url%.git}
+
+    if [[ "$remote_url" == *://* ]]; then
+        remote_url=${remote_url#*://}
+    elif [[ "$remote_url" == *@*:* ]]; then
+        remote_url=${remote_url#*:}
+    fi
+
+    repository=${remote_url##*/}
+    owner_path=${remote_url%/*}
+    owner=${owner_path##*/}
+    printf '%s/%s\n' "${owner,,}" "${repository,,}"
+}
+
+declare -a roots=()
+while IFS= read -r pattern || [[ -n "$pattern" ]]; do
+    pattern=${pattern#"${pattern%%[![:space:]]*}"}
+    pattern=${pattern%"${pattern##*[![:space:]]}"}
+    [[ -z "$pattern" || "$pattern" == \#* ]] && continue
+
+    if [[ "$pattern" == "~" ]]; then
+        pattern=$HOME
+    elif [[ "$pattern" == "~/"* ]]; then
+        pattern=$HOME/${pattern#\~/}
+    fi
+
+    while IFS= read -r root; do
+        [[ -d "$root" ]] && roots+=("$root")
+    done < <(compgen -G "$pattern" || true)
+done < "$config"
+
+((${#roots[@]})) || die "no directories matched $config"
+
+declare -a candidates=()
+declare -a candidate_remotes=()
+declare -A seen=()
+wanted_repo=${repo,,}
+
+while IFS= read -r -d '' directory; do
+    directory=$(realpath "$directory")
+    [[ -z "${seen[$directory]+x}" ]] || continue
+    seen[$directory]=1
+
+    top_level=$(git -C "$directory" rev-parse --show-toplevel 2>/dev/null) || continue
+    top_level=$(realpath "$top_level")
+    [[ "$top_level" == "$directory" ]] || continue
+
+    while IFS= read -r remote; do
+        remote_url=$(git -C "$directory" remote get-url "$remote" 2>/dev/null) || continue
+        if [[ "$(normalize_repo "$remote_url")" == "$wanted_repo" ]]; then
+            candidates+=("$directory")
+            candidate_remotes+=("$remote")
+            break
+        fi
+    done < <(git -C "$directory" remote)
+done < <(find "${roots[@]}" -maxdepth 1 -type d -print0 2>/dev/null)
+
+((${#candidates[@]})) || die "no project for $repo found through $config"
+
+current_root=$(git rev-parse --show-toplevel 2>/dev/null || true)
+if [[ -n "$current_root" ]]; then
+    current_root=$(realpath "$current_root")
+fi
+
+best_index=-1
+best_score=-10000
+best_ties=0
+repo_directory_name=${repo##*/}
+
+for index in "${!candidates[@]}"; do
+    directory=${candidates[$index]}
+    score=0
+
+    if [[ "$directory" == "$current_root" ]]; then
+        ((score += 1000))
+    fi
+
+    session_name=$(basename "$directory" | tr . _)
+    session_path=$(tmux display-message -p -t "$session_name" '#{session_path}' 2>/dev/null || true)
+    if [[ -n "$session_path" && "$(realpath -m "$session_path")" == "$directory" ]]; then
+        ((score += 500))
+    fi
+
+    current_branch=$(git -C "$directory" branch --show-current)
+    if [[ "$current_branch" == "$head_branch" ]]; then
+        ((score += 200))
+    elif git -C "$directory" show-ref --verify --quiet "refs/heads/$head_branch"; then
+        ((score += 100))
+    fi
+
+    directory_name=${directory##*/}
+    if [[ "${directory_name,,}" == "${repo_directory_name,,}" ]]; then
+        ((score += 50))
+    fi
+
+    if [[ "$directory" == */debug/* ]]; then
+        ((score -= 10))
+    fi
+
+    if ((score > best_score)); then
+        best_index=$index
+        best_score=$score
+        best_ties=1
+    elif ((score == best_score)); then
+        ((best_ties += 1))
+    fi
+done
+
+if ((best_ties > 1)); then
+    printf 'tsp-pr: multiple projects match %s:\n' "$repo" >&2
+    printf '  %s\n' "${candidates[@]}" >&2
+    die "run the shortcut from the intended project once, or open its tmux session first"
+fi
+
+project_directory=${candidates[$best_index]}
+base_remote=${candidate_remotes[$best_index]}
+
+if $resolve_only; then
+    printf '%s\n' "$project_directory"
+    exit 0
+fi
+
+if ! git -C "$project_directory" diff --quiet || ! git -C "$project_directory" diff --cached --quiet; then
+    die "tracked changes in $project_directory must be committed or stashed first"
+fi
+
+printf 'Updating %s/%s in %s\n' "$base_remote" "$base_branch" "$project_directory"
+git -C "$project_directory" fetch \
+    "$base_remote" \
+    "+refs/heads/$base_branch:refs/remotes/$base_remote/$base_branch"
+
+if git -C "$project_directory" show-ref --verify --quiet "refs/heads/$base_branch"; then
+    git -C "$project_directory" switch "$base_branch"
+else
+    git -C "$project_directory" switch --track -c "$base_branch" "$base_remote/$base_branch"
+fi
+
+git -C "$project_directory" merge --ff-only "$base_remote/$base_branch"
+cd "$project_directory"
+gh pr checkout "$pr_number" --repo "$repo"
+
+current_branch=$(git -C "$project_directory" branch --show-current)
+[[ "$current_branch" == "$head_branch" ]] || {
+    die "expected branch $head_branch after checkout, found ${current_branch:-detached HEAD}"
+}
+
+exec tsp "$project_directory"
