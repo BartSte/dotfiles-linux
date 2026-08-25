@@ -7,7 +7,7 @@ zshenv() {
     add_to_path "$HOME/.npm-global/bin" "$HOME/dotfiles-arch/bin" "$HOME/dotfiles-pi/bin" "$HOME/dotfiles-linux/bin" "$HOME/.local/bin" "$HOME/.cargo/bin" "$HOME/go/bin" /usr/bin/vendor_perl "$ANDROID_HOME/platform-tools"
 
     export ANDROID_HOME="$HOME/Android/Sdk"
-    export BROWSER='open'
+    export BROWSER="open -l $HOME/.local/state/browser.log"
     export ESCDELAY=0
     export IPDB_CONTEXT_SIZE=10
     export LINBROWSER='qutebrowser'
