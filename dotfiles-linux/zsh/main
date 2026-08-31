@@ -16,5 +16,7 @@ sudo chsh -s /usr/bin/zsh "$(whoami)"
 # Set root shell to zsh
 sudo chsh -s /usr/bin/zsh root
 
-# Ensure history file exists
+# Ensure history file exists. zsh settings are loaded only by .zshrc,
+# so non-interactive installers must provide the same default explicitly.
+HISTFILE="${HISTFILE:-$HOME/.histfile}"
 touch "$HISTFILE"
