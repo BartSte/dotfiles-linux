@@ -1,0 +1,4 @@
+interface:
+  display_name: "Respond to Review"
+  short_description: "Assess PR feedback before applying changes"
+  default_prompt: "Use $pr-respond to gather reviewer feedback and propose responses for my approval."

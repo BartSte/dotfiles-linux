@@ -1,5 +1,5 @@
 ---
-name: post-review
+name: pr-post
 description: Curate `/review` findings and add them as a user-approved GitHub pull-request review, either submitting the review or leaving it pending. Use when the user wants to inspect, select, edit, stage, post, publish, submit, or finalize code-review findings on a specific GitHub PR. Reuse earlier `/review` output when available; otherwise run `/review` first.
 ---
 
