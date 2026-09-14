@@ -73,12 +73,14 @@ Host ${HOST_ALIAS_PERSONAL}
   User git
   IdentityFile ${SSH_KEY_PERSONAL}
   IdentitiesOnly yes
+  IPQoS none
 
 Host ${HOST_ALIAS_WORK}
   HostName github.com
   User git
   IdentityFile ${SSH_KEY_WORK}
   IdentitiesOnly yes
+  IPQoS none
 
 Host pi pi-ts
   User barts
