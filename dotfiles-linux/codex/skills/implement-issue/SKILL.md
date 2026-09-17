@@ -46,6 +46,19 @@ Inspect enough of the repository to ground the work. Locate relevant source file
 related tests, configuration, documentation, reusable implementations, and potential compatibility,
 migration, security, or deployment concerns. Do not modify files during this phase.
 
+### Documentation impact
+
+Before implementation, determine whether the change affects user-facing behavior, supported
+configuration, public APIs, installation or upgrade steps, operational procedures, or release notes.
+Inspect the documentation that describes each affected surface.
+
+- Update the documentation when it becomes inaccurate, incomplete, or misleading because of the
+  change.
+- When the repository has a changelog, follow step 7. Do not treat a changelog entry as a substitute
+  for affected user documentation.
+- Do not change documentation that is unrelated to the issue. When no documentation change is needed,
+  record the reason in the final report.
+
 Ask a focused question only when missing information materially changes scope or makes proceeding
 unsafe. Otherwise record a clearly labeled assumption in the final report or, when planning, in the
 plan.
@@ -109,6 +122,9 @@ the stated request and any clearly necessary supporting changes. Follow reposito
 conventions, make the smallest coherent change that satisfies the issue, avoid unrelated refactors,
 add or update tests, and update documentation or configuration when required.
 
+Complete the documentation impact work identified during inspection. Reassess it when implementation
+changes the observed behavior or user workflow.
+
 If new findings require a material change in scope or approach, explain why, present the revised
 portion of the plan, and wait for approval. Do not require renewed approval for minor implementation
 details that preserve the approved scope. If the work began without a plan and a material ambiguity or
@@ -146,6 +162,9 @@ pre-existing failures unless required by the issue.
 
 When the changelog changed, verify that its destination is not already released and that any new
 version heading matches the required semantic-version bump.
+
+Before committing, compare the final behavior with the affected documentation. Update any stale
+documentation. When documentation remains unchanged, report why it remains accurate.
 
 Report only checks actually run and verified. For every skipped or unavailable check, state why and
 describe the risk.
