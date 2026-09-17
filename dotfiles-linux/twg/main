@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+if ! command -v twg >/dev/null 2>&1; then
+    curl -fsSL --retry 2 https://teamwork-graph.atlassian.com/cli/install | bash
+fi

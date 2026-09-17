@@ -19,6 +19,10 @@
 - For Windows Python projects, use `wuv`, `wpy`, and `try-uv-install`.
 - Use these tools to run Windows Python interpreters and install dependencies.
 
+## Atlassian Teamwork Graph
+
+- When you need Jira, Confluence, Bitbucket, or connected-app data and actions, use the `twg` CLI.
+
 ## Codex skills
 
 - Store user-owned general-purpose Codex skills in `/home/barts/dotfiles-linux/codex/skills/<skill-name>` as the canonical source.
