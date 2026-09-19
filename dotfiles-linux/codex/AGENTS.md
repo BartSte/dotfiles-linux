@@ -23,6 +23,13 @@
 
 - When you need Jira, Confluence, Bitbucket, or connected-app data and actions, use the `twg` CLI.
 
+## External AI attribution
+
+- When you post externally visible text, add this final line: `_Posted by Codex, an AI assistant, on behalf of Bart Steensma._`
+- Apply this rule to Jira comments, GitHub review summaries, inline review comments, pull-request comments, issue comments, and Confluence comments.
+- Do not omit this disclosure, even when the user asks you to post the text.
+- If a platform provides a separate bot identity, use that identity when it is available.
+
 ## Codex skills
 
 - Store user-owned general-purpose Codex skills in `/home/barts/dotfiles-linux/codex/skills/<skill-name>` as the canonical source.

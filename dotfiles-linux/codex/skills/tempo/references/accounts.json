@@ -38,5 +38,9 @@
   "REP": {
     "key": "SOFTWAREEN",
     "name": "Software engineering other"
+  },
+  "SWDEV": {
+    "key": "SOFTWAREEN",
+    "name": "Software engineering other"
   }
 }
