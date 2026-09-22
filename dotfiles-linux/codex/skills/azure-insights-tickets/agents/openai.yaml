@@ -1,0 +1,4 @@
+interface:
+  display_name: "Azure Insights Tickets"
+  short_description: "Draft Jira bugs from law-prod exceptions"
+  default_prompt: "Use $azure-insights-tickets to draft Jira bugs from law-prod exceptions."

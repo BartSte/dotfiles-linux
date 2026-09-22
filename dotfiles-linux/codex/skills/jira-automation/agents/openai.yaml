@@ -1,0 +1,4 @@
+interface:
+  display_name: "Jira Automation"
+  short_description: "Manage Jira Automation rules safely"
+  default_prompt: "Use $jira-automation to update a Jira Automation rule and validate the saved rule."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Azure Insights"
+  short_description: "Analyze Azure Application Insights telemetry"
+  default_prompt: "Use $azure-insights to investigate the telemetry for this issue."

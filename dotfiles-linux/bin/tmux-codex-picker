@@ -1,0 +1,136 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+codex_pane_filter='#{||:#{==:#{pane_current_command},codex},#{m:*| codex |*,#{pane_title}}}'
+picker_command=/home/barts/dotfiles-linux/bin/tmux-codex-picker
+preview_interval=${TMUX_CODEX_PREVIEW_INTERVAL:-1}
+
+list_codex_panes() {
+    local location pane_id pane_title state task
+    local -a title_fields
+
+    while IFS=$'\t' read -r pane_id location pane_title; do
+        IFS='|' read -ra title_fields <<< "$pane_title"
+        state=$(trim_whitespace "${title_fields[3]:-Unknown}")
+        task=$(trim_whitespace "${title_fields[4]:-$pane_title}")
+        printf '%s\t%-12s %-26s %s\n' "$pane_id" "[$state]" "$location" "$task"
+    done < <(
+        tmux list-panes \
+            -a \
+            -f "$codex_pane_filter" \
+            -F $'#{pane_id}\t#{session_name}:#{window_index}.#{pane_index}\t#{pane_title}'
+    )
+}
+
+trim_whitespace() {
+    local value=$1
+
+    value="${value#"${value%%[![:space:]]*}"}"
+    value="${value%"${value##*[![:space:]]}"}"
+    printf '%s\n' "$value"
+}
+
+show_empty_message() {
+    tmux display-message 'No Codex panes found'
+}
+
+preview_mode() {
+    local mode
+
+    if ! IFS= read -r mode < "$TMUX_CODEX_PREVIEW_STATE"; then
+        mode=live
+    fi
+    printf '%s\n' "$mode"
+}
+
+toggle_preview_mode() {
+    if [[ $(preview_mode) == live ]]; then
+        printf 'frozen\n' > "$TMUX_CODEX_PREVIEW_STATE"
+    else
+        printf 'live\n' > "$TMUX_CODEX_PREVIEW_STATE"
+    fi
+}
+
+show_live_preview() {
+    local pane_id=$1 current_mode previous_mode=
+
+    if [[ ! $pane_id =~ ^%[0-9]+$ ]]; then
+        printf 'Invalid tmux pane ID: %s\n' "$pane_id" >&2
+        return 2
+    fi
+
+    while tmux display-message -p -t "$pane_id" '#{pane_id}' >/dev/null 2>&1; do
+        current_mode=$(preview_mode)
+        if [[ $current_mode == live || $current_mode != "$previous_mode" ]]; then
+            printf '\033[2J\033[H\033[2m[%s preview - Ctrl-s to toggle]\033[0m\n\n' "${current_mode^^}"
+            tmux capture-pane -e -p -t "$pane_id" -S -200
+        fi
+        previous_mode=$current_mode
+        sleep "$preview_interval"
+    done
+
+    printf '\033[2J\033[HThe tmux pane is no longer available.\n'
+}
+
+select_codex_pane() {
+    local panes preview_state_file selection
+
+    panes=$(list_codex_panes)
+    if [[ -z "$panes" ]]; then
+        show_empty_message
+        return
+    fi
+
+    preview_state_file=$(mktemp "${TMPDIR:-/tmp}/tmux-codex-picker.XXXXXX")
+    printf 'live\n' > "$preview_state_file"
+    export TMUX_CODEX_PREVIEW_STATE=$preview_state_file
+    trap 'if [[ -n ${TMUX_CODEX_PREVIEW_STATE:-} ]]; then rm -f -- "$TMUX_CODEX_PREVIEW_STATE"; fi' EXIT
+
+    if ! selection=$(
+        printf '%s\n' "$panes" |
+            fzf \
+                --ansi \
+                --delimiter=$'\t' \
+                --with-nth=2.. \
+                --layout=reverse \
+                --info=inline \
+                --prompt='Codex> ' \
+                --header='Enter: jump  Ctrl-s: live/freeze  Esc: close' \
+                --bind="ctrl-s:execute-silent($picker_command --toggle-preview)" \
+                --preview="$picker_command --preview {1}" \
+                --preview-label=' Pane output ' \
+                --preview-window='right,60%,border-left,wrap,follow'
+    ); then
+        return
+    fi
+
+    tmux switch-client -t "${selection%%$'\t'*}"
+}
+
+case "${1:-}" in
+    --list)
+        list_codex_panes
+        ;;
+    --preview)
+        if [[ $# != 2 || -z ${TMUX_CODEX_PREVIEW_STATE:-} ]]; then
+            printf 'Usage: TMUX_CODEX_PREVIEW_STATE=<file> tmux-codex-picker --preview <pane-id>\n' >&2
+            exit 2
+        fi
+        show_live_preview "$2"
+        ;;
+    --toggle-preview)
+        if [[ $# != 1 || -z ${TMUX_CODEX_PREVIEW_STATE:-} ]]; then
+            printf 'Usage: TMUX_CODEX_PREVIEW_STATE=<file> tmux-codex-picker --toggle-preview\n' >&2
+            exit 2
+        fi
+        toggle_preview_mode
+        ;;
+    '')
+        select_codex_pane
+        ;;
+    *)
+        printf 'Usage: tmux-codex-picker [--list]\n' >&2
+        exit 2
+        ;;
+esac
