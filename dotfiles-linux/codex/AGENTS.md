@@ -25,7 +25,7 @@
 
 ## External AI attribution
 
-- When you post externally visible text, add this final line: `_Posted by Codex, an AI assistant, on behalf of Bart Steensma._`
+- When you post externally visible text, add this final line: `_Posted by Codex (AI) for Bart Steensma._`
 - Apply this rule to Jira comments, GitHub review summaries, inline review comments, pull-request comments, issue comments, and Confluence comments.
 - Do not omit this disclosure, even when the user asks you to post the text.
 - If a platform provides a separate bot identity, use that identity when it is available.
