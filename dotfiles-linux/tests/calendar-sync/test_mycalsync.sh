@@ -36,8 +36,8 @@ run_subject() {
 run_subject || fail "normal mycalsync run returned non-zero"
 mapfile -t events < "$TEST_EVENT_LOG"
 [[ ${#events[@]} -eq 2 ]] || fail "expected two calendars, got ${#events[@]}"
-[[ ${events[0]} == "calsync|$HOME/.config/davmail/davmail.work.properties outlook_work $HOME/dropbox/org/outlook_work.org today 365d --quiet" ]] || fail "unexpected work invocation: ${events[0]}"
-[[ ${events[1]} == "calsync|$HOME/.config/davmail/davmail.personal.properties outlook_personal $HOME/dropbox/org/outlook_personal.org today 365d --quiet" ]] || fail "unexpected personal invocation: ${events[1]}"
+[[ ${events[0]} == "calsync|$HOME/.config/davmail/davmail.work.properties outlook_work $HOME/dropbox/generated/outlook_work.org today 365d --quiet" ]] || fail "unexpected work invocation: ${events[0]}"
+[[ ${events[1]} == "calsync|$HOME/.config/davmail/davmail.personal.properties outlook_personal $HOME/dropbox/generated/outlook_personal.org today 365d --quiet" ]] || fail "unexpected personal invocation: ${events[1]}"
 
 : > "$TEST_EVENT_LOG"
 export FAIL_CALENDAR=work

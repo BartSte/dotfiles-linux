@@ -11,16 +11,18 @@ for option in "$@"; do
     esac
 done
 
+mkdir -p "$HOME/dropbox/generated"
+
 calsync \
     "$HOME/.config/davmail/davmail.work.properties" \
     outlook_work \
-    "$HOME/dropbox/org/outlook_work.org" \
+    "$HOME/dropbox/generated/outlook_work.org" \
     today 365d \
     "$@"
 
 calsync \
     "$HOME/.config/davmail/davmail.personal.properties" \
     outlook_personal \
-    "$HOME/dropbox/org/outlook_personal.org" \
+    "$HOME/dropbox/generated/outlook_personal.org" \
     today 365d \
     "$@"
