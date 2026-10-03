@@ -18,7 +18,6 @@ _zshrc_config() {
         "settings.zsh"
         "aliases.zsh"
         "functions.zsh"
-        "codex.zsh"
         "completion.zsh"
         "vi-mode.zsh"
         "bindings.zsh"

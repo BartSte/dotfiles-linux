@@ -1,4 +1,4 @@
 interface:
   display_name: "Azure Insights"
-  short_description: "Analyze Azure Application Insights telemetry"
+  short_description: "Analyze Application Insights and Log Analytics telemetry"
   default_prompt: "Use $azure-insights to investigate the telemetry for this issue."
