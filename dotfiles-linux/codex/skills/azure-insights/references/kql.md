@@ -2,6 +2,30 @@
 
 Replace placeholders before you run a query. Use UTC timestamps. Filter rows before you summarize them. Limit detail rows to a small, relevant result set.
 
+## Log Analytics workspace tables
+
+Use these patterns with `az monitor log-analytics query`. A workspace can contain several applications. Keep `_ResourceId` and `AppRoleName` in the grouping. `ItemCount` gives the represented event count when sampling is active.
+
+```kql
+AppExceptions
+| where TimeGenerated between (datetime(<start-utc>) .. datetime(<end-utc>))
+| summarize rows=count(), events=sum(ItemCount), firstSeen=min(TimeGenerated), lastSeen=max(TimeGenerated)
+    by _ResourceId, AppRoleName, AppVersion, ExceptionType, ProblemId
+| order by events desc
+```
+
+Use `AppRequests`, `AppDependencies`, and `AppTraces` for related telemetry. First filter by the same role, resource ID, and time window. Then project only the fields needed for correlation. Do not return full `Message`, `Details`, `Properties`, URL, or stack fields before redaction. In `law-prod`, recorded operation IDs were all-zero placeholders during one investigation. Inspect their usefulness before joining tables on them.
+
+```kql
+AppRequests
+| where TimeGenerated between (datetime(<start-utc>) .. datetime(<end-utc>))
+| summarize total=sum(ItemCount), failed=sumif(ItemCount, Success == false)
+    by _ResourceId, AppRoleName, Name, ResultCode
+| order by failed desc, total desc
+```
+
+For a narrow time correlation, compare exception and trace timestamps and role. State that timing alone does not prove a shared cause.
+
 ## Errors by type
 
 ```kql
