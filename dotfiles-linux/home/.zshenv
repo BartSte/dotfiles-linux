@@ -10,7 +10,7 @@ zshenv() {
     export BROWSER="open -l $HOME/.local/state/browser.log"
     export ESCDELAY=0
     export IPDB_CONTEXT_SIZE=10
-    export LINBROWSER='qutebrowser'
+    export LINBROWSER='firefox'
     export MANPAGER="nvim +Man!"
     export PYTHONBREAKPOINT='ipdb.set_trace'
     export TMUX_PLUGIN_DIR="$HOME/.tmux/plugins"
