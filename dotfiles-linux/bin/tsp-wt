@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+    cat <<'EOF'
+Usage: tsp-wt BRANCH [PROJECT_DIRECTORY]
+
+Open BRANCH in its own worktree and tmux session. PROJECT_DIRECTORY defaults
+to the current directory. New branches start at the current HEAD.
+EOF
+}
+
+die() {
+    printf 'tsp-wt: %s\n' "$*" >&2
+    exit 1
+}
+
+if [[ "${1:-}" == -h || "${1:-}" == --help ]]; then
+    usage
+    exit 0
+fi
+
+(($# == 1 || $# == 2)) || {
+    usage >&2
+    exit 2
+}
+
+branch=$1
+project_directory=${2:-$PWD}
+git check-ref-format --branch "$branch" >/dev/null 2>&1 || die "invalid branch: $branch"
+project_directory=$(git -C "$project_directory" rev-parse --show-toplevel 2>/dev/null) || die "not a Git worktree: $project_directory"
+
+main_directory=$(git -C "$project_directory" worktree list --porcelain | sed -n '1s/^worktree //p')
+[[ -n "$main_directory" ]] || die "could not find the main worktree"
+project=$(basename "$main_directory")
+worktree_root="$HOME/code/worktrees"
+worktree_directory="$worktree_root/$project--${branch//\//-}"
+
+open_session() {
+    local directory=$1 session_name existing_path
+    session_name=$(basename "$directory" | tr . _)
+    if tmux has-session -t "=$session_name" 2>/dev/null; then
+        existing_path=$(tmux display-message -p -t "=$session_name" '#{session_path}')
+        if [[ "$(realpath -m "$existing_path")" != "$(realpath -m "$directory")" ]]; then
+            die "tmux session $session_name already points to $existing_path"
+        fi
+    fi
+    exec tsp "$directory"
+}
+
+while IFS= read -r line; do
+    if [[ "$line" == worktree\ * ]]; then
+        existing_directory=${line#worktree }
+    elif [[ "$line" == "branch refs/heads/$branch" ]]; then
+        open_session "$existing_directory"
+    fi
+done < <(git -C "$project_directory" worktree list --porcelain)
+
+mkdir -p "$worktree_root"
+[[ ! -e "$worktree_directory" ]] || die "destination already exists: $worktree_directory"
+
+session_name=$(basename "$worktree_directory" | tr . _)
+if tmux has-session -t "=$session_name" 2>/dev/null; then
+    existing_path=$(tmux display-message -p -t "=$session_name" '#{session_path}')
+    die "tmux session $session_name already points to $existing_path"
+fi
+
+if git -C "$project_directory" show-ref --verify --quiet "refs/heads/$branch"; then
+    git -C "$project_directory" worktree add "$worktree_directory" "$branch"
+elif git -C "$project_directory" show-ref --verify --quiet "refs/remotes/origin/$branch"; then
+    git -C "$project_directory" worktree add --track -b "$branch" "$worktree_directory" "origin/$branch"
+else
+    git -C "$project_directory" worktree add -b "$branch" "$worktree_directory" HEAD
+fi
+
+open_session "$worktree_directory"
