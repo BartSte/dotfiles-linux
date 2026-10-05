@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ "${1:-}" == --path && $# == 2 ]]; then
+    directory=$2
+elif [[ $# == 1 && -n "$1" ]]; then
+    directory=$(tmux display-message -p -t "$1" '#{session_path}')
+else
+    printf 'Usage: tsp-worktree-remove SESSION_ID | --path WORKTREE\n' >&2
+    exit 2
+fi
+worktree_root=$(realpath -m "$HOME/code/worktrees")
+worktree_directory=$(realpath -m "$directory")
+
+message() {
+    tmux display-message -d 5000 "$1" 2>/dev/null || printf '%s\n' "$1" >&2
+}
+
+if [[ "$(dirname "$worktree_directory")" != "$worktree_root" ]] ||
+    [[ ! -e "$worktree_directory/.git" ]] ||
+    [[ "$(git -C "$worktree_directory" rev-parse --show-toplevel 2>/dev/null || true)" != "$worktree_directory" ]]; then
+    message "This session is not in a managed worktree."
+    exit 1
+fi
+
+main_directory=$(git -C "$worktree_directory" worktree list --porcelain | sed -n '1s/^worktree //p')
+if [[ "$main_directory" == "$worktree_directory" ]]; then
+    message "The main worktree cannot be removed with this binding."
+    exit 1
+fi
+
+if output=$(git -C "$worktree_directory" worktree remove "$worktree_directory" 2>&1); then
+    current_session=$(tmux display-message -p '#{session_id}' 2>/dev/null || true)
+    while IFS=$'\t' read -r session_id session_path; do
+        [[ "$(realpath -m "$session_path")" == "$worktree_directory" ]] || continue
+        if [[ "$session_id" == "$current_session" ]]; then
+            tmux switch-client -n 2>/dev/null || true
+        fi
+        tmux kill-session -t "$session_id"
+    done < <(tmux list-sessions -F $'#{session_id}\t#{session_path}' 2>/dev/null || true)
+    message "Removed worktree: $worktree_directory"
+else
+    output=${output//$'\n'/ }
+    message "Worktree kept: $output"
+    exit 1
+fi

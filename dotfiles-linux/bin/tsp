@@ -26,6 +26,12 @@ while (($#)); do
     esac
 done
 
+if ((${#tmux_session_args[@]} == 0)); then
+    selected_directory=$(/home/barts/dotfiles-linux/bin/tsp-picker) || exit 0
+    [[ -n "$selected_directory" ]] || exit 0
+    tmux_session_args+=("$selected_directory")
+fi
+
 combined_hook=
 if ((${#extra_hooks[@]})); then
     for extra_hook in "${extra_hooks[@]}"; do
