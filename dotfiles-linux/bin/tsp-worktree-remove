@@ -16,8 +16,7 @@ message() {
     tmux display-message -d 5000 "$1" 2>/dev/null || printf '%s\n' "$1" >&2
 }
 
-if [[ "$(dirname "$worktree_directory")" != "$worktree_root" ]] ||
-    [[ ! -e "$worktree_directory/.git" ]] ||
+if [[ ! -e "$worktree_directory/.git" ]] ||
     [[ "$(git -C "$worktree_directory" rev-parse --show-toplevel 2>/dev/null || true)" != "$worktree_directory" ]]; then
     message "This session is not in a managed worktree."
     exit 1
@@ -26,6 +25,20 @@ fi
 main_directory=$(git -C "$worktree_directory" worktree list --porcelain | sed -n '1s/^worktree //p')
 if [[ "$main_directory" == "$worktree_directory" ]]; then
     message "The main worktree cannot be removed with this binding."
+    exit 1
+fi
+
+main_directory=$(realpath "$main_directory")
+code_root=$(realpath -m "$HOME/code")
+grouped_root=$worktree_root
+case "$main_directory" in
+    "$code_root/work/"* | "$code_root/personal/"*)
+        grouped_root="$(dirname "$main_directory")/worktrees"
+        ;;
+esac
+if [[ "$(dirname "$worktree_directory")" != "$worktree_root" &&
+    "$(dirname "$worktree_directory")" != "$grouped_root" ]]; then
+    message "This session is not in a managed worktree."
     exit 1
 fi
 

@@ -1,3 +1,286 @@
 #!/usr/bin/env bash
-git-pull-local
-git-del-local -y
+
+set -euo pipefail
+
+usage='Usage: git-update [options] [remote]
+
+Fetch and prune the selected remote, then update the current branch with
+git pull --ff-only. Prune missing worktree metadata after its expiration
+period (gc.worktreePruneExpire, or three months by default).
+Preserve missing metadata when commits lack a named reference.
+
+Automatically remove clean, unlocked linked worktrees and local branches
+whose upstream is gone and whose commits remain reachable from the current
+branch. Preserve worktrees with changed, untracked, or ignored files, active
+tmux sessions or panes, detached HEAD, or submodules. Preserve the main and
+current worktrees, and branches without an upstream.
+Preserve branches still checked out in retained worktrees.
+
+Other clean worktree candidates require confirmation. Branches with commits
+outside the current branch require confirmation before deletion, plus a
+second confirmation for force deletion. Worktree removal never uses --force.
+
+Use the remote of the current branch by default. Otherwise, use the only
+configured remote. With multiple remotes, specify one explicitly.
+
+Options:
+  -h, --help        Show this help message and exit.
+  -q, --quiet       Suppress progress messages. Keep candidates and prompts.
+  -v, --verbose     Show output from Git commands.
+  --no-cleanup      Update the current branch without branch cleanup.
+  --cleanup-only    Fetch and clean worktrees and branches without an update.
+
+The current branch must track an upstream on the selected remote for updates.
+git-pull-local uses --no-cleanup. git-del-local uses --cleanup-only.
+Unconditional deletion (-y / --yes) is not supported.'
+
+quiet=false
+git_options=(--quiet)
+mode=update
+remote=''
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -h | --help) printf '%s\n' "$usage"; exit 0 ;;
+        -q | --quiet) quiet=true ;;
+        -v | --verbose) git_options=() ;;
+        --no-cleanup | --cleanup-only)
+            [[ $mode == update ]] || { printf 'Specify only one operation mode.\n' >&2; exit 1; }
+            mode=${1#--}
+            ;;
+        -*) printf 'Unsupported option: %s\n%s\n' "$1" "$usage" >&2; exit 1 ;;
+        *)
+            [[ -z $remote ]] || { printf 'Specify only one remote.\n' >&2; exit 1; }
+            remote=$1
+            ;;
+    esac
+    shift
+done
+
+log() {
+    if [[ $quiet == false ]]; then
+        printf '%s\n' "$*" >&2
+    fi
+}
+
+fail() {
+    printf '%s\n' "$*" >&2
+    exit 1
+}
+
+confirm() {
+    local response
+    printf '%s [y/N] ' "$1" >&2
+    if ! read -r response; then
+        printf '\n' >&2
+        return 1
+    fi
+    [[ $response == y || $response == Y ]]
+}
+
+select_remote() {
+    local configured_remote
+    local -a remotes
+    configured_remote=$(git config --get "branch.$current_branch.remote" || true)
+    if [[ -z $remote && -n $configured_remote && $configured_remote != . ]]; then
+        remote=$configured_remote
+    fi
+    mapfile -t remotes < <(git remote)
+    if [[ -z $remote ]]; then
+        [[ ${#remotes[@]} -eq 1 ]] || fail 'Specify a remote: the repository does not have exactly one remote.'
+        remote=${remotes[0]}
+    fi
+    local name
+    for name in "${remotes[@]}"; do
+        if [[ $name == "$remote" ]]; then
+            return
+        fi
+    done
+    fail "Remote does not exist: $remote"
+}
+
+upstream_is_gone() {
+    local upstream upstream_remote
+    upstream=$(git for-each-ref --format='%(upstream)' "$1")
+    upstream_remote=$(git for-each-ref --format='%(upstream:remotename)' "$1")
+    [[ -n $upstream && $upstream_remote == "$remote" ]] || return 1
+    ! git show-ref --verify --quiet "$upstream"
+}
+
+commits_are_preserved() {
+    # A named branch keeps the commits reachable after cleanup. A detached HEAD
+    # is not a sufficiently durable reference for automatic deletion.
+    [[ -n $current_branch ]] &&
+        git merge-base --is-ancestor "$1" "refs/heads/$current_branch"
+}
+
+get_tmux_paths() {
+    local session pane path
+    tmux_paths=()
+    command -v tmux >/dev/null 2>&1 || return 0
+    while IFS= read -r session; do
+        if path=$(tmux display-message -p -t "$session" '#{session_path}' 2>/dev/null); then
+            tmux_paths+=("$(realpath -m -- "$path")")
+        fi
+    done < <(tmux list-sessions -F '#{session_id}' 2>/dev/null || true)
+    while IFS= read -r pane; do
+        if path=$(tmux display-message -p -t "$pane" '#{pane_current_path}' 2>/dev/null); then
+            tmux_paths+=("$(realpath -m -- "$path")")
+        fi
+    done < <(tmux list-panes -a -F '#{pane_id}' 2>/dev/null || true)
+}
+
+worktree_is_in_tmux() {
+    local path worktree
+    worktree=$(realpath -m -- "$1")
+    for path in "${tmux_paths[@]}"; do
+        if [[ $path == "$worktree" || $path == "$worktree/"* ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+cleanup_worktrees() {
+    local expiration record path='' branch='' head='' locked=false index=0 status
+    local current_worktree references can_prune=true
+    local -a paths=() branches=() heads=() locks=() tmux_paths=()
+    current_worktree=$(realpath -- "$(git rev-parse --show-toplevel)")
+    # NUL records handle whitespace and newlines in worktree paths.
+    while IFS= read -r -d '' record; do
+        case "$record" in
+            'worktree '*) path=${record#worktree } ;;
+            'branch '*) branch=${record#branch } ;;
+            'HEAD '*) head=${record#HEAD } ;;
+            locked | 'locked '*) locked=true ;;
+            '')
+                paths+=("$path")
+                branches+=("$branch")
+                heads+=("$head")
+                locks+=("$locked")
+                path='' branch='' head='' locked=false
+                ;;
+        esac
+    done < <(git worktree list --porcelain -z)
+
+    # Prune applies to the whole repository. Preserve all missing metadata if
+    # any unlocked entry can be the last reference to a commit.
+    for path in "${paths[@]}"; do
+        head=${heads[index]}
+        locked=${locks[index]}
+        index=$((index + 1))
+        [[ $index -gt 1 && ! -d $path && $locked == false ]] || continue
+        if ! references=$(git for-each-ref --contains "$head" --format='%(refname)' refs/heads/ refs/remotes/ refs/tags/) ||
+            [[ -z $references ]]; then
+            log "Keep missing worktree metadata: commits have no named reference: $path"
+            can_prune=false
+        fi
+    done
+    if [[ $can_prune == true ]]; then
+        expiration=$(git config --get gc.worktreePruneExpire || printf '3.months.ago')
+        log "Prune missing worktree metadata older than $expiration"
+        git worktree prune --verbose --expire="$expiration"
+    fi
+    get_tmux_paths
+
+    index=0
+    for path in "${paths[@]}"; do
+        branch=${branches[index]}
+        locked=${locks[index]}
+        index=$((index + 1))
+        # Git lists the main worktree first. Never remove it or this worktree.
+        [[ $index -gt 1 && -d $path && -n $branch && $locked == false ]] || continue
+        [[ $(realpath -- "$path") != "$current_worktree" ]] || continue
+        upstream_is_gone "$branch" || continue
+        if worktree_is_in_tmux "$path"; then
+            log "Keep worktree with an active tmux session or pane: $path"
+            continue
+        fi
+        if [[ -e $path/.gitmodules ]]; then
+            log "Keep worktree with submodules: $path"
+            continue
+        fi
+        # Include ignored files: .env files and other local data must survive.
+        if ! status=$(git -C "$path" status --porcelain --untracked-files=all --ignored --ignore-submodules=none); then
+            log "Keep worktree: cannot inspect $path"
+            continue
+        fi
+        if [[ -n $status ]]; then
+            log "Keep worktree with local files or changes: $path"
+            continue
+        fi
+        if ! commits_are_preserved "$branch"; then
+            printf 'Worktree candidate: %s (commits outside the current branch)\n' "$path" >&2
+            confirm "Remove clean worktree '$path' (keep its branch for review)?" || continue
+        fi
+        if git worktree remove -- "$path"; then
+            log "Removed worktree: $path"
+        else
+            log "Keep worktree: Git refused to remove $path"
+        fi
+    done
+}
+
+cleanup_branches() {
+    local branch upstream upstream_remote worktree
+    local -a candidates=()
+    # NUL fields preserve empty values and unusual branch or worktree names.
+    while IFS= read -r -d '' branch; do
+        # for-each-ref appends a newline after each formatted record.
+        branch=${branch#$'\n'}
+        branch=${branch#refs/heads/}
+        IFS= read -r -d '' upstream
+        IFS= read -r -d '' upstream_remote
+        IFS= read -r -d '' worktree
+        [[ -n $upstream && $upstream_remote == "$remote" && -z $worktree ]] || continue
+        if ! git show-ref --verify --quiet "$upstream"; then
+            candidates+=("$branch")
+            printf 'Cleanup candidate: %s (upstream gone: %s)\n' "$branch" "${upstream#refs/remotes/}" >&2
+        fi
+    done < <(git for-each-ref --format='%(refname)%00%(upstream)%00%(upstream:remotename)%00%(worktreepath)%00' refs/heads/)
+
+    if [[ ${#candidates[@]} -eq 0 ]]; then
+        log 'No branches qualify for cleanup.'
+        return
+    fi
+    for branch in "${candidates[@]}"; do
+        if commits_are_preserved "refs/heads/$branch"; then
+            git branch -d "${git_options[@]}" -- "$branch"
+            log "Deleted branch: $branch"
+            continue
+        fi
+        if ! confirm "Delete branch '$branch'?"; then
+            continue
+        fi
+        if git branch -d "${git_options[@]}" -- "$branch"; then
+            continue
+        fi
+        printf 'Safe deletion failed. Force deletion can discard unique local commits.\n' >&2
+        if confirm "Force-delete branch '$branch'?"; then
+            git branch -D "${git_options[@]}" -- "$branch"
+        fi
+    done
+}
+
+[[ $(git rev-parse --is-inside-work-tree 2>/dev/null) == true ]] || fail 'Not inside a Git working tree.'
+current_branch=$(git branch --show-current)
+select_remote
+
+if [[ $mode != cleanup-only ]]; then
+    [[ -n $current_branch ]] || fail 'Cannot update a detached HEAD.'
+    upstream_remote=$(git config --get "branch.$current_branch.remote" || true)
+    merge_ref=$(git config --get "branch.$current_branch.merge" || true)
+    [[ $upstream_remote == "$remote" && -n $merge_ref ]] || fail "Current branch must track an upstream on remote '$remote'."
+fi
+
+log "Fetch and prune $remote"
+# Keep automatic Git maintenance from pruning worktree metadata before the
+# cleanup step can inspect its commit references.
+git -c gc.auto=0 -c maintenance.auto=false fetch --prune "${git_options[@]}" "$remote"
+if [[ $mode != cleanup-only ]]; then
+    log "Update $current_branch with --ff-only"
+    git -c gc.auto=0 -c maintenance.auto=false pull --ff-only --no-rebase --no-autostash "${git_options[@]}" "$remote" "$merge_ref"
+fi
+if [[ $mode != no-cleanup ]]; then
+    cleanup_worktrees
+    cleanup_branches
+fi

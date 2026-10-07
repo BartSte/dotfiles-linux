@@ -9,12 +9,14 @@ setopt extendedglob
 #------------------------------------------------------------------------------
 # __projectrc_from_map
 # Reads $PROJECTRC_MAP (lines: "<glob> <file>") and returns snippet paths
-# whose <glob> matches the current $PWD. Globs use zsh pattern syntax.
+# whose <glob> matches the supplied directory (default: $PWD).
+# Globs use zsh pattern syntax.
 # Output: newline-separated absolute paths under $PROJECTRC_HOME/projectrc.d/
 # Side effects: none
 #------------------------------------------------------------------------------
 __projectrc_from_map() {
   local projectrc_dir="$PROJECTRC_HOME/projectrc.d"
+  local context_directory=${1:-$PWD}
   [[ -r $PROJECTRC_MAP ]] || return 0
 
   local line pat file exp_pat matches=()
@@ -25,12 +27,12 @@ __projectrc_from_map() {
     [[ -z $pat || -z $file ]] && continue
 
     exp_pat=${~pat}            # expand ~ in patterns
-    if [[ $PWD == ${~exp_pat} ]]; then
+    if [[ $context_directory == ${~exp_pat} ]]; then
       matches+="$projectrc_dir/$file"
     fi
   done < "$PROJECTRC_MAP"
 
-  print -r -- ${(u)matches}
+  print -rl -- "${(@u)matches}"
 }
 
 #------------------------------------------------------------------------------
@@ -52,9 +54,23 @@ __projectrc_is_safe() {
 #------------------------------------------------------------------------------
 __projectrc_load_startup() {
   local files=() f first_file=""
-  files+=($(__projectrc_from_map))
-  files=(${(u)files})  # unique
-  for f in $files; do
+  local PROJECTRC_PROJECT_DIRECTORY=$PWD
+  local context_directory=$PWD worktree_directory field
+
+  if worktree_directory=$(git rev-parse --show-toplevel 2>/dev/null); then
+    # The first record identifies the original checkout, even from a worktree.
+    if IFS= read -r -d '' field < <(git worktree list --porcelain -z 2>/dev/null); then
+      if [[ $field == 'worktree '* ]]; then
+        PROJECTRC_PROJECT_DIRECTORY=${field#worktree }
+        # Keep the relative subdirectory for project-specific mappings.
+        context_directory="$PROJECTRC_PROJECT_DIRECTORY${${PWD:A}#$worktree_directory}"
+      fi
+    fi
+  fi
+
+  files+=("${(@f)$(__projectrc_from_map "$context_directory")}")
+  files=("${(@u)files}")  # unique
+  for f in "${files[@]}"; do
     [[ -z $first_file ]] && first_file="$f"
     if __projectrc_is_safe "$f"; then
       source "$f"
@@ -66,4 +82,3 @@ __projectrc_load_startup() {
 
 # Run once when .zshrc is sourced (initial shell PWD only)
 __projectrc_load_startup
-

@@ -3,10 +3,13 @@ set -euo pipefail
 
 usage() {
     cat <<'EOF'
-Usage: tsp-wt BRANCH [PROJECT_DIRECTORY]
+Usage: tsp-wt [--remote REMOTE] BRANCH [PROJECT_DIRECTORY]
 
 Open BRANCH in its own worktree and tmux session. PROJECT_DIRECTORY defaults
 to the current directory. New branches start at the current HEAD.
+Use --remote to create a branch that tracks the selected remote branch.
+Repositories under ~/code/work or ~/code/personal use a worktrees folder
+beside the original repository. Other repositories use ~/code/worktrees.
 EOF
 }
 
@@ -14,6 +17,13 @@ die() {
     printf 'tsp-wt: %s\n' "$*" >&2
     exit 1
 }
+
+remote=""
+if [[ "${1:-}" == --remote ]]; then
+    (($# >= 3)) || die "--remote requires a remote and branch"
+    remote=$2
+    shift 2
+fi
 
 if [[ "${1:-}" == -h || "${1:-}" == --help ]]; then
     usage
@@ -29,11 +39,28 @@ branch=$1
 project_directory=${2:-$PWD}
 git check-ref-format --branch "$branch" >/dev/null 2>&1 || die "invalid branch: $branch"
 project_directory=$(git -C "$project_directory" rev-parse --show-toplevel 2>/dev/null) || die "not a Git worktree: $project_directory"
+if [[ -n "$remote" ]]; then
+    git -C "$project_directory" remote get-url -- "$remote" > /dev/null 2>&1 || die "unknown remote: $remote"
+    git -C "$project_directory" show-ref --verify --quiet "refs/remotes/$remote/$branch" ||
+        die "remote branch not found: $remote/$branch; fetch the remote first"
+    if git -C "$project_directory" show-ref --verify --quiet "refs/heads/$branch"; then
+        upstream=$(git -C "$project_directory" for-each-ref --format='%(upstream)' "refs/heads/$branch")
+        [[ "$upstream" == "refs/remotes/$remote/$branch" ]] ||
+            die "local branch $branch already exists and does not track $remote/$branch"
+    fi
+fi
 
 main_directory=$(git -C "$project_directory" worktree list --porcelain | sed -n '1s/^worktree //p')
 [[ -n "$main_directory" ]] || die "could not find the main worktree"
 project=$(basename "$main_directory")
 worktree_root="$HOME/code/worktrees"
+main_directory=$(realpath "$main_directory")
+code_root=$(realpath -m "$HOME/code")
+case "$main_directory" in
+    "$code_root/work/"* | "$code_root/personal/"*)
+        worktree_root="$(dirname "$main_directory")/worktrees"
+        ;;
+esac
 worktree_directory="$worktree_root/$project--${branch//\//-}"
 
 open_session() {
@@ -67,6 +94,8 @@ fi
 
 if git -C "$project_directory" show-ref --verify --quiet "refs/heads/$branch"; then
     git -C "$project_directory" worktree add "$worktree_directory" "$branch"
+elif [[ -n "$remote" ]]; then
+    git -C "$project_directory" worktree add --track -b "$branch" "$worktree_directory" "refs/remotes/$remote/$branch"
 elif git -C "$project_directory" show-ref --verify --quiet "refs/remotes/origin/$branch"; then
     git -C "$project_directory" worktree add --track -b "$branch" "$worktree_directory" "origin/$branch"
 else

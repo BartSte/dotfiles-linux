@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# != 1 || ! $1 =~ ^[1-9][0-9]*$ ]]; then
+    printf 'Usage: tmux-codex-account PANE_PID\n' >&2
+    exit 2
+fi
+
+account_label() {
+    local process_id=$1 entry process_home= codex_home=
+
+    [[ -r /proc/$process_id/environ ]] || return 0
+    while IFS= read -r -d '' entry; do
+        case "$entry" in
+            HOME=*) process_home=${entry#HOME=} ;;
+            CODEX_HOME=*) codex_home=${entry#CODEX_HOME=} ;;
+        esac
+    done 2>/dev/null < "/proc/$process_id/environ" || return 0
+
+    [[ -n "$process_home" ]] || return 0
+    codex_home=$(realpath -m -- "${codex_home:-$process_home/.codex}")
+    if [[ "$codex_home" == "$(realpath -m -- "$process_home/.codex")" ]]; then
+        printf 'Codex: Work\n'
+    elif [[ "$codex_home" == "$(realpath -m -- "$process_home/.codex-personal")" ]]; then
+        printf 'Codex: Personal\n'
+    else
+        printf 'Codex: Custom\n'
+    fi
+}
+
+# The pane PID normally belongs to its shell. Find its nearest Codex child.
+pending=("$1")
+index=0
+while ((index < ${#pending[@]})); do
+    process_id=${pending[index]}
+    index=$((index + 1))
+    process_name=
+    if ! IFS= read -r process_name 2>/dev/null < "/proc/$process_id/comm"; then
+        continue
+    fi
+    if [[ "$process_name" == codex ]]; then
+        account_label "$process_id"
+        exit 0
+    fi
+
+    children=()
+    # procfs can return the child list without a final newline.
+    read -ra children 2>/dev/null < "/proc/$process_id/task/$process_id/children" || true
+    pending+=("${children[@]}")
+done

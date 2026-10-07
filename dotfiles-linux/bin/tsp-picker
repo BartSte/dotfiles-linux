@@ -17,14 +17,6 @@ if (($# > 1)); then
     exit 2
 fi
 
-context=${1:-}
-if [[ -z "$context" ]]; then
-    context=$(tmux display-message -p '#{session_path}' 2>/dev/null || true)
-    [[ -n "$context" ]] || context=$PWD
-fi
-current_repo=$(git -C "$context" rev-parse --show-toplevel 2>/dev/null || true)
-worktree_root=$(realpath -m "$HOME/code/worktrees")
-
 list_projects() {
     local pattern root directory top_level main_directory project branch kind
     declare -A seen=()
@@ -57,117 +49,22 @@ list_projects() {
                 [[ -n "$branch" ]] || branch='detached'
 
                 kind=project
-                if [[ "$(dirname "$directory")" == "$worktree_root" ]] && [[ -f "$directory/.git" ]]; then
+                if [[ -f "$directory/.git" ]]; then
                     kind=worktree
                 fi
                 printf '%s\t%s\t[%s] %s [%s]  %s\n' "$kind" "$directory" "$kind" "$project" "$branch" "$directory"
-            done < <(find "$root" -maxdepth 1 -type d -print0 2>/dev/null)
+            done < <(find "$root" -maxdepth 2 -type d -print0 2>/dev/null)
         done < <(compgen -G "$pattern" || true)
     done < "$config"
 }
 
-list_branches() {
-    [[ -n "$current_repo" ]] || return 0
-    local line branch project main_directory
-    declare -A checked_out=()
-
-    while IFS= read -r line; do
-        if [[ "$line" == branch\ refs/heads/* ]]; then
-            branch=${line#branch refs/heads/}
-            checked_out["$branch"]=1
-        fi
-    done < <(git -C "$current_repo" worktree list --porcelain)
-
-    main_directory=$(git -C "$current_repo" worktree list --porcelain | sed -n '1s/^worktree //p')
-    project=$(basename "$main_directory")
-    while IFS= read -r branch; do
-        [[ -z "${checked_out[$branch]+x}" ]] || continue
-        printf 'branch\t%s\t[branch] %s  (%s)\n' "$branch" "$branch" "$project"
-    done < <(git -C "$current_repo" for-each-ref --format='%(refname:short)' refs/heads)
-}
-
-list_entries() {
-    list_projects
-    list_branches
-}
-
 if $list_only; then
-    list_entries
+    list_projects
     exit 0
 fi
 
-status=
-while true; do
-    header='Enter: open project/worktree  Ctrl-A: add current project branch or query  Ctrl-X: remove worktree  Esc: close'
-    [[ -z "$status" ]] || header="$status"$'\n'"$header"
-    result=$(list_entries | fzf \
-        --delimiter=$'\t' \
-        --with-nth=3.. \
-        --prompt='Project> ' \
-        --header="$header" \
-        --print-query \
-        --expect=ctrl-a,ctrl-x) || exit 0
-
-    query=${result%%$'\n'*}
-    remaining=${result#*$'\n'}
-    key=${remaining%%$'\n'*}
-    if [[ "$remaining" == *$'\n'* ]]; then
-        selection=${remaining#*$'\n'}
-        entry_type=${selection%%$'\t'*}
-        value=${selection#*$'\t'}
-        value=${value%%$'\t'*}
-    else
-        entry_type=
-        value=
-    fi
-
-    case "$key" in
-        ctrl-a)
-            if [[ -z "$current_repo" ]]; then
-                status='Open a project first to create a worktree.'
-                continue
-            fi
-            if [[ -n "$query" ]] && git -C "$current_repo" show-ref --verify --quiet "refs/heads/$query"; then
-                branch=$query
-            elif [[ "$entry_type" == branch ]] &&
-                { [[ -z "$query" ]] || printf '%s\n' "$selection" |
-                    fzf --filter="$query" --delimiter=$'\t' --with-nth=3.. >/dev/null; }; then
-                branch=$value
-            else
-                branch=$query
-            fi
-            if [[ -z "$branch" ]]; then
-                status='Select a branch or type a new branch name.'
-                continue
-            fi
-            if ! git check-ref-format --branch "$branch" >/dev/null 2>&1; then
-                status="Invalid branch name: $branch"
-                continue
-            fi
-            if tsp-wt "$branch" "$current_repo" >&2; then
-                exit 0
-            fi
-            status="Could not open worktree for $branch."
-            ;;
-        ctrl-x)
-            if [[ "$entry_type" != worktree ]]; then
-                status='Select a managed worktree to remove.'
-                continue
-            fi
-            if /home/barts/dotfiles-linux/bin/tsp-worktree-remove --path "$value"; then
-                status="Removed $(basename "$value")."
-            else
-                status="Could not remove $(basename "$value"); check for changes in that worktree."
-            fi
-            ;;
-        '')
-            [[ -n "$entry_type" ]] || exit 0
-            if [[ "$entry_type" == branch ]]; then
-                status="Press Ctrl-A to create a worktree for $value."
-                continue
-            fi
-            printf '%s\n' "$value"
-            exit 0
-            ;;
-    esac
-done
+selection=$(list_projects | fzf --delimiter=$'\t' --with-nth=3 \
+    --prompt='Project> ' --header='Enter: open repo/worktree  Esc: close') || exit 0
+[[ -n "$selection" ]] || exit 0
+value=${selection#*$'\t'}
+printf '%s\n' "${value%%$'\t'*}"
