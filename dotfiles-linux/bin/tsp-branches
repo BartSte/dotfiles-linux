@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+list_only=false
+if [[ "${1:-}" == --list ]]; then
+    list_only=true
+    shift
+fi
+if (($# > 1)); then
+    printf 'Usage: tsp-branches [--list] [PROJECT_DIRECTORY]\n' >&2
+    exit 2
+fi
+
+context=${1:-$PWD}
+project_directory=$(git -C "$context" rev-parse --show-toplevel 2>/dev/null) || {
+    printf 'tsp-branches: the current directory is not in a Git repo.\n' >&2
+    exit 1
+}
+
+list_branches() {
+    local branch remote ref symbolic
+    declare -A local_branches=()
+
+    while IFS= read -r branch; do
+        local_branches["$branch"]=1
+        printf 'local\t%s\t[local] %s\n' "$branch" "$branch"
+    done < <(git -C "$project_directory" for-each-ref --format='%(refname:strip=2)' refs/heads)
+
+    while IFS= read -r remote; do
+        while IFS=$'\t' read -r ref symbolic; do
+            [[ -z "$symbolic" ]] || continue
+            branch=${ref#refs/remotes/"$remote"/}
+            [[ -z "${local_branches[$branch]+x}" ]] || continue
+            printf 'remote\t%s\t[remote] %s/%s\t%s\n' "$branch" "$remote" "$branch" "$remote"
+        done < <(git -C "$project_directory" for-each-ref --format='%(refname)%09%(symref)' "refs/remotes/$remote/")
+    done < <(git -C "$project_directory" remote)
+}
+
+if $list_only; then
+    list_branches
+    exit 0
+fi
+
+selection=$(list_branches | fzf --delimiter=$'\t' --with-nth=3 \
+    --prompt='Branch> ' --header='Enter: open branch worktree  Esc: close') || exit 0
+[[ -n "$selection" ]] || exit 0
+entry_type=${selection%%$'\t'*}
+value=${selection#*$'\t'}
+branch=${value%%$'\t'*}
+args=()
+if [[ "$entry_type" == remote ]]; then
+    args+=(--remote "${selection##*$'\t'}")
+fi
+exec tsp-wt "${args[@]}" "$branch" "$project_directory"

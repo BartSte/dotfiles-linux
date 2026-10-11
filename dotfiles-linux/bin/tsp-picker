@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+config=${TMUX_SESSION_DIRS_CONFIG:-"$HOME/.config/tmux-session/dirs"}
+[[ -f "$config" ]] || {
+    printf 'tsp-picker: config not found: %s\n' "$config" >&2
+    exit 1
+}
+
+list_only=false
+if [[ "${1:-}" == --list ]]; then
+    list_only=true
+    shift
+fi
+if (($# > 1)); then
+    printf 'Usage: tsp-picker [--list] [PROJECT_DIRECTORY]\n' >&2
+    exit 2
+fi
+
+list_projects() {
+    local pattern root directory top_level main_directory project branch kind
+    declare -A seen=()
+
+    while IFS= read -r pattern || [[ -n "$pattern" ]]; do
+        pattern=${pattern#"${pattern%%[![:space:]]*}"}
+        pattern=${pattern%"${pattern##*[![:space:]]}"}
+        [[ -z "$pattern" || "$pattern" == \#* ]] && continue
+
+        if [[ "$pattern" == '~' ]]; then
+            pattern=$HOME
+        elif [[ "$pattern" == '~/'* ]]; then
+            pattern=$HOME/${pattern#\~/}
+        fi
+
+        while IFS= read -r root; do
+            [[ -d "$root" ]] || continue
+            while IFS= read -r -d '' directory; do
+                directory=$(realpath "$directory")
+                [[ -e "$directory/.git" ]] || continue
+                top_level=$(git -C "$directory" rev-parse --show-toplevel 2>/dev/null) || continue
+                [[ "$(realpath "$top_level")" == "$directory" ]] || continue
+                [[ -z "${seen[$directory]+x}" ]] || continue
+                seen[$directory]=1
+
+                project=$(basename "$directory")
+                main_directory=$(git -C "$directory" worktree list --porcelain 2>/dev/null | sed -n '1s/^worktree //p')
+                [[ -z "$main_directory" ]] || project=$(basename "$main_directory")
+                branch=$(git -C "$directory" branch --show-current 2>/dev/null || true)
+                [[ -n "$branch" ]] || branch='detached'
+
+                kind=project
+                if [[ -f "$directory/.git" ]]; then
+                    kind=worktree
+                fi
+                printf '%s\t%s\t[%s] %s [%s]  %s\n' "$kind" "$directory" "$kind" "$project" "$branch" "$directory"
+            done < <(find "$root" -maxdepth 2 -type d -print0 2>/dev/null)
+        done < <(compgen -G "$pattern" || true)
+    done < "$config"
+}
+
+if $list_only; then
+    list_projects
+    exit 0
+fi
+
+selection=$(list_projects | fzf --delimiter=$'\t' --with-nth=3 \
+    --prompt='Project> ' --header='Enter: open repo/worktree  Esc: close') || exit 0
+[[ -n "$selection" ]] || exit 0
+value=${selection#*$'\t'}
+printf '%s\n' "${value%%$'\t'*}"

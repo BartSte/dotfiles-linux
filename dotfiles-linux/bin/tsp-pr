@@ -8,8 +8,10 @@ usage() {
     cat <<'EOF'
 Usage: tsp-pr [--config FILE] [--resolve-only] OWNER/REPO PR BASE_BRANCH HEAD_BRANCH
 
-Resolve a GitHub repository through the tmux-session dirs config, update the
-pull request's base branch, check out its head branch, and open it with tsp.
+Resolve a GitHub repository through the tmux-session dirs config and open
+the pull request in a worktree with tsp. Repositories under ~/code/work or
+~/code/personal use a worktrees folder beside the original repository.
+Other repositories use ~/code/worktrees.
 EOF
 }
 
@@ -103,33 +105,34 @@ done < "$config"
 ((${#roots[@]})) || die "no directories matched $config"
 
 declare -a candidates=()
-declare -a candidate_remotes=()
 declare -A seen=()
 wanted_repo=${repo,,}
 
 while IFS= read -r -d '' directory; do
+    top_level=$(git -C "$directory" rev-parse --show-toplevel 2>/dev/null) || continue
+    top_level=$(realpath "$top_level")
+    directory=$(realpath "$directory")
+    [[ "$top_level" == "$directory" ]] || continue
+
+    directory=$(git -C "$directory" worktree list --porcelain | sed -n '1s/^worktree //p')
     directory=$(realpath "$directory")
     [[ -z "${seen[$directory]+x}" ]] || continue
     seen[$directory]=1
-
-    top_level=$(git -C "$directory" rev-parse --show-toplevel 2>/dev/null) || continue
-    top_level=$(realpath "$top_level")
-    [[ "$top_level" == "$directory" ]] || continue
 
     while IFS= read -r remote; do
         remote_url=$(git -C "$directory" remote get-url "$remote" 2>/dev/null) || continue
         if [[ "$(normalize_repo "$remote_url")" == "$wanted_repo" ]]; then
             candidates+=("$directory")
-            candidate_remotes+=("$remote")
             break
         fi
     done < <(git -C "$directory" remote)
-done < <(find "${roots[@]}" -maxdepth 1 -type d -print0 2>/dev/null)
+done < <(find "${roots[@]}" -maxdepth 2 -type d -print0 2>/dev/null)
 
 ((${#candidates[@]})) || die "no project for $repo found through $config"
 
 current_root=$(git rev-parse --show-toplevel 2>/dev/null || true)
 if [[ -n "$current_root" ]]; then
+    current_root=$(git -C "$current_root" worktree list --porcelain | sed -n '1s/^worktree //p')
     current_root=$(realpath "$current_root")
 fi
 
@@ -184,35 +187,69 @@ if ((best_ties > 1)); then
 fi
 
 project_directory=${candidates[$best_index]}
-base_remote=${candidate_remotes[$best_index]}
 
 if $resolve_only; then
     printf '%s\n' "$project_directory"
     exit 0
 fi
 
-if ! git -C "$project_directory" diff --quiet || ! git -C "$project_directory" diff --cached --quiet; then
-    die "tracked changes in $project_directory must be committed or stashed first"
-fi
+worktree_root="$HOME/code/worktrees"
+code_root=$(realpath -m "$HOME/code")
+case "$project_directory" in
+    "$code_root/work/"* | "$code_root/personal/"*)
+        worktree_root="$(dirname "$project_directory")/worktrees"
+        ;;
+esac
+project=${project_directory##*/}
+worktree_directory="$worktree_root/$project--pr-$pr_number"
+worktree_branch=$head_branch
 
-printf 'Updating %s/%s in %s\n' "$base_remote" "$base_branch" "$project_directory"
-git -C "$project_directory" fetch \
-    "$base_remote" \
-    "+refs/heads/$base_branch:refs/remotes/$base_remote/$base_branch"
+# A branch can only be checked out in one worktree, including the main one.
+existing_worktree=""
+while IFS= read -r -d '' field; do
+    case "$field" in
+        'worktree '*) existing_worktree=${field#worktree } ;;
+        "branch refs/heads/$worktree_branch")
+            worktree_directory=$existing_worktree
+            break
+            ;;
+    esac
+done < <(git -C "$project_directory" worktree list --porcelain -z)
 
-if git -C "$project_directory" show-ref --verify --quiet "refs/heads/$base_branch"; then
-    git -C "$project_directory" switch "$base_branch"
+if [[ -e "$worktree_directory" ]]; then
+    worktree_top=$(git -C "$worktree_directory" rev-parse --show-toplevel 2>/dev/null || true)
+    [[ -n "$worktree_top" && "$(realpath "$worktree_top")" == "$(realpath "$worktree_directory")" ]] ||
+        die "destination is not a Git worktree: $worktree_directory"
+    project_git=$(git -C "$project_directory" rev-parse --path-format=absolute --git-common-dir)
+    worktree_git=$(git -C "$worktree_directory" rev-parse --path-format=absolute --git-common-dir)
+    [[ "$(realpath "$project_git")" == "$(realpath "$worktree_git")" ]] ||
+        die "destination belongs to another repository: $worktree_directory"
+    current_branch=$(git -C "$worktree_directory" branch --show-current)
+    if [[ "$current_branch" == "pr-$pr_number" && "$current_branch" != "$worktree_branch" ]]; then
+        git -C "$project_directory" show-ref --verify --quiet "refs/heads/$worktree_branch" &&
+            die "branch $worktree_branch already exists; move the old PR worktree before retrying"
+        # Rename legacy PR branches without discarding local commits or changes.
+        git -C "$worktree_directory" branch -m "$worktree_branch"
+        if ! (cd "$project_directory" && gh pr checkout "$pr_number" --repo "$repo" \
+            --branch "$worktree_branch" --worktree "$worktree_directory"); then
+            git -C "$worktree_directory" branch -m "$current_branch"
+            die "PR checkout failed; the legacy branch name was restored"
+        fi
+    elif [[ "$current_branch" != "$worktree_branch" ]]; then
+        die "destination is not on $worktree_branch: $worktree_directory"
+    fi
 else
-    git -C "$project_directory" switch --track -c "$base_branch" "$base_remote/$base_branch"
+    mkdir -p "$worktree_root"
+    printf 'Fetching %s#%s (%s)\n' "$repo" "$pr_number" "$head_branch"
+    (cd "$project_directory" && gh pr checkout "$pr_number" --repo "$repo" \
+        --branch "$worktree_branch" --worktree "$worktree_directory")
 fi
 
-git -C "$project_directory" merge --ff-only "$base_remote/$base_branch"
-cd "$project_directory"
-gh pr checkout "$pr_number" --repo "$repo"
+session_name=$(basename "$worktree_directory" | tr . _)
+if tmux has-session -t "=$session_name" 2>/dev/null; then
+    session_path=$(tmux display-message -p -t "=$session_name" '#{session_path}')
+    [[ "$(realpath -m "$session_path")" == "$(realpath -m "$worktree_directory")" ]] ||
+        die "tmux session $session_name already points to $session_path"
+fi
 
-current_branch=$(git -C "$project_directory" branch --show-current)
-[[ "$current_branch" == "$head_branch" ]] || {
-    die "expected branch $head_branch after checkout, found ${current_branch:-detached HEAD}"
-}
-
-exec tsp "$project_directory"
+exec tsp "$worktree_directory"

@@ -12,6 +12,7 @@ alias blueon='bluetoothctl power on; bluetoothctl discoverable on; bluetoothctl 
 alias chrome='google-chrome-stable --ozone-platform=wayland'
 alias dact='deactivate'
 alias dropsync='rclone bisync dropbox: ~/dropbox --remove-empty-dirs --progress --conflict-resolve newer'
+alias droppull='_droppull'
 alias dsize='du -h -d1' # use the du command for further inspection
 alias earbuds='bluetoothctl connect $EARBUDS'
 alias fps="ps aux | fzf"
@@ -31,6 +32,13 @@ alias tmka='tmux kill-server'
 alias ts='tmux-session'
 alias unl='rbw unlock'
 alias v='nvim'
+
+_droppull() {
+    local confirmation
+    read -r 'confirmation?Type yes to replace ~/dropbox with Dropbox contents (deleting local-only files): ' || return 1
+    [[ $confirmation == yes ]] || return 1
+    rclone sync dropbox: ~/dropbox --progress
+}
 
 tmks() {
     local session
