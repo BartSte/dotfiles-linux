@@ -12,9 +12,11 @@ project="$test_directory/projects space/python/project one"
 worktree="$test_directory/elsewhere/task worktree"
 mkdir -p "$project/nested directory" "$PROJECTRC_HOME/projectrc.d" "$test_directory/elsewhere"
 cp "$repo_root/zsh/projectrc/projectrc.d/python-work.zsh" "$PROJECTRC_HOME/projectrc.d/"
+cp "$repo_root/zsh/projectrc/projectrc.d/python.zsh" "$PROJECTRC_HOME/projectrc.d/"
 printf 'export SUBDIRECTORY_CONFIG=loaded\n' > "$PROJECTRC_HOME/projectrc.d/nested.zsh"
 printf '%s\n' \
     "$test_directory/projects*/python/** python-work.zsh" \
+    "$test_directory/projects*/python/** python.zsh" \
     "$test_directory/projects*/python/** python-work.zsh" \
     "$test_directory/projects*/python/**/nested* nested.zsh" > "$PROJECTRC_MAP"
 git -C "$project" init -q -b main
@@ -74,4 +76,38 @@ PROJECTRC_MAP="$test_directory/missing" zsh -ef -c '
     [[ -z "$PROJECTRC" ]]
 '
 
-printf 'PASS: worktree project configuration, shared Windows venv, nested paths, spaces, and fallback behavior\n'
+# Real venvs exercise activation, interpreter selection, and child processes.
+python3 -m venv --without-pip "$project/.venv"
+load_linux_venv() {
+    env -u VIRTUAL_ENV -u WSL_DISTRO_NAME -u WSL_INTEROP zsh -ef -c '
+        cd "$1"
+        source "$PROJECTRC_LOADER"
+        [[ "$VIRTUAL_ENV" == "$2" ]]
+        [[ "$(command -v python)" == "$2/bin/python" ]]
+        [[ "$(python -c "import sys; print(sys.prefix)")" == "$2" ]]
+        if command -v nvim >/dev/null; then
+            nvim --headless -u NONE -i NONE "+lua assert(vim.env.VIRTUAL_ENV == vim.env.EXPECTED_VENV); assert(vim.fn.exepath(\"python\") == vim.env.EXPECTED_VENV .. \"/bin/python\")" +qa
+        fi
+    ' -- "$1" "$2"
+}
+
+export EXPECTED_VENV="$project/.venv"
+load_linux_venv "$project" "$EXPECTED_VENV"
+load_linux_venv "$project/nested directory" "$EXPECTED_VENV"
+load_linux_venv "$worktree" "$EXPECTED_VENV"
+load_linux_venv "$worktree/nested directory" "$EXPECTED_VENV"
+
+python3 -m venv --without-pip "$worktree/.venv"
+export EXPECTED_VENV="$worktree/.venv"
+load_linux_venv "$worktree" "$EXPECTED_VENV"
+load_linux_venv "$worktree/nested directory" "$EXPECTED_VENV"
+
+# Missing Linux venvs leave the shell usable, including Windows-only venvs.
+mkdir -p "$plain_directory/.venv/Scripts"
+env -u VIRTUAL_ENV zsh -ef -c '
+    cd "$1"
+    source "$PROJECTRC_LOADER"
+    [[ -z ${VIRTUAL_ENV:-} ]]
+' -- "$plain_directory"
+
+printf 'PASS: worktree configuration, Windows venv, Linux venv precedence, nested paths, spaces, and Neovim inheritance\n'

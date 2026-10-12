@@ -46,4 +46,30 @@ else
     combined_hook="$layout_hook"
 fi
 
+# Nested PR worktrees need the project name to distinguish identical PR numbers.
+if ((${#tmux_session_args[@]} == 1)) && [[ -f "${tmux_session_args[0]}/.git" ]]; then
+    directory=$(realpath "${tmux_session_args[0]}")
+    project_directory=$(dirname "$directory")
+    worktree_root=$(dirname "$project_directory")
+    main_directory=$(git -C "$directory" worktree list --porcelain | sed -n '1s/^worktree //p')
+    if [[ "${worktree_root##*/}" == worktrees &&
+        "${project_directory##*/}" == "${main_directory##*/}" ]]; then
+        name=$(printf '%s--%s' "${project_directory##*/}" "${directory##*/}" | tr . _)
+        if tmux has-session -t "=$name" 2>/dev/null; then
+            session_path=$(tmux display-message -p -t "=$name" '#{session_path}')
+            if [[ "$(realpath -m "$session_path")" != "$directory" ]]; then
+                printf 'tsp: tmux session %s already points to %s\n' "$name" "$session_path" >&2
+                exit 1
+            fi
+        else
+            tmux new-session -d -s "$name" -c "$directory"
+            env name="$name" directory="$directory" bash -c "$combined_hook"
+        fi
+        if [[ -n "${TMUX:-}" ]]; then
+            exec tmux switch-client -t "=$name"
+        fi
+        exec tmux attach-session -t "=$name"
+    fi
+fi
+
 exec tmux-session "${tmux_session_args[@]}" --hook "$combined_hook"

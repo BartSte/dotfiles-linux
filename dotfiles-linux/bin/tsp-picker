@@ -53,7 +53,7 @@ list_projects() {
                     kind=worktree
                 fi
                 printf '%s\t%s\t[%s] %s [%s]  %s\n' "$kind" "$directory" "$kind" "$project" "$branch" "$directory"
-            done < <(find "$root" -maxdepth 2 -type d -print0 2>/dev/null)
+            done < <(find "$root" -maxdepth 3 -type d -print0 2>/dev/null)
         done < <(compgen -G "$pattern" || true)
     done < "$config"
 }

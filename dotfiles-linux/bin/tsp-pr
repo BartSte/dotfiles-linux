@@ -12,6 +12,7 @@ Resolve a GitHub repository through the tmux-session dirs config and open
 the pull request in a worktree with tsp. Repositories under ~/code/work or
 ~/code/personal use a worktrees folder beside the original repository.
 Other repositories use ~/code/worktrees.
+PR worktrees use <worktrees>/<project>/pr-<number>.
 EOF
 }
 
@@ -108,7 +109,8 @@ declare -a candidates=()
 declare -A seen=()
 wanted_repo=${repo,,}
 
-while IFS= read -r -d '' directory; do
+while IFS= read -r -d '' git_marker; do
+    directory=${git_marker%/.git}
     top_level=$(git -C "$directory" rev-parse --show-toplevel 2>/dev/null) || continue
     top_level=$(realpath "$top_level")
     directory=$(realpath "$directory")
@@ -126,7 +128,9 @@ while IFS= read -r -d '' directory; do
             break
         fi
     done < <(git -C "$directory" remote)
-done < <(find "${roots[@]}" -maxdepth 2 -type d -print0 2>/dev/null)
+# A marker is one level below its repository. Do not scan Git internals or
+# run Git in every source, dependency, and build directory.
+done < <(find "${roots[@]}" -maxdepth 4 -name .git -print0 -prune 2>/dev/null)
 
 ((${#candidates[@]})) || die "no project for $repo found through $config"
 
@@ -201,7 +205,11 @@ case "$project_directory" in
         ;;
 esac
 project=${project_directory##*/}
-worktree_directory="$worktree_root/$project--pr-$pr_number"
+worktree_directory="$worktree_root/$project/pr-$pr_number"
+legacy_directory="$worktree_root/$project--pr-$pr_number"
+if [[ ! -e "$worktree_directory" && -e "$legacy_directory" ]]; then
+    worktree_directory=$legacy_directory
+fi
 worktree_branch=$head_branch
 
 # A branch can only be checked out in one worktree, including the main one.
@@ -239,13 +247,16 @@ if [[ -e "$worktree_directory" ]]; then
         die "destination is not on $worktree_branch: $worktree_directory"
     fi
 else
-    mkdir -p "$worktree_root"
+    mkdir -p "$(dirname "$worktree_directory")"
     printf 'Fetching %s#%s (%s)\n' "$repo" "$pr_number" "$head_branch"
     (cd "$project_directory" && gh pr checkout "$pr_number" --repo "$repo" \
         --branch "$worktree_branch" --worktree "$worktree_directory")
 fi
 
 session_name=$(basename "$worktree_directory" | tr . _)
+if [[ "$(dirname "$worktree_directory")" == "$worktree_root/$project" ]]; then
+    session_name=$(printf '%s--%s' "$project" "${worktree_directory##*/}" | tr . _)
+fi
 if tmux has-session -t "=$session_name" 2>/dev/null; then
     session_path=$(tmux display-message -p -t "=$session_name" '#{session_path}')
     [[ "$(realpath -m "$session_path")" == "$(realpath -m "$worktree_directory")" ]] ||

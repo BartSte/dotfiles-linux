@@ -37,7 +37,9 @@ case "$main_directory" in
         ;;
 esac
 if [[ "$(dirname "$worktree_directory")" != "$worktree_root" &&
-    "$(dirname "$worktree_directory")" != "$grouped_root" ]]; then
+    "$(dirname "$worktree_directory")" != "$grouped_root" &&
+    "$(dirname "$worktree_directory")" != "$worktree_root/${main_directory##*/}" &&
+    "$(dirname "$worktree_directory")" != "$grouped_root/${main_directory##*/}" ]]; then
     message "This session is not in a managed worktree."
     exit 1
 fi

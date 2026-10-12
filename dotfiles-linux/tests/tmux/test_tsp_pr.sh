@@ -15,6 +15,7 @@ TEST_REAL_GIT=$(command -v git)
 export TEST_REMOTE="$test_directory/remote.git"
 export TEST_OPENED="$test_directory/opened"
 export TEST_CHECKOUT_LOG="$test_directory/checkouts"
+export TEST_NON_REPO_SCAN_LOG="$test_directory/non-repository-scans"
 export TEST_HEAD_REMOTE=https://github.com/contributor/project.git
 mkdir -p "$test_home/projects/project one" "$test_directory/bin"
 project="$test_home/projects/project one"
@@ -24,6 +25,9 @@ printf '%s\n' "$test_home/projects" "$TEST_WORKTREE_ROOT" > "$config"
 cat > "$test_directory/bin/git" <<'SH'
 #!/usr/bin/env bash
 set -euo pipefail
+if [[ ${1:-} == -C && ${3:-} == rev-parse && ${4:-} == --show-toplevel && ! -e "$2/.git" ]]; then
+    printf '%s\n' "$2" >> "$TEST_NON_REPO_SCAN_LOG"
+fi
 if [[ ${1:-} == -C && ${3:-} == fetch ]]; then
     exec "$TEST_REAL_GIT" -C "$2" fetch "$TEST_REMOTE" "${@:5}"
 fi
@@ -80,7 +84,7 @@ git -C "$project" remote add origin https://github.com/example/project.git
 printf 'local changes\n' > "$project/file"
 
 "$subject" --config "$config" example/project 42 main fork-feature
-worktree="$TEST_WORKTREE_ROOT/project one--pr-42"
+worktree="$TEST_WORKTREE_ROOT/project one/pr-42"
 [[ $(cat "$TEST_OPENED") == "$worktree" ]]
 [[ $(git -C "$worktree" rev-parse HEAD) == "$pr_commit" ]]
 [[ $(git -C "$worktree" branch --show-current) == fork-feature ]]
@@ -97,6 +101,10 @@ printf 'review changes\n' > "$worktree/file"
 [[ $(cat "$worktree/file") == 'review changes' ]]
 [[ $(cat "$TEST_CHECKOUT_LOG") == fork-feature ]]
 [[ $("$subject" --config "$config" --resolve-only example/project 42 main fork-feature) == "$project" ]]
+[[ ! -s "$TEST_NON_REPO_SCAN_LOG" ]] || {
+    printf 'FAIL: repository discovery ran Git in directories without a .git marker\n' >&2
+    exit 1
+}
 
 # Reuse any worktree that already has the source branch, including the main one.
 "$subject" --config "$config" example/project 43 main main
@@ -109,6 +117,14 @@ git -C "$project" worktree move "$worktree" "$other_worktree"
 [[ $(cat "$TEST_OPENED") == "$other_worktree" ]]
 [[ $(cat "$other_worktree/file") == 'review changes' ]]
 git -C "$project" worktree move "$other_worktree" "$worktree"
+
+# Existing worktrees at the old flat path retain their files and path.
+legacy_worktree="$TEST_WORKTREE_ROOT/project one--pr-42"
+git -C "$project" worktree move "$worktree" "$legacy_worktree"
+worktree=$legacy_worktree
+"$subject" --config "$config" example/project 42 main fork-feature
+[[ $(cat "$TEST_OPENED") == "$worktree" ]]
+[[ $(cat "$worktree/file") == 'review changes' ]]
 
 # Migrate a legacy branch while preserving local commits and uncommitted changes.
 git -C "$worktree" commit -qam 'local review commit'
@@ -136,7 +152,7 @@ unset TEST_CHECKOUT_FAIL
 git -C "$project" push -q "$TEST_REMOTE" "$pr_commit:refs/pull/44/head"
 export TEST_HEAD_REMOTE=origin
 "$subject" --config "$config" example/project 44 main feature/new
-new_worktree="$TEST_WORKTREE_ROOT/project one--pr-44"
+new_worktree="$TEST_WORKTREE_ROOT/project one/pr-44"
 [[ $(cat "$TEST_OPENED") == "$new_worktree" ]]
 [[ $(git -C "$new_worktree" branch --show-current) == feature/new ]]
 [[ $(git -C "$new_worktree" rev-parse HEAD) == "$pr_commit" ]]
@@ -177,11 +193,22 @@ for category in work/python personal/shell work personal; do
     git -C "$grouped_project" remote set-url origin https://github.com/example/project.git
     printf '%s\n' "$(dirname "$grouped_project")" > "$config"
     (cd "$grouped_project" && "$subject" --config "$config" example/project 44 main feature/grouped)
-    grouped_worktree="$HOME/code/$category/worktrees/grouped repo--pr-44"
+    grouped_worktree="$HOME/code/$category/worktrees/grouped repo/pr-44"
     [[ $(cat "$TEST_OPENED") == "$grouped_worktree" ]]
     [[ $(git -C "$grouped_worktree" branch --show-current) == feature/grouped ]]
     (cd "$grouped_project" && "$subject" --config "$config" example/project 44 main feature/grouped)
     [[ $(cat "$TEST_OPENED") == "$grouped_worktree" ]]
+    listing=$(TMUX_SESSION_DIRS_CONFIG="$config" "$repo_root/bin/tsp-picker" --list)
+    [[ "$listing" == *$'worktree\t'"$grouped_worktree"$'\t'* ]]
+    printf 'local changes\n' > "$grouped_worktree/file"
+    if "$repo_root/bin/tsp-worktree-remove" --path "$grouped_worktree" > /dev/null 2>&1; then
+        printf 'FAIL: removal accepted a dirty PR worktree\n' >&2
+        exit 1
+    fi
+    [[ -d "$grouped_worktree" ]]
+    git -C "$grouped_worktree" restore file
+    "$repo_root/bin/tsp-worktree-remove" --path "$grouped_worktree" > /dev/null 2>&1
+    [[ ! -e "$grouped_worktree" ]]
 done
 
 printf 'PASS: source branches, tracking, grouped worktrees, worktree reuse, legacy migration, isolation, and invalid input\n'
