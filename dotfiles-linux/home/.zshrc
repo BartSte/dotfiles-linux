@@ -11,4 +11,14 @@ fi
 # Added by garmin-connect-screens setup
 export PATH="$HOME/.local/bin:$PATH"
 # Added by garmin-connect-screens setup
-if command -v connect-iq-sdk-manager >/dev/null 2>&1; then export PATH="$(connect-iq-sdk-manager sdk current-path --bin):$PATH"; fi
+if command -v connect-iq-sdk-manager >/dev/null 2>&1; then 
+    connect-iq-sdk-manager agreement accept >/dev/null 2>&1
+    connect_sdk_path="$(connect-iq-sdk-manager sdk current-path --bin)";
+    if [[ -e "$connect_sdk_path" ]]; then
+        export PATH="$connect_sdk_path:$PATH"
+    fi
+fi
+
+# >>> Codex installer >>>
+export PATH="/home/barts/.local/bin:$PATH"
+# <<< Codex installer <<<
