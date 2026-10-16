@@ -7,6 +7,7 @@ trap 'rm -rf "$test_directory"' EXIT
 export TEST_WORKTREE_ROOT="$test_directory/worktrees space"
 export TEST_OPENED="$test_directory/opened"
 export TEST_PICKER_INPUT="$test_directory/picker-input"
+export XDG_CACHE_HOME="$test_directory/cache"
 export TMUX_SESSION_DIRS_CONFIG="$test_directory/dirs"
 project="$test_directory/projects/project one"
 mkdir -p "$project" "$test_directory/bin"
@@ -24,6 +25,12 @@ STUB
 cat > "$test_directory/bin/fzf" <<'STUB'
 #!/usr/bin/env bash
 set -euo pipefail
+if [[ ${TEST_ACCEPT_EARLY:-false} == true ]]; then
+    IFS= read -r selection
+    printf '%s\n' "$selection"
+    touch "$TEST_PICKER_INPUT.accepted"
+    exit 0
+fi
 cat > "$TEST_PICKER_INPUT"
 [[ ${TEST_CANCEL:-false} == false ]] || exit 130
 while IFS=$'\t' read -r kind value label remote; do
@@ -113,6 +120,41 @@ export TEST_SELECT_TYPE=project TEST_SELECT_VALUE="$project" TEST_SELECT_REMOTE=
 [[ $("$projects") == "$project" ]]
 export TEST_SELECT_TYPE=worktree TEST_SELECT_VALUE="$worktree"
 [[ $("$projects") == "$worktree" ]]
+
+# Accept the first result while discovery of another worktree is still busy.
+# The delayed producer writes after fzf closes its input pipe.
+real_git=$(command -v git)
+export TEST_REAL_GIT="$real_git" TEST_SLOW_DIRECTORY="$worktree"
+cat > "$test_directory/bin/git" <<'STUB'
+#!/usr/bin/env bash
+set -euo pipefail
+if [[ ${TEST_ACCEPT_EARLY:-false} == true && ${2:-} == "$TEST_SLOW_DIRECTORY" ]]; then
+    for ((attempt = 0; attempt < 100; attempt++)); do
+        [[ ! -e "$TEST_PICKER_INPUT.accepted" ]] || break
+        sleep 0.01
+    done
+    sleep 0.1
+fi
+exec "$TEST_REAL_GIT" "$@"
+STUB
+chmod +x "$test_directory/bin/git"
+printf '%s\n' "$project" "$worktree" > "$TMUX_SESSION_DIRS_CONFIG"
+export TEST_ACCEPT_EARLY=true
+rm -rf "$XDG_CACHE_HOME/tsp-picker"
+[[ $("$projects") == "$project" ]]
+# Let the complete scan finish before the fixture removes the Git wrapper.
+for ((attempt = 0; attempt < 100; attempt++)); do
+    [[ ! -d "$XDG_CACHE_HOME/tsp-picker" ]] || {
+        cache_files=("$XDG_CACHE_HOME/tsp-picker/"*.tsv)
+        [[ ! -f "${cache_files[0]}" ]] || break
+    }
+    sleep 0.01
+done
+[[ -f "${cache_files[0]}" ]]
+[[ $(wc -l < "${cache_files[0]}") == 2 ]]
+unset TEST_ACCEPT_EARLY
+rm "$test_directory/bin/git"
+printf '%s\n' "$test_directory/projects" "$TEST_WORKTREE_ROOT" > "$TMUX_SESSION_DIRS_CONFIG"
 
 export TEST_CANCEL=true
 previous_opened=$(cat "$TEST_OPENED")

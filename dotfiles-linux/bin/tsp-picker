@@ -8,12 +8,13 @@ config=${TMUX_SESSION_DIRS_CONFIG:-"$HOME/.config/tmux-session/dirs"}
 }
 
 list_only=false
-if [[ "${1:-}" == --list ]]; then
-    list_only=true
-    shift
-fi
+refresh=false
+case "${1:-}" in
+    --list) list_only=true; shift ;;
+    --refresh) refresh=true; shift ;;
+esac
 if (($# > 1)); then
-    printf 'Usage: tsp-picker [--list] [PROJECT_DIRECTORY]\n' >&2
+    printf 'Usage: tsp-picker [--list | --refresh] [PROJECT_DIRECTORY]\n' >&2
     exit 2
 fi
 
@@ -58,13 +59,55 @@ list_projects() {
     done < "$config"
 }
 
+cached_projects() (
+    umask 077
+    cache_directory=${XDG_CACHE_HOME:-"$HOME/.cache"}/tsp-picker
+    # Include both the configuration location and its contents. HOME affects
+    # expansion of the configured paths, so it also belongs in the key.
+    cache_key=$({ printf 'v1\n%s\n%s\n' "$HOME" "$(realpath "$config")"; cat "$config"; } | sha256sum)
+    cache_file="$cache_directory/${cache_key%% *}.tsv"
+    if ! mkdir -p "$cache_directory"; then
+        list_projects
+        exit
+    fi
+    if ! $refresh && [[ -f "$cache_file" ]]; then
+        cache_age=$(( $(date +%s) - $(stat -c %Y "$cache_file") ))
+        if ((cache_age >= 0 && cache_age < 60)); then
+            cat "$cache_file"
+            exit
+        fi
+    fi
+
+    temporary=$(mktemp "$cache_directory/.pending.XXXXXXXX")
+    trap 'rm -f "$temporary"' EXIT
+    # Keep writing the cache if fzf accepts early and closes its input pipe.
+    # Publish only complete scans; concurrent scans use separate temporary files.
+    list_projects | tee --output-error=warn-nopipe "$temporary"
+    mv -f "$temporary" "$cache_file"
+)
+
 if $list_only; then
     list_projects
     exit 0
 fi
 
-selection=$(list_projects | fzf --delimiter=$'\t' --with-nth=3 \
-    --prompt='Project> ' --header='Enter: open repo/worktree  Esc: close') || exit 0
+if $refresh; then
+    cached_projects
+    exit 0
+fi
+
+printf -v refresh_command '%q --refresh' "$(realpath "${BASH_SOURCE[0]}")"
+# fzf can accept a result before discovery finishes. A closed input pipe must
+# not turn that successful selection into a pipeline failure.
+selection=$(fzf --delimiter=$'\t' --with-nth=3 \
+    --prompt='Project> ' --header='Enter: open repo/worktree  Ctrl-R: refresh  Esc: close' \
+    --bind="ctrl-r:reload($refresh_command)" \
+    < <(cached_projects)) || exit 0
 [[ -n "$selection" ]] || exit 0
 value=${selection#*$'\t'}
-printf '%s\n' "${value%%$'\t'*}"
+directory=${value%%$'\t'*}
+if [[ ! -d "$directory" || ! -e "$directory/.git" ]]; then
+    printf 'tsp-picker: directory no longer exists: %s; use Ctrl-R to refresh\n' "$directory" >&2
+    exit 1
+fi
+printf '%s\n' "$directory"
