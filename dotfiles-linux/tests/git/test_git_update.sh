@@ -48,8 +48,8 @@ stale_branch() {
     git -C "$case_dir/seed" push --quiet origin --delete "$1"
 }
 
-# Only the current branch advances. An unpublished branch and a renamed local
-# branch with an existing upstream survive, even with an affirmative answer.
+# All branches on the selected remote advance, including renamed branches.
+# Unpublished commits survive, and the current branch stays selected.
 setup_case
 git switch --quiet -c unpublished
 git commit --quiet --allow-empty -m unpublished
@@ -61,9 +61,105 @@ git -C "$case_dir/seed" commit --quiet --allow-empty -m remote-update
 git -C "$case_dir/seed" push --quiet origin main
 run_command git-update <<< y || fail 'normal update failed'
 [[ $(git rev-parse main) == "$(git -C "$case_dir/seed" rev-parse main)" ]] || fail 'main did not advance'
-[[ $(git rev-parse local-main) == "$old_main" ]] || fail 'another local branch advanced'
+[[ $(git rev-parse local-main) == "$(git rev-parse main)" ]] || fail 'another local branch did not advance'
+[[ $(git rev-parse unpublished^) == "$old_main" ]] || fail 'unpublished branch changed'
 assert_branch unpublished
 [[ $(git branch --show-current) == main ]] || fail 'current branch changed'
+
+# Clean linked worktrees update their files and index, including newline paths.
+setup_case
+git branch 'linked|branch' main
+git branch --set-upstream-to=origin/main 'linked|branch' >/dev/null
+worktree="$case_dir/"$'linked\nworktree'
+git worktree add --quiet "$worktree" 'linked|branch'
+printf 'remote content\n' > "$case_dir/seed/new.txt"
+git -C "$case_dir/seed" add new.txt
+git -C "$case_dir/seed" commit --quiet -m remote-file
+git -C "$case_dir/seed" push --quiet origin main
+run_command git-update </dev/null || fail 'linked worktree update failed'
+[[ $(cat "$worktree/new.txt") == 'remote content' ]] || fail 'linked worktree files did not advance'
+[[ -z $(git -C "$worktree" status --porcelain) ]] || fail 'linked worktree index is inconsistent'
+
+# A divergent branch does not prevent other fast-forwards, but blocks cleanup.
+setup_case
+stale_branch stale
+git switch --quiet -c a-diverged
+git branch --set-upstream-to=origin/main >/dev/null
+git commit --quiet --allow-empty -m unique-local
+local_tip=$(git rev-parse HEAD)
+git switch --quiet main
+git branch z-behind main
+git branch --set-upstream-to=origin/main z-behind >/dev/null
+git -C "$case_dir/seed" commit --quiet --allow-empty -m remote-update
+git -C "$case_dir/seed" push --quiet origin main
+if run_command git-update </dev/null; then fail 'divergent secondary branch reported success'; fi
+[[ $(git rev-parse a-diverged) == "$local_tip" ]] || fail 'divergent branch changed'
+[[ $(git rev-parse z-behind) == "$(git rev-parse main)" ]] || fail 'eligible branch was skipped after divergence'
+assert_branch stale
+rg -q 'a-diverged.*diverge' "$test_root/output" || fail 'divergent branch was not reported'
+
+# Dirty linked worktrees preserve local files and do not use automatic stashing.
+setup_case
+git branch linked main
+git branch --set-upstream-to=origin/main linked >/dev/null
+worktree="$case_dir/dirty linked"
+git worktree add --quiet "$worktree" linked
+old_tip=$(git rev-parse linked)
+printf 'local content\n' > "$worktree/local.txt"
+git config merge.autostash true
+git -C "$case_dir/seed" commit --quiet --allow-empty -m remote-update
+git -C "$case_dir/seed" push --quiet origin main
+if run_command git-update </dev/null; then fail 'dirty secondary worktree reported success'; fi
+[[ $(git rev-parse linked) == "$old_tip" ]] || fail 'dirty worktree branch changed'
+[[ $(cat "$worktree/local.txt") == 'local content' ]] || fail 'local worktree files changed'
+[[ -z $(git stash list) ]] || fail 'secondary worktree changes were stashed'
+
+# Branches on other remotes and branches ahead of upstream retain their tips.
+setup_case
+git init --bare --quiet "$case_dir/other.git"
+git remote add other "$case_dir/other.git"
+git push --quiet other main
+git branch other-local main
+git branch --set-upstream-to=other/main other-local >/dev/null
+other_tip=$(git rev-parse other-local)
+git switch --quiet -c ahead
+git branch --set-upstream-to=origin/main >/dev/null
+git commit --quiet --allow-empty -m ahead
+git push --quiet origin HEAD:main
+git commit --quiet --allow-empty -m unpublished
+ahead_tip=$(git rev-parse HEAD)
+git switch --quiet main
+run_command git-pull-local </dev/null || fail 'ahead branch update failed'
+[[ $(git rev-parse ahead) == "$ahead_tip" ]] || fail 'ahead branch lost commits'
+[[ $(git rev-parse other-local) == "$other_tip" ]] || fail 'branch on another remote changed'
+
+# Ignored files and unfinished operations also protect clean linked worktrees.
+for blocked_kind in ignored operation; do
+    setup_case
+    git branch linked main
+    git branch --set-upstream-to=origin/main linked >/dev/null
+    worktree="$case_dir/blocked linked"
+    git worktree add --quiet "$worktree" linked
+    old_tip=$(git rev-parse linked)
+    if [[ $blocked_kind == ignored ]]; then
+        printf 'local.env\n' >> "$(git rev-parse --git-path info/exclude)"
+        printf 'local content\n' > "$worktree/local.env"
+        printf 'remote content\n' > "$case_dir/seed/local.env"
+        git -C "$case_dir/seed" add local.env
+    else
+        metadata=$(git -C "$worktree" rev-parse --absolute-git-dir)
+        mkdir "$metadata/rebase-merge"
+    fi
+    git -C "$case_dir/seed" commit --quiet --allow-empty -m remote-update
+    git -C "$case_dir/seed" push --quiet origin main
+    if run_command git-update </dev/null; then fail "blocked secondary worktree reported success: $blocked_kind"; fi
+    [[ $(git rev-parse linked) == "$old_tip" ]] || fail "blocked worktree branch changed: $blocked_kind"
+    if [[ $blocked_kind == ignored ]]; then
+        [[ $(cat "$worktree/local.env") == 'local content' ]] || fail 'ignored local file changed'
+    else
+        [[ -d $metadata/rebase-merge ]] || fail 'unfinished operation changed'
+    fi
+done
 
 # A merged branch with a missing upstream is deleted without confirmation.
 setup_case

@@ -4,8 +4,11 @@ set -euo pipefail
 
 usage='Usage: git-update [options] [remote]
 
-Fetch and prune the selected remote, then update the current branch with
-git pull --ff-only. Prune missing worktree metadata after its expiration
+Fetch and prune the selected remote, then fast-forward all local branches
+that track it. Pull the current branch with --ff-only. Update other checked-out
+branches only in clean worktrees. Preserve local commits and report divergent
+branches or blocked updates. Skip cleanup if any update fails.
+Prune missing worktree metadata after its expiration
 period (gc.worktreePruneExpire, or three months by default).
 Preserve missing metadata when commits lack a named reference.
 
@@ -27,7 +30,7 @@ Options:
   -h, --help        Show this help message and exit.
   -q, --quiet       Suppress progress messages. Keep candidates and prompts.
   -v, --verbose     Show output from Git commands.
-  --no-cleanup      Update the current branch without branch cleanup.
+  --no-cleanup      Update branches without branch cleanup.
   --cleanup-only    Fetch and clean worktrees and branches without an update.
 
 The current branch must track an upstream on the selected remote for updates.
@@ -104,6 +107,55 @@ upstream_is_gone() {
     upstream_remote=$(git for-each-ref --format='%(upstream:remotename)' "$1")
     [[ -n $upstream && $upstream_remote == "$remote" ]] || return 1
     ! git show-ref --verify --quiet "$upstream"
+}
+
+update_other_branches() {
+    local branch upstream upstream_remote worktree tip target status git_dir operation
+    local failed=false
+    while IFS= read -r -d '' branch; do
+        branch=${branch#$'\n'}
+        IFS= read -r -d '' upstream
+        IFS= read -r -d '' upstream_remote
+        IFS= read -r -d '' worktree
+        [[ $branch != "refs/heads/$current_branch" && -n $upstream && $upstream_remote == "$remote" ]] || continue
+        # Missing upstreams remain available for the existing cleanup process.
+        git show-ref --verify --quiet "$upstream" || continue
+        tip=$(git rev-parse --verify "$branch")
+        target=$(git rev-parse --verify "$upstream")
+        # Already current or ahead: preserve any unpublished commits.
+        if git merge-base --is-ancestor "$target" "$tip"; then
+            continue
+        fi
+        if ! git merge-base --is-ancestor "$tip" "$target"; then
+            printf 'Cannot update %s: local and upstream commits diverge.\n' "${branch#refs/heads/}" >&2
+            failed=true
+            continue
+        fi
+        log "Update ${branch#refs/heads/} with --ff-only"
+        if [[ -n $worktree ]]; then
+            if ! status=$(git -C "$worktree" status --porcelain --untracked-files=all --ignored --ignore-submodules=none) ||
+                [[ -n $status ]]; then
+                printf 'Cannot update %s: worktree is unavailable or has local changes or files: %s\n' "${branch#refs/heads/}" "$worktree" >&2
+                failed=true
+                continue
+            fi
+            git_dir=$(git -C "$worktree" rev-parse --absolute-git-dir)
+            for operation in MERGE_HEAD CHERRY_PICK_HEAD REVERT_HEAD rebase-merge rebase-apply sequencer BISECT_START; do
+                if [[ -e $git_dir/$operation ]]; then
+                    printf 'Cannot update %s: an unfinished Git operation exists in %s\n' "${branch#refs/heads/}" "$worktree" >&2
+                    failed=true
+                    continue 2
+                fi
+            done
+            if ! git -C "$worktree" -c gc.auto=0 -c maintenance.auto=false \
+                -c merge.autostash=false merge --ff-only --no-autostash "${git_options[@]}" "$target"; then
+                failed=true
+            fi
+        elif ! git update-ref -m "git-update: fast-forward to $upstream" "$branch" "$target" "$tip"; then
+            failed=true
+        fi
+    done < <(git for-each-ref --format='%(refname)%00%(upstream)%00%(upstream:remotename)%00%(worktreepath)%00' refs/heads/)
+    [[ $failed == false ]]
 }
 
 commits_are_preserved() {
@@ -279,6 +331,7 @@ git -c gc.auto=0 -c maintenance.auto=false fetch --prune "${git_options[@]}" "$r
 if [[ $mode != cleanup-only ]]; then
     log "Update $current_branch with --ff-only"
     git -c gc.auto=0 -c maintenance.auto=false pull --ff-only --no-rebase --no-autostash "${git_options[@]}" "$remote" "$merge_ref"
+    update_other_branches
 fi
 if [[ $mode != no-cleanup ]]; then
     cleanup_worktrees

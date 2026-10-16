@@ -10,6 +10,7 @@ to the current directory. New branches start at the current HEAD.
 Use --remote to create a branch that tracks the selected remote branch.
 Repositories under ~/code/work or ~/code/personal use a worktrees folder
 beside the original repository. Other repositories use ~/code/worktrees.
+Worktree paths use <worktrees>/<project>/<branch>, with slashes replaced by hyphens.
 EOF
 }
 
@@ -61,11 +62,14 @@ case "$main_directory" in
         worktree_root="$(dirname "$main_directory")/worktrees"
         ;;
 esac
-worktree_directory="$worktree_root/$project--${branch//\//-}"
+worktree_directory="$worktree_root/$project/${branch//\//-}"
 
 open_session() {
     local directory=$1 session_name existing_path
     session_name=$(basename "$directory" | tr . _)
+    if [[ "$directory" == "$worktree_directory" ]]; then
+        session_name=$(printf '%s--%s' "$project" "${directory##*/}" | tr . _)
+    fi
     if tmux has-session -t "=$session_name" 2>/dev/null; then
         existing_path=$(tmux display-message -p -t "=$session_name" '#{session_path}')
         if [[ "$(realpath -m "$existing_path")" != "$(realpath -m "$directory")" ]]; then
@@ -83,10 +87,10 @@ while IFS= read -r line; do
     fi
 done < <(git -C "$project_directory" worktree list --porcelain)
 
-mkdir -p "$worktree_root"
+mkdir -p "$(dirname "$worktree_directory")"
 [[ ! -e "$worktree_directory" ]] || die "destination already exists: $worktree_directory"
 
-session_name=$(basename "$worktree_directory" | tr . _)
+session_name=$(printf '%s--%s' "$project" "${worktree_directory##*/}" | tr . _)
 if tmux has-session -t "=$session_name" 2>/dev/null; then
     existing_path=$(tmux display-message -p -t "=$session_name" '#{session_path}')
     die "tmux session $session_name already points to $existing_path"

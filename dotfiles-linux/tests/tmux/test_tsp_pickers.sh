@@ -73,7 +73,7 @@ listing=$("$branches" --list "$project")
 
 export TEST_SELECT_TYPE=remote TEST_SELECT_VALUE=feature/login TEST_SELECT_REMOTE=origin
 "$branches" "$project"
-worktree="$TEST_WORKTREE_ROOT/project one--feature-login"
+worktree="$TEST_WORKTREE_ROOT/project one/feature-login"
 [[ $(cat "$TEST_OPENED") == "$worktree" ]]
 [[ $(git -C "$worktree" branch --show-current) == feature/login ]]
 [[ $(git -C "$worktree" rev-parse HEAD) == "$remote_commit" ]]
@@ -97,13 +97,13 @@ export TEST_SELECT_VALUE=main
 [[ $(cat "$TEST_OPENED") == "$project" ]]
 export TEST_SELECT_VALUE=local-task
 "$branches" "$project"
-[[ $(cat "$TEST_OPENED") == "$TEST_WORKTREE_ROOT/project one--local-task" ]]
-[[ $(git -C "$TEST_WORKTREE_ROOT/project one--local-task" rev-parse HEAD) == "$base_commit" ]]
+[[ $(cat "$TEST_OPENED") == "$TEST_WORKTREE_ROOT/project one/local-task" ]]
+[[ $(git -C "$TEST_WORKTREE_ROOT/project one/local-task" rev-parse HEAD) == "$base_commit" ]]
 
 export TEST_SELECT_TYPE=remote TEST_SELECT_VALUE=fix/bug TEST_SELECT_REMOTE=upstream
 "$branches" "$project"
-[[ $(cat "$TEST_OPENED") == "$TEST_WORKTREE_ROOT/project one--fix-bug" ]]
-[[ $(git -C "$TEST_WORKTREE_ROOT/project one--fix-bug" rev-parse --symbolic-full-name '@{upstream}') == refs/remotes/upstream/fix/bug ]]
+[[ $(cat "$TEST_OPENED") == "$TEST_WORKTREE_ROOT/project one/fix-bug" ]]
+[[ $(git -C "$TEST_WORKTREE_ROOT/project one/fix-bug" rev-parse --symbolic-full-name '@{upstream}') == refs/remotes/upstream/fix/bug ]]
 
 # The directory picker contains only directories and opens the selected one.
 listing=$("$projects" --list "$project")
@@ -157,10 +157,10 @@ for category in work/python personal/shell work personal; do
     grouped_root="$HOME/code/$category/worktrees"
     git clone -q "$project" "$grouped_project"
     tsp-wt feature/grouped "$grouped_project"
-    grouped_worktree="$grouped_root/grouped repo--feature-grouped"
+    grouped_worktree="$grouped_root/grouped repo/feature-grouped"
     [[ $(cat "$TEST_OPENED") == "$grouped_worktree" ]]
     tsp-wt second-task "$grouped_worktree"
-    [[ $(cat "$TEST_OPENED") == "$grouped_root/grouped repo--second-task" ]]
+    [[ $(cat "$TEST_OPENED") == "$grouped_root/grouped repo/second-task" ]]
     listing=$("$projects" --list)
     [[ "$listing" == *$'project\t'"$grouped_project"$'\t'* ]]
     [[ "$listing" == *$'worktree\t'"$grouped_worktree"$'\t'* ]]

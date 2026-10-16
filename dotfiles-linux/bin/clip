@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
+set -o pipefail
+
 if is_running wsl; then
-    clip.exe $@
+    # Windows clip.exe needs UTF-16LE input to preserve Unicode characters.
+    iconv -f UTF-8 -t UTF-16LE | clip.exe "$@"
 else
-    wl-copy $@
+    wl-copy "$@"
 fi

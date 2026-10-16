@@ -1,0 +1,4 @@
+interface:
+  display_name: "PR Attention"
+  short_description: "Collect PR work and prepare approved batches"
+  default_prompt: "Use $pr-attention to collect my daily PR queue, starting with direct review requests."

@@ -5,7 +5,7 @@ description: Curate `/review` findings and add them as a user-approved GitHub pu
 
 # Post a GitHub Pull-Request Review
 
-Turn `/review` findings into precise inline GitHub comments. Treat every GitHub write as consequential: show the exact draft and require explicit approval before adding comments or submitting a review.
+Turn `/review` findings into precise inline GitHub comments. Show the exact draft before any GitHub write. Combine comment selection and approval in one user response. Do not ask for a second confirmation of choices that the draft already covers.
 
 ## GitHub integration
 
@@ -27,15 +27,9 @@ Use the connected GitHub plugin first for PR metadata, diffs, file context, revi
 - Exclude equivalent comments already present in the user's pending or submitted reviews.
 - Write GitHub-facing text in plain, simple, informal English. Keep it concise, factual, and actionable. Preserve code identifiers, error messages, technical meaning, and user-supplied severity.
 
-Show numbered candidates with the complete body, path, line, side, and supplied severity or title. Show unpostable and excluded findings separately.
+Prepare numbered candidates with the complete body, path, line, side, and supplied severity or title. Show unpostable and excluded findings separately.
 
-Ask the user:
-
-1. Which comments should be included (`1,3`, `all`, or `none`)?
-2. Should any selected comment or the review summary be edited?
-3. Should the result be `submit` or `keep pending`?
-
-Do not treat selection as posting approval.
+Continue to the complete draft before requesting selection or approval. Do not ask preliminary selection questions.
 
 ## 3. Choose finalization behavior
 
@@ -54,9 +48,13 @@ Do not treat selection as posting approval.
 - Do not add a final submitted review action such as `COMMENT`, `REQUEST_CHANGES`, or `APPROVE`.
 - Never modify another user's pending review.
 
-## 4. Require exact-draft approval
+## 4. Combine selection and exact-draft approval
 
-Add a short summary covering only the selected points. For `keep pending`, include it in the pending review only when the chosen operation can store an unsubmitted review body; otherwise show it as deferred until submission.
+Default to all actionable candidates, `submit`, and `COMMENT`, unless the user already specifies other choices. Resolve the target before asking for approval.
+
+Add a short summary covering only the selected points. When the user can select a subset, show one numbered summary bullet per candidate. State that the final summary contains only the selected bullets, in draft order, with any required attribution unchanged. Do not rewrite the approved summary after selection.
+
+For `keep pending`, include the summary only when the chosen operation can store an unsubmitted review body. Otherwise show it as deferred until submission.
 
 Show the exact final draft with:
 
@@ -64,13 +62,20 @@ Show the exact final draft with:
 - finalization mode: `submit` or `keep pending`;
 - review action for `submit`;
 - target: existing pending review ID, new submitted review, or new pending review;
-- every inline path, line, side, and complete body;
+- numbered inline candidates with every path, line, side, and complete body;
 - the complete review summary or its deferred status;
 - an explicit statement of whether the result will be submitted.
 
-Ask: `Approve applying this review exactly as shown?`
+If the user can choose either finalization mode, show the exact target and summary behavior for each mode. Show the review action for `submit` and state that `keep pending` does not submit the review. If only one mode is available, show that mode and explain the limitation.
 
-Require an explicit affirmative response such as `yes`, `approved`, `post it`, or `add them`. If any body, anchor, selection, action, summary, target, or finalization mode changes, show the revised exact draft and obtain approval again.
+Ask once: `Approve all, or specify comment numbers, and choose submit or keep pending. Your selection and mode approve the displayed draft for those choices. You can also request edits or choose none.`
+
+- Treat `all, submit`, `1,3 keep pending`, or equivalent clear selection and mode as approval. Revalidate and write without another confirmation.
+- Treat `yes`, `approved`, `post it`, or `add them` as approval of the displayed defaults.
+- Apply subset selections and finalization choices directly when the displayed draft covers them. These choices do not require another approval.
+- For `none`, do not write a review unless the user explicitly approves a displayed summary-only review.
+- If the response requests edits or introduces an undisplayed action, target, mode, or summary, show the revised exact draft for approval.
+- If revalidation changes the head, anchor, target, or content, show the revised exact draft for approval.
 
 ## 5. Revalidate and write
 
@@ -96,23 +101,26 @@ Then apply only the approved draft:
 ## Draft format
 
 ```markdown
-Ready to apply this review exactly as shown:
+Ready to apply this review with your selection and approval:
 
 Repo: `owner/repo`
 PR: `#123`
 Head commit: `abc123...`
-Finalization: `submit` # or `keep pending`
-Review action: `COMMENT` # submit only
-Target: existing pending review `987654` by `login` # or new review
+Defaults: all comments, `submit`, `COMMENT`
+Submit target: new submitted review by `login`
+Keep pending target: new pending review by `login`
 
 Inline comments:
 1. `[P1] src/example.py:42` RIGHT
    Body: This fails when `limit` is missing. Please handle the default first.
 
-Review summary:
-Please handle the missing `limit` case before this call.
+Review summary (include only bullets for selected comments, in this order):
+1. Please handle the missing `limit` case before this call.
 
-This review will be submitted. # or: This review will remain pending.
+`submit` submits the review with action `COMMENT` and the displayed summary.
+`keep pending` leaves the review unsubmitted with the displayed summary.
 
-Approve applying this review exactly as shown?
+Approve all, or specify comment numbers, and choose submit or keep pending.
+Your selection and mode approve the displayed draft for those choices.
+You can also request edits or choose none.
 ```
