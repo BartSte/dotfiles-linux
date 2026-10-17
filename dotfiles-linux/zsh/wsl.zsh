@@ -1,7 +1,9 @@
-_winenv() {
+_winenv() (
     local name=$1
+    # CMD requires a Windows directory, even when it only reads the environment.
+    cd /mnt/c || return
     /mnt/c/Windows/System32/cmd.exe /D /C "echo %${name}%" | tr -d '\r'
-}
+)
 
 _resolve_win_python() {
     local python_root=$1
