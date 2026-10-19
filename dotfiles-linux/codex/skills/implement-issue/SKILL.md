@@ -191,12 +191,14 @@ unless explicitly requested.
 Follow repository title conventions. Otherwise use a clear summary with the ticket key when
 available, for example `DATC-123 Fix invalid release tag generation`.
 
-Write a pull-request description using the valuable, non-empty sections below:
+Read [PR description guidance](references/pr-descriptions.md) before creating or updating the
+description. Write for the developer who reviews the change. Use only valuable, non-empty sections:
 
 ```markdown
 ## Summary
 
-- What changed, why, and the main implementation decisions.
+- Explain the problem or goal and the resulting behavior.
+- Describe the approach and why it solves the problem.
 
 ## Issue
 
@@ -205,17 +207,25 @@ Write a pull-request description using the valuable, non-empty sections below:
 
 ## Changes
 
-- List important code, test, changelog, configuration, migration, and documentation changes.
+- Explain the important code changes and why they are necessary.
+- Mention tests, configuration, migrations, and documentation when they help the reviewer assess the change.
 
-## Validation
+## Manual testing
 
-- List every test, lint, type-check, and build command run, with each result.
-- Clearly list checks not run and why.
+- Give the prerequisites, actions, and expected results for useful manual checks.
+- Distinguish checks you performed from suggested checks that remain unperformed.
+- Omit this section when no useful manual check exists.
+
+## Demo
+
+- Include an available screenshot, recording, or concise before/after example when it helps explain the behavior.
+- Omit this section when no useful demo is available.
 
 ## Notes
 
 - Record relevant assumptions, limitations, follow-up work, and deployment, migration, or
-  compatibility considerations.
+  compatibility considerations. Include automated-check results only when they explain a material
+  failure, coverage gap, or limitation. Do not copy routine CI results or a command log into the description.
 ```
 
 Verify the push and draft PR creation. Then report the branch name, commit summaries, draft PR title

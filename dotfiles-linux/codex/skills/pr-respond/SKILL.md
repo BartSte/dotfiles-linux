@@ -50,6 +50,8 @@ An approval applies only to the listed actions and exact reply text. If the prop
 
 1. Re-fetch the pull-request head and selected comments. Stop and rebuild the proposal if the head, comment state, or relevant code changed.
 2. Apply only the approved code changes. Run relevant checks and tests.
+   If the approved actions include a PR description change, use the
+   [PR description guidance](../implement-issue/references/pr-descriptions.md).
 3. Show the final diff and test results before posting replies, unless the user explicitly approved both the code changes and the exact replies in one approval.
 4. Post only the approved replies. Do not resolve or dismiss threads unless the user explicitly approved that action.
 5. Report the applied changes, test results, posted replies, skipped items, and any failure.

@@ -103,6 +103,8 @@ Do not request another confirmation for unchanged actions and exact text already
 Revalidate the head, relevant comments, diff anchors, check state, and target review immediately before the relevant action.
 If relevant state changes, mark the proposal stale and rebuild the affected part before requesting approval again.
 Apply only approved actions, run appropriate validation, and report results per PR.
+For proposed or approved PR description changes, use the
+[PR description guidance](../implement-issue/references/pr-descriptions.md).
 Code approval does not implicitly approve committing, pushing, merging, resolving threads, or sending reminders. List these as distinct actions when proposed.
 
 On a partial failure, stop writes for that PR. Record successful operations and returned identifiers.
