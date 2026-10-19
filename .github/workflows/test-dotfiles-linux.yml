@@ -1,9 +1,13 @@
 name: test-dotfiles-linux
 
 on:
+  pull_request:
   schedule:
     - cron: "0 3 * * *"
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   linux:
@@ -11,6 +15,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Test twg setup
+        shell: bash
+        run: bash dotfiles-linux/tests/twg/test_main.sh
 
       - name: Run base initialize (curl)
         shell: bash
@@ -19,6 +29,13 @@ jobs:
           curl -O https://raw.githubusercontent.com/BartSte/dotfiles/master/dotfiles/initialize
           bash ./initialize
           rm ./initialize
+
+      - name: Use checked-out Linux revision
+        shell: bash
+        run: |
+          set -euo pipefail
+          git --git-dir="$HOME/dotfiles-linux.git" --work-tree="$HOME" fetch "$GITHUB_WORKSPACE" "$GITHUB_SHA"
+          git --git-dir="$HOME/dotfiles-linux.git" --work-tree="$HOME" checkout --force --detach FETCH_HEAD
 
       - name: Run dotfiles-linux main
         shell: bash

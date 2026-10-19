@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+export PATH="$HOME/.local/bin:$PATH"
+if ! command -v twg >/dev/null 2>&1; then
+    echo 'Run ~/dotfiles-linux/twg/main before authentication.' >&2
+    exit 1
+fi
+
+twg consent
+twg login

@@ -1,7 +1,35 @@
 #!/usr/bin/env bash
-
 set -euo pipefail
 
-if ! command -v twg >/dev/null 2>&1; then
-    curl -fsSL --retry 2 https://teamwork-graph.atlassian.com/cli/install | bash
+if command -v twg >/dev/null 2>&1 || [[ -x "$HOME/.local/bin/twg" ]]; then
+    exit 0
 fi
+
+version="${TWG_VERSION:-1.3.8}"
+case "$(uname -m)" in
+    x86_64) arch=x64 ;;
+    aarch64|arm64) arch=arm64 ;;
+    *) echo 'Unsupported twg architecture' >&2; exit 1 ;;
+esac
+
+base_url=https://teamwork-graph.atlassian.com/cli
+binary="twg-linux-${arch}-v${version}"
+tmpdir=$(mktemp -d)
+trap 'rm -rf "$tmpdir"' EXIT
+
+curl -fsSL --retry 2 "$base_url/$binary" -o "$tmpdir/$binary"
+curl -fsSL --retry 2 "$base_url/SHA256SUMS-v$version" -o "$tmpdir/SHA256SUMS"
+checksum=$(awk -v file="$binary" '{
+    name = $2
+    sub(/^\*/, "", name)
+    sub(/\r$/, "", name)
+    if (name == file) { print $1; exit }
+}' "$tmpdir/SHA256SUMS")
+if [[ ! "$checksum" =~ ^[[:xdigit:]]{64}$ ]]; then
+    echo "Missing or invalid checksum for $binary" >&2
+    exit 1
+fi
+(cd "$tmpdir" && printf '%s  %s\n' "$checksum" "$binary" | sha256sum --check --status)
+mkdir -p "$HOME/.local/bin"
+install -m 755 "$tmpdir/$binary" "$HOME/.local/bin/twg"
+echo 'twg installed. Run ~/dotfiles-linux/twg/auth for consent and login.'
