@@ -66,7 +66,7 @@ Identify proposal items by PR and number, such as `R1.1` and `A2.3`. Do not make
 Keep complete proposals in local files. Present the exact actionable drafts for the current batch before requesting approval.
 Include this final line in each proposed external comment, reply, or review summary:
 
-`_Codex (AI) for Bart Steensma._`
+`_Codex (AI) for Bart._`
 
 If a review finds no actionable issues, report that result. Do not infer permission to approve the PR.
 Stop the batch at proposals. Do not edit code, stage a GitHub pending review, or post replies during preparation.

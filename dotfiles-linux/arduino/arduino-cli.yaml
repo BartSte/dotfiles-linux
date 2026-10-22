@@ -10,7 +10,7 @@ directories:
 library:
   enable_unsafe_install: false
 logging:
-  file: 
+  file: ""
   format: text
   level: debug
 metrics:

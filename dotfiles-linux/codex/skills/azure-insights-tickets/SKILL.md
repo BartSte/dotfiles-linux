@@ -46,7 +46,7 @@ Start every description with an information panel. The `twg jira workitem create
 End every externally visible description with this line:
 
 ```text
-_Posted by Codex (AI) for Bart Steensma._
+_Posted by Codex (AI) for Bart._
 ```
 
 ## Review gate
