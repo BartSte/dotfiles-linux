@@ -11,7 +11,9 @@
 )
 
 ;; Match the Atreus firmware holds: Tab = numbers, Space = navigation,
-;; Enter = symbols, F = function keys. Backspace has no hold action.
+;; Enter = symbols, F = function keys, Backspace = shortcuts.
+;; Shortcuts use the left half: P = play/pause, B = back (previous track),
+;; F = forward (next track), S = silence (mute). Taps retain their base action.
 ;; For Meta + number, hold A and Tab, then press a right-hand digit.
 ;; The physical bottom-row keys emit Escape, Tab, Space, Backspace, Enter, Delete.
 (defsrc
@@ -36,6 +38,7 @@
 
     num_tab (tap-hold-next-release 200 tab (layer-toggle numpad))
     nav_space (tap-hold-next-release 200 space (layer-toggle navigation_right))
+    shortcuts_bspc (tap-hold-next-release 200 bspc (layer-toggle shortcuts))
     sym_ret (tap-hold-next-release 200 return (layer-toggle symbols))
     fk_f (tap-hold-next-release 200 f (layer-toggle fkeys))
     mac_d (tap-hold-next-release 200 d (layer-toggle macroright))
@@ -46,13 +49,20 @@
     q   w   @fk_f   p       b      j   l        u       y   ;
     @ma @ar @ss     @ct     g      m   @cn      @se     @ai @mo
     _   z   x       c       @mac_d v  k @mac_h  ,       .   /
-              esc @num_tab @nav_space bspc @sym_ret del
+              esc @num_tab @nav_space @shortcuts_bspc @sym_ret del
 )
 
 (deflayer navigation_right
-    _    _    _    _    _  Home     PageDown  PageUp  End       KeyPlayPause
+    _    _    _    _    _  Home     PageDown  PageUp  End       _
     lmet lalt lsft lctl _  KeyLeft  KeyDown   KeyUp   KeyRight  _
-    _    _    _    _    _  _        _         _       _         KeyPreviousSong KeyNextSong
+    _    _    _    _    _  _        _         _       _         _ _
+         _ _ _ _ _ _
+)
+
+(deflayer shortcuts
+    _ _ KeyNextSong KeyPlayPause KeyPreviousSong _ _ _ _ _
+    _ _ KeyMute     _            _               _ _ _ _ _
+    _ _ _ _ _ _ _ _ _ _ _
          _ _ _ _ _ _
 )
 

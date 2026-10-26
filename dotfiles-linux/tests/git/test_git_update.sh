@@ -65,6 +65,9 @@ run_command git-update <<< y || fail 'normal update failed'
 [[ $(git rev-parse unpublished^) == "$old_main" ]] || fail 'unpublished branch changed'
 assert_branch unpublished
 [[ $(git branch --show-current) == main ]] || fail 'current branch changed'
+rg -q "Keep branch 'unpublished': no upstream configured" "$test_root/output" || fail 'missing upstream skip reason was not reported'
+rg -q "Keep branch 'local-main': upstream still exists" "$test_root/output" || fail 'existing upstream skip reason was not reported'
+rg -q "Keep branch 'main': checked out in" "$test_root/output" || fail 'checked-out branch skip reason was not reported'
 
 # Clean linked worktrees update their files and index, including newline paths.
 setup_case
@@ -80,9 +83,19 @@ run_command git-update </dev/null || fail 'linked worktree update failed'
 [[ $(cat "$worktree/new.txt") == 'remote content' ]] || fail 'linked worktree files did not advance'
 [[ -z $(git -C "$worktree" status --porcelain) ]] || fail 'linked worktree index is inconsistent'
 
-# A divergent branch does not prevent other fast-forwards, but blocks cleanup.
+# A divergent branch does not prevent other fast-forwards or safe cleanup.
 setup_case
 stale_branch stale
+git worktree add --quiet "$case_dir/stale worktree" stale
+stale_branch unique-stale
+git switch --quiet unique-stale
+git commit --quiet --allow-empty -m unique-stale
+git switch --quiet main
+git worktree add --quiet "$case_dir/unique stale worktree" unique-stale
+stale_branch unique-local-stale
+git switch --quiet unique-local-stale
+git commit --quiet --allow-empty -m unique-local-stale
+git switch --quiet main
 git switch --quiet -c a-diverged
 git branch --set-upstream-to=origin/main >/dev/null
 git commit --quiet --allow-empty -m unique-local
@@ -92,14 +105,21 @@ git branch z-behind main
 git branch --set-upstream-to=origin/main z-behind >/dev/null
 git -C "$case_dir/seed" commit --quiet --allow-empty -m remote-update
 git -C "$case_dir/seed" push --quiet origin main
-if run_command git-update </dev/null; then fail 'divergent secondary branch reported success'; fi
+if run_command git-update <<< $'y\ny\ny\ny'; then fail 'divergent secondary branch reported success'; fi
 [[ $(git rev-parse a-diverged) == "$local_tip" ]] || fail 'divergent branch changed'
 [[ $(git rev-parse z-behind) == "$(git rev-parse main)" ]] || fail 'eligible branch was skipped after divergence'
-assert_branch stale
+assert_deleted stale
+[[ ! -e $case_dir/stale\ worktree ]] || fail 'safe stale worktree survived unrelated divergence'
+assert_branch unique-stale
+assert_branch unique-local-stale
+[[ -d $case_dir/unique\ stale\ worktree ]] || fail 'unique stale worktree was removed after update failure'
+if rg -q '\[y/N\]' "$test_root/output"; then fail 'cleanup prompted after update failure'; fi
+rg -q 'review with git-del-local' "$test_root/output" || fail 'unique branch skip reason was not reported'
 rg -q 'a-diverged.*diverge' "$test_root/output" || fail 'divergent branch was not reported'
 
 # Dirty linked worktrees preserve local files and do not use automatic stashing.
 setup_case
+stale_branch stale
 git branch linked main
 git branch --set-upstream-to=origin/main linked >/dev/null
 worktree="$case_dir/dirty linked"
@@ -113,6 +133,7 @@ if run_command git-update </dev/null; then fail 'dirty secondary worktree report
 [[ $(git rev-parse linked) == "$old_tip" ]] || fail 'dirty worktree branch changed'
 [[ $(cat "$worktree/local.txt") == 'local content' ]] || fail 'local worktree files changed'
 [[ -z $(git stash list) ]] || fail 'secondary worktree changes were stashed'
+assert_deleted stale
 
 # Branches on other remotes and branches ahead of upstream retain their tips.
 setup_case

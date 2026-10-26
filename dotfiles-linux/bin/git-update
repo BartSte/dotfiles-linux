@@ -7,7 +7,9 @@ usage='Usage: git-update [options] [remote]
 Fetch and prune the selected remote, then fast-forward all local branches
 that track it. Pull the current branch with --ff-only. Update other checked-out
 branches only in clean worktrees. Preserve local commits and report divergent
-branches or blocked updates. Skip cleanup if any update fails.
+branches or blocked updates. Skip cleanup if fetch or the current branch pull
+fails. If another branch update fails, perform only automatic safe cleanup
+and return a failure status.
 Prune missing worktree metadata after its expiration
 period (gc.worktreePruneExpire, or three months by default).
 Preserve missing metadata when commits lack a named reference.
@@ -41,6 +43,7 @@ quiet=false
 git_options=(--quiet)
 mode=update
 remote=''
+update_failed=false
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -h | --help) printf '%s\n' "$usage"; exit 0 ;;
@@ -261,6 +264,10 @@ cleanup_worktrees() {
             continue
         fi
         if ! commits_are_preserved "$branch"; then
+            if [[ $update_failed == true ]]; then
+                log "Keep worktree: commits outside the current branch; review with git-del-local: $path"
+                continue
+            fi
             printf 'Worktree candidate: %s (commits outside the current branch)\n' "$path" >&2
             confirm "Remove clean worktree '$path' (keep its branch for review)?" || continue
         fi
@@ -283,10 +290,23 @@ cleanup_branches() {
         IFS= read -r -d '' upstream
         IFS= read -r -d '' upstream_remote
         IFS= read -r -d '' worktree
-        [[ -n $upstream && $upstream_remote == "$remote" && -z $worktree ]] || continue
+        if [[ -n $worktree ]]; then
+            log "Keep branch '$branch': checked out in $worktree"
+            continue
+        fi
+        if [[ -z $upstream ]]; then
+            log "Keep branch '$branch': no upstream configured"
+            continue
+        fi
+        if [[ $upstream_remote != "$remote" ]]; then
+            log "Keep branch '$branch': upstream belongs to another remote ($upstream_remote)"
+            continue
+        fi
         if ! git show-ref --verify --quiet "$upstream"; then
             candidates+=("$branch")
             printf 'Cleanup candidate: %s (upstream gone: %s)\n' "$branch" "${upstream#refs/remotes/}" >&2
+        else
+            log "Keep branch '$branch': upstream still exists (${upstream#refs/remotes/})"
         fi
     done < <(git for-each-ref --format='%(refname)%00%(upstream)%00%(upstream:remotename)%00%(worktreepath)%00' refs/heads/)
 
@@ -300,7 +320,12 @@ cleanup_branches() {
             log "Deleted branch: $branch"
             continue
         fi
+        if [[ $update_failed == true ]]; then
+            log "Keep branch '$branch': commits outside the current branch; review with git-del-local"
+            continue
+        fi
         if ! confirm "Delete branch '$branch'?"; then
+            log "Keep branch '$branch': deletion not confirmed"
             continue
         fi
         if git branch -d "${git_options[@]}" -- "$branch"; then
@@ -309,6 +334,8 @@ cleanup_branches() {
         printf 'Safe deletion failed. Force deletion can discard unique local commits.\n' >&2
         if confirm "Force-delete branch '$branch'?"; then
             git branch -D "${git_options[@]}" -- "$branch"
+        else
+            log "Keep branch '$branch': force deletion not confirmed"
         fi
     done
 }
@@ -331,9 +358,18 @@ git -c gc.auto=0 -c maintenance.auto=false fetch --prune "${git_options[@]}" "$r
 if [[ $mode != cleanup-only ]]; then
     log "Update $current_branch with --ff-only"
     git -c gc.auto=0 -c maintenance.auto=false pull --ff-only --no-rebase --no-autostash "${git_options[@]}" "$remote" "$merge_ref"
-    update_other_branches
+    if ! update_other_branches; then
+        update_failed=true
+        if [[ $mode != no-cleanup ]]; then
+            printf 'Some branch updates failed. Cleanup will only remove safe candidates automatically.\n' >&2
+        fi
+    fi
 fi
 if [[ $mode != no-cleanup ]]; then
     cleanup_worktrees
     cleanup_branches
+fi
+if [[ $update_failed == true ]]; then
+    printf 'git-update finished with branch update failures.\n' >&2
+    exit 1
 fi
