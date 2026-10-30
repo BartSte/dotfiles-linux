@@ -25,9 +25,10 @@
 
 ## External AI attribution
 
-- When you post externally visible text, add this final line: `_Codex (AI) for Bart._`
+- When you post externally visible text outside Confluence, add this final line: `_Codex (AI) for Bart._`
 - Use only the first name `Bart` in attribution text.
-- Apply this rule to Jira comments, GitHub review summaries, inline review comments, pull-request comments, issue comments, and Confluence comments.
+- Apply this rule to Jira comments, GitHub review summaries, inline review comments, pull-request comments, and issue comments.
+- Do not add AI attribution to Confluence pages or comments.
 - Do not omit this disclosure, even when the user asks you to post the text.
 - If a platform provides a separate bot identity, use that identity when it is available.
 

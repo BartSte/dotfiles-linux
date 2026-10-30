@@ -1,28 +1,44 @@
 #!/usr/bin/env bash
 
-set -eo pipefail
+set -euo pipefail
 
-if is_running wsl; then
-  lg "Running in WSL, skipping DNS configuration"
-  exit 0
+install_only=false
+case "${1:-}" in
+    --install-only) install_only=true ;;
+    "") ;;
+    *) printf '%s\n' 'Usage: main [--install-only]' >&2; exit 1 ;;
+esac
+if (( $# > 1 )); then
+    printf '%s\n' 'Usage: main [--install-only]' >&2
+    exit 1
 fi
 
-sudo killall kmonad || true
-sudo systemctl disable kmonad.service || true
+if [[ $(uname -r) == *[Mm]icrosoft* ]] && [[ $install_only == false ]]; then
+    printf '%s\n' 'Running in WSL; skipping KMonad service setup. Use --install-only to install the configuration.'
+    exit 0
+fi
 
-pushd .
-cd ~/dotfiles-linux/kmonad
-sudo cp kmonad.service /etc/systemd/system
-sudo cp home_row_modifiers.kbd /etc/systemd/system
+script_directory=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+secret_directory=${DOTFILES_SECRET_DIR:-$HOME/dotfiles-secret}
+source_config="$secret_directory/kmonad/linux.kbd"
 
-cd /etc/systemd/system
-sudo chmod 644 kmonad.service
-sudo chmod 644 home_row_modifiers.kbd
-sudo chown root kmonad.service
-sudo chown root home_row_modifiers.kbd
+if [[ ! -f $source_config ]]; then
+    printf '%s\n' 'Private KMonad configuration not found in dotfiles-secret/kmonad/linux.kbd.' >&2
+    exit 1
+fi
 
-popd
-sudo systemctl start kmonad.service
-sudo systemctl enable kmonad.service
+# Parser errors can contain macro values. Keep diagnostics out of terminal logs.
+if ! kmonad "$source_config" --dry-run >/dev/null 2>&1; then
+    printf '%s\n' 'Private KMonad configuration validation failed.' >&2
+    exit 1
+fi
 
+sudo install -d -m 755 /etc/kmonad
+sudo install -m 600 "$source_config" /etc/kmonad/config.kbd
+sudo install -m 644 "$script_directory/kmonad.service" /etc/systemd/system/kmonad.service
 sudo systemctl daemon-reload
+
+if [[ $install_only == false ]]; then
+    sudo systemctl enable kmonad.service
+    sudo systemctl restart kmonad.service
+fi

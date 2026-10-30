@@ -154,7 +154,7 @@ run_command git-pull-local </dev/null || fail 'ahead branch update failed'
 [[ $(git rev-parse ahead) == "$ahead_tip" ]] || fail 'ahead branch lost commits'
 [[ $(git rev-parse other-local) == "$other_tip" ]] || fail 'branch on another remote changed'
 
-# Ignored files and unfinished operations also protect clean linked worktrees.
+# Ignored files that an update would overwrite and unfinished operations protect worktrees.
 for blocked_kind in ignored operation; do
     setup_case
     git branch linked main
@@ -181,6 +181,24 @@ for blocked_kind in ignored operation; do
         [[ -d $metadata/rebase-merge ]] || fail 'unfinished operation changed'
     fi
 done
+
+# Ignored caches and local data do not block an unrelated fast-forward.
+setup_case
+git branch linked main
+git branch --set-upstream-to=origin/main linked >/dev/null
+worktree="$case_dir/linked with caches"
+git worktree add --quiet "$worktree" linked
+printf '.pytest_cache/\nlocal.env\n' >> "$(git rev-parse --git-path info/exclude)"
+mkdir "$worktree/.pytest_cache"
+printf 'cache\n' > "$worktree/.pytest_cache/state"
+printf 'secret\n' > "$worktree/local.env"
+printf 'remote\n' > "$case_dir/seed/new.txt"
+git -C "$case_dir/seed" add new.txt
+git -C "$case_dir/seed" commit --quiet -m unrelated-update
+git -C "$case_dir/seed" push --quiet origin main
+run_command git-update </dev/null || fail 'ignored files blocked an unrelated update'
+[[ $(git rev-parse linked) == "$(git rev-parse main)" ]] || fail 'linked branch did not advance with ignored files'
+[[ $(cat "$worktree/local.env") == secret && $(cat "$worktree/.pytest_cache/state") == cache ]] || fail 'update changed ignored files'
 
 # A merged branch with a missing upstream is deleted without confirmation.
 setup_case
@@ -275,6 +293,68 @@ for dirty_kind in changed staged untracked ignored; do
     run_command git-update </dev/null || fail "dirty worktree cleanup failed: $dirty_kind"
     [[ -d $worktree ]] || fail "dirty worktree was removed: $dirty_kind"
     assert_branch dirty-worktree
+    case "$dirty_kind" in
+        changed | staged) reason='tracked changes' ;;
+        untracked) reason='untracked files' ;;
+        ignored) reason='ignored file: local.env' ;;
+    esac
+    rg -q "Keep worktree: $reason" "$test_root/output" || fail "missing specific blocker: $dirty_kind"
+done
+
+# Generated ignored files no longer retain merged worktrees. Exercise spaces,
+# newlines, and pathspec metacharacters in file and directory names.
+setup_case
+stale_branch generated-worktree
+worktree="$case_dir/generated worktree"
+git worktree add --quiet "$worktree" generated-worktree
+printf '__pycache__/\n.pytest_cache/\n.mypy_cache/\n.ruff_cache/\n*.egg-info/\n*.pyc\n*.pyo\n' >> "$(git rev-parse --git-path info/exclude)"
+for directory in 'src with spaces/__pycache__' .pytest_cache .mypy_cache .ruff_cache 'src/pkg.egg-info'; do
+    mkdir -p "$worktree/$directory"
+    printf 'generated\n' > "$worktree/$directory/"$'cache[*]\nfile'
+done
+printf 'bytecode\n' > "$worktree/module.pyc"
+printf 'bytecode\n' > "$worktree/module.pyo"
+run_command git-update </dev/null || fail 'generated file cleanup failed'
+[[ ! -e $worktree ]] || fail 'generated files retained a merged worktree'
+assert_deleted generated-worktree
+
+# Unknown ignored files, untracked caches, unfinished operations, and unique
+# commits preserve generated files as well as the worktree.
+for protected_kind in ignored environment untracked operation unique nested; do
+    setup_case
+    stale_branch protected-worktree
+    worktree="$case_dir/protected worktree"
+    git worktree add --quiet "$worktree" protected-worktree
+    printf '.pytest_cache/\n' >> "$(git rev-parse --git-path info/exclude)"
+    mkdir "$worktree/.pytest_cache"
+    printf 'cache\n' > "$worktree/.pytest_cache/state"
+    case "$protected_kind" in
+        ignored)
+            printf '.env\n' >> "$(git rev-parse --git-path info/exclude)"
+            printf 'secret\n' > "$worktree/.env"
+            ;;
+        environment)
+            printf '.venv/\n' >> "$(git rev-parse --git-path info/exclude)"
+            mkdir "$worktree/.venv"
+            printf 'environment\n' > "$worktree/.venv/state"
+            ;;
+        untracked)
+            mkdir "$worktree/__pycache__"
+            printf 'local\n' > "$worktree/__pycache__/local.pyc"
+            ;;
+        operation)
+            metadata=$(git -C "$worktree" rev-parse --absolute-git-dir)
+            mkdir "$metadata/rebase-merge"
+            ;;
+        unique) git -C "$worktree" commit --quiet --allow-empty -m unique ;;
+        nested)
+            git init --quiet "$worktree/.pytest_cache/nested"
+            git -C "$worktree/.pytest_cache/nested" commit --quiet --allow-empty -m nested
+            ;;
+    esac
+    run_command git-update </dev/null || fail "protected generated file cleanup failed: $protected_kind"
+    [[ $(cat "$worktree/.pytest_cache/state") == cache ]] || fail "generated files changed before safeguards passed: $protected_kind"
+    assert_branch protected-worktree
 done
 
 # Detached worktrees and branches without an upstream remain untouched.
@@ -283,6 +363,7 @@ git worktree add --quiet --detach "$case_dir/detached worktree" main
 git worktree add --quiet -b unpublished-worktree "$case_dir/unpublished worktree" main
 run_command git-update </dev/null || fail 'protected worktree cleanup failed'
 [[ -d $case_dir/detached\ worktree && -d $case_dir/unpublished\ worktree ]] || fail 'protected worktree was removed'
+rg -q 'Keep worktree with detached HEAD:' "$test_root/output" || fail 'detached HEAD blocker was not reported'
 assert_branch unpublished-worktree
 
 # An existing upstream and submodules prevent automatic worktree removal.

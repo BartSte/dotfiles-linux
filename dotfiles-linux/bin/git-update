@@ -16,10 +16,13 @@ Preserve missing metadata when commits lack a named reference.
 
 Automatically remove clean, unlocked linked worktrees and local branches
 whose upstream is gone and whose commits remain reachable from the current
-branch. Preserve worktrees with changed, untracked, or ignored files, active
+branch. Remove ignored Python bytecode, __pycache__, .pytest_cache,
+.mypy_cache, .ruff_cache, and *.egg-info files from eligible worktrees.
+Preserve worktrees with changed, untracked, or other ignored files, active
 tmux sessions or panes, detached HEAD, or submodules. Preserve the main and
 current worktrees, and branches without an upstream.
 Preserve branches still checked out in retained worktrees.
+In other worktrees, ignored files block updates only if Git must overwrite them.
 
 Other clean worktree candidates require confirmation. Branches with commits
 outside the current branch require confirmation before deletion, plus a
@@ -112,8 +115,69 @@ upstream_is_gone() {
     ! git show-ref --verify --quiet "$upstream"
 }
 
+worktree_is_clean() {
+    local status
+    blocker=''
+    if ! status=$(git -C "$1" status --porcelain --untracked-files=no --ignore-submodules=none); then
+        blocker='worktree is unavailable or cannot be inspected'
+    elif [[ -n $status ]]; then
+        blocker='tracked changes'
+    elif ! status=$(git -C "$1" status --porcelain --untracked-files=all --ignore-submodules=none); then
+        blocker='worktree cannot be inspected'
+    elif [[ -n $status ]]; then
+        blocker='untracked files'
+    fi
+    [[ -z $blocker ]]
+}
+
+worktree_has_no_operation() {
+    local git_dir operation
+    if ! git_dir=$(git -C "$1" rev-parse --absolute-git-dir); then
+        blocker='Git metadata cannot be inspected'
+        return 1
+    fi
+    for operation in MERGE_HEAD CHERRY_PICK_HEAD REVERT_HEAD rebase-merge rebase-apply sequencer BISECT_START; do
+        if [[ -e $git_dir/$operation ]]; then
+            blocker="unfinished Git operation ($operation)"
+            return 1
+        fi
+    done
+}
+
+collect_generated_files() {
+    local worktree=$1 ignored_list file
+    local -a ignored_files=()
+    generated_files=()
+    # A file preserves NUL separators and lets an inspection failure block cleanup.
+    ignored_list=$(mktemp) || { blocker='cannot create an inspection file'; return 1; }
+    if ! git -C "$worktree" ls-files --others --ignored --exclude-standard -z > "$ignored_list"; then
+        rm -f -- "$ignored_list"
+        blocker='ignored files cannot be inspected'
+        return 1
+    fi
+    mapfile -d '' -t ignored_files < "$ignored_list"
+    rm -f -- "$ignored_list"
+    for file in "${ignored_files[@]}"; do
+        # ls-files reports an embedded repository as a directory. Its contents
+        # are not inspected, even when its parent is a generated directory.
+        if [[ $file == */ ]]; then
+            printf -v blocker 'uninspected ignored directory or nested repository: %q' "$file"
+            return 1
+        fi
+        case "/$file" in
+            */__pycache__/* | */.pytest_cache/* | */.mypy_cache/* | */.ruff_cache/* | */*.egg-info/* | *.pyc | *.pyo)
+                generated_files+=(":(literal)$file")
+                ;;
+            *)
+                printf -v blocker 'ignored file: %q' "$file"
+                return 1
+                ;;
+        esac
+    done
+}
+
 update_other_branches() {
-    local branch upstream upstream_remote worktree tip target status git_dir operation
+    local branch upstream upstream_remote worktree tip target blocker
     local failed=false
     while IFS= read -r -d '' branch; do
         branch=${branch#$'\n'}
@@ -136,22 +200,13 @@ update_other_branches() {
         fi
         log "Update ${branch#refs/heads/} with --ff-only"
         if [[ -n $worktree ]]; then
-            if ! status=$(git -C "$worktree" status --porcelain --untracked-files=all --ignored --ignore-submodules=none) ||
-                [[ -n $status ]]; then
-                printf 'Cannot update %s: worktree is unavailable or has local changes or files: %s\n' "${branch#refs/heads/}" "$worktree" >&2
+            if ! worktree_is_clean "$worktree" || ! worktree_has_no_operation "$worktree"; then
+                printf 'Cannot update %s: %s: %s\n' "${branch#refs/heads/}" "$blocker" "$worktree" >&2
                 failed=true
                 continue
             fi
-            git_dir=$(git -C "$worktree" rev-parse --absolute-git-dir)
-            for operation in MERGE_HEAD CHERRY_PICK_HEAD REVERT_HEAD rebase-merge rebase-apply sequencer BISECT_START; do
-                if [[ -e $git_dir/$operation ]]; then
-                    printf 'Cannot update %s: an unfinished Git operation exists in %s\n' "${branch#refs/heads/}" "$worktree" >&2
-                    failed=true
-                    continue 2
-                fi
-            done
             if ! git -C "$worktree" -c gc.auto=0 -c maintenance.auto=false \
-                -c merge.autostash=false merge --ff-only --no-autostash "${git_options[@]}" "$target"; then
+                -c merge.autostash=false merge --ff-only --no-autostash --no-overwrite-ignore "${git_options[@]}" "$target"; then
                 failed=true
             fi
         elif ! git update-ref -m "git-update: fast-forward to $upstream" "$branch" "$target" "$tip"; then
@@ -196,9 +251,10 @@ worktree_is_in_tmux() {
 }
 
 cleanup_worktrees() {
-    local expiration record path='' branch='' head='' locked=false index=0 status
+    local expiration record path='' branch='' head='' locked=false index=0 blocker
     local current_worktree references can_prune=true
     local -a paths=() branches=() heads=() locks=() tmux_paths=()
+    local -a generated_files=()
     current_worktree=$(realpath -- "$(git rev-parse --show-toplevel)")
     # NUL records handle whitespace and newlines in worktree paths.
     while IFS= read -r -d '' record; do
@@ -243,8 +299,16 @@ cleanup_worktrees() {
         locked=${locks[index]}
         index=$((index + 1))
         # Git lists the main worktree first. Never remove it or this worktree.
-        [[ $index -gt 1 && -d $path && -n $branch && $locked == false ]] || continue
+        [[ $index -gt 1 && -d $path ]] || continue
         [[ $(realpath -- "$path") != "$current_worktree" ]] || continue
+        if [[ $locked == true ]]; then
+            log "Keep locked worktree: $path"
+            continue
+        fi
+        if [[ -z $branch ]]; then
+            log "Keep worktree with detached HEAD: $path"
+            continue
+        fi
         upstream_is_gone "$branch" || continue
         if worktree_is_in_tmux "$path"; then
             log "Keep worktree with an active tmux session or pane: $path"
@@ -254,13 +318,8 @@ cleanup_worktrees() {
             log "Keep worktree with submodules: $path"
             continue
         fi
-        # Include ignored files: .env files and other local data must survive.
-        if ! status=$(git -C "$path" status --porcelain --untracked-files=all --ignored --ignore-submodules=none); then
-            log "Keep worktree: cannot inspect $path"
-            continue
-        fi
-        if [[ -n $status ]]; then
-            log "Keep worktree with local files or changes: $path"
+        if ! worktree_is_clean "$path" || ! worktree_has_no_operation "$path" || ! collect_generated_files "$path"; then
+            log "Keep worktree: $blocker: $path"
             continue
         fi
         if ! commits_are_preserved "$branch"; then
@@ -270,6 +329,15 @@ cleanup_worktrees() {
             fi
             printf 'Worktree candidate: %s (commits outside the current branch)\n' "$path" >&2
             confirm "Remove clean worktree '$path' (keep its branch for review)?" || continue
+        fi
+        # Remove only ignored files from the allowlist, after all safeguards and
+        # any required confirmation. Literal pathspecs protect unusual names.
+        if [[ ${#generated_files[@]} -gt 0 ]]; then
+            log "Remove generated files from worktree: $path"
+            if ! git -C "$path" clean -f -X "${git_options[@]}" -- "${generated_files[@]}"; then
+                log "Keep worktree: generated file cleanup failed: $path"
+                continue
+            fi
         fi
         if git worktree remove -- "$path"; then
             log "Removed worktree: $path"
