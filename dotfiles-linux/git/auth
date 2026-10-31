@@ -156,6 +156,9 @@ done
 
 # 4) Per-scope identities and SSH signing
 write_file_if_changed "$CFG_PERSONAL" <<EOF
+[gh]
+user = BartSte
+
 [user]
 name = BartSte
 email = ${PERSONAL_EMAIL}
@@ -170,6 +173,9 @@ insteadOf = https://github.com/
 EOF
 
 write_file_if_changed "$CFG_WORK" <<EOF
+[gh]
+user = b-steensma_fleet
+
 [user]
 name = BartSte
 email = ${WORK_EMAIL}

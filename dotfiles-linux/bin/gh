@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Find the next executable, excluding this wrapper and symlinks to it.
+real_gh=
+IFS=: read -r -a search_paths <<< "$PATH"
+for directory in "${search_paths[@]}"; do
+    candidate="${directory:-.}/gh"
+    if [[ -x "$candidate" && ! "$candidate" -ef "${BASH_SOURCE[0]}" ]]; then
+        real_gh=$candidate
+        break
+    fi
+done
+if [[ -z "$real_gh" ]]; then
+    printf 'gh: cannot find the GitHub CLI executable on PATH\n' >&2
+    exit 127
+fi
+
+# Explicit credentials and authentication management retain normal gh behavior.
+if [[ -n ${GH_TOKEN:-} || -n ${GITHUB_TOKEN:-} || ${GH_HOST:-github.com} != github.com ]]; then
+    exec "$real_gh" "$@"
+fi
+case "${1:-}" in
+    auth|completion|help|--help|-h|--version|version|'') exec "$real_gh" "$@" ;;
+esac
+
+# An explicit host takes precedence over the repository's github.com account.
+previous=
+for argument in "$@"; do
+    if [[ "$previous" == --hostname && "$argument" != github.com ]]; then
+        exec "$real_gh" "$@"
+    fi
+    case "$argument" in
+        --hostname=*)
+            if [[ "$argument" != --hostname=github.com ]]; then
+                exec "$real_gh" "$@"
+            fi
+            ;;
+    esac
+    previous=$argument
+done
+
+account=
+if account=$(git config --get gh.user); then
+    :
+else
+    status=$?
+    if [[ "$status" != 1 ]]; then
+        printf 'gh: cannot read the gh.user Git configuration\n' >&2
+        exit "$status"
+    fi
+    # includeIf cannot select an account before a repository exists.
+    directory=$(pwd -P)
+    personal_root=$(realpath -m -- "$HOME/code/personal")
+    case "$directory" in
+        "$personal_root"|"$personal_root"/*)
+            if ! account=$(git config --file "$HOME/.gitconfig-personal" --get gh.user); then
+                printf 'gh: cannot read the personal gh.user configuration\n' >&2
+                exit 1
+            fi
+            ;;
+    esac
+fi
+if [[ -n "$account" ]]; then
+    if ! account_token=$("$real_gh" auth token --hostname github.com --user "$account"); then
+        printf 'gh: cannot get credentials for configured account %s\n' "$account" >&2
+        exit 1
+    fi
+    if [[ -z "$account_token" ]]; then
+        printf 'gh: no credentials for configured account %s\n' "$account" >&2
+        exit 1
+    fi
+    export GH_TOKEN=$account_token
+fi
+exec "$real_gh" "$@"
