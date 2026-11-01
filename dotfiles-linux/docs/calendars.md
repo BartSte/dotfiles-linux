@@ -20,7 +20,10 @@ After an explicit action, the Neovim configuration runs `mycalsync` to upload an
 If upload fails, retry synchronization rather than creating the event again.
 
 The Arch and Pi layers install five-minute user timers.
-They use independent storage and authentication. Preserve live DavMail properties during upgrades.
+They use independent storage and authentication.
+If credential lookup uses `rbw`, run `rbw unlock` interactively before background synchronization.
+An expired vault session blocks remote synchronization until the vault is unlocked again.
+Existing exported files remain available. Preserve live DavMail properties during upgrades.
 The Pi WebDAV unit serves the standard data directory, so keep its XDG data root at the default.
 
 The [base calendar instructions](https://github.com/BartSte/dotfiles/blob/master/README.md#calendar-setup)
