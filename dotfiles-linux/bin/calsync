@@ -4,17 +4,19 @@ set -euo pipefail
 usage="Usage: $(basename "$0") [-q | --quiet] [-v | --verbose] [-h | --help] <davmail-config> <calendar-name> <org-file> <start> <stop>
 
 Synchronize one vdirsyncer calendar with Outlook through DavMail and synchronize
-that local calendar bidirectionally with an Org file through khalorg.
+a read-only Org projection. Org files never request calendar changes.
 
 Options:
   -q, --quiet    suppress stdout and stderr
   -v, --verbose  also write errors to stderr
   -h, --help     show this help message
+  --request FILE apply one explicit request (used by calendar-submit)
 "
 
+request_file=
 quiet=0
 verbose=0
-options=$(getopt -o qvh --long quiet,verbose,help -- "$@") || {
+options=$(getopt -o qvh --long quiet,verbose,help,request: -- "$@") || {
     echo "Incorrect options provided" >&2
     exit 2
 }
@@ -32,6 +34,10 @@ while true; do
         -h | --help)
             echo "$usage"
             exit 0
+            ;;
+        --request)
+            request_file=$2
+            shift 2
             ;;
         --)
             shift
@@ -65,9 +71,13 @@ if [[ $org_file == -* || $davmail_config == -* || $start == -* || $stop == -* ]]
     exit 2
 fi
 
+server_marker=${XDG_CONFIG_HOME:-$HOME/.config}/calendar-bridge/server
+if [[ ! -f $server_marker || $(cat "$server_marker") != "$(hostname)" ]]; then
+    echo "This host is not the calendar server. Use explicit requests to the Pi." >&2
+    exit 2
+fi
+
 state_home=${XDG_STATE_HOME:-$HOME/.local/state}
-data_home=${XDG_DATA_HOME:-$HOME/.local/share}
-khalorg_state_dir=$data_home/khalorg
 mkdir -p "$state_home"
 log_file=$state_home/calsync.log
 if [[ -f $log_file ]] && (( $(wc -c < "$log_file") > 1048576 )); then
@@ -222,15 +232,19 @@ sync_calendar() {
 
     start_davmail "$current_uid"
     run_stage vdirsyncer -v CRITICAL sync "$calendar"
-    run_stage khalorg sync \
-        --start "$start" \
-        --stop "$stop" \
-        --state-dir "$khalorg_state_dir" \
-        --conflict-resolution khal \
-        "$calendar" \
-        "$org_file"
-    run_stage vdirsyncer -v CRITICAL sync "$calendar"
-    echo "Calendar sync done."
+    if [[ -n $request_file ]]; then
+        # Only explicit requests can write calendar data. The helper validates
+        # calendar, action, UUID, one complete event, UID, and baseline.
+        run_stage calendar-bridge-local apply "$calendar" "$request_file" >/dev/null
+        run_stage vdirsyncer -v CRITICAL sync "$calendar" >&2
+        run_stage vdirsyncer -v CRITICAL sync "$calendar" >&2
+        run_stage calendar-bridge-local verify "$calendar" "$request_file"
+        run_stage calendar-bridge-local export "$calendar" "$org_file" "$start" "$stop" >&2
+    else
+        run_stage calendar-bridge-local export "$calendar" "$org_file" "$start" "$stop"
+        run_stage vdirsyncer -v CRITICAL sync "$calendar"
+        echo "Calendar sync done."
+    fi
 }
 
 if [[ -n ${TMUX:-} ]] && command -v tmux >/dev/null; then

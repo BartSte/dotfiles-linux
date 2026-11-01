@@ -24,6 +24,9 @@ setup_case() {
     export TEST_VDIR_COUNT="$case_dir/vdir-count"
     export TEST_VDIR_PID="$case_dir/vdir-pid"
     export TEST_DAVMAIL_PID="$case_dir/davmail-pid"
+    export XDG_CONFIG_HOME="$case_dir/config"
+    mkdir -p "$XDG_CONFIG_HOME/calendar-bridge"
+    hostname > "$XDG_CONFIG_HOME/calendar-bridge/server"
     export XDG_STATE_HOME="$case_dir/state"
     export XDG_DATA_HOME="$case_dir/data"
     export TEST_UNRELATED_PID=$$
@@ -69,9 +72,9 @@ if [[ ${BLOCK_VDIR_CALL:-0} == "$n" ]]; then
 fi
 exit 0
 SH
-    cat > "$fake_bin/khalorg" <<'SH'
+    cat > "$fake_bin/calendar-bridge-local" <<'SH'
 #!/usr/bin/env bash
-printf 'khalorg|%s\n' "$*" >> "$TEST_EVENT_LOG"
+printf 'calendar-bridge-local|%s\n' "$*" >> "$TEST_EVENT_LOG"
 [[ ${FAIL_KHALORG:-0} == 1 ]] && exit 43
 exit 0
 SH
@@ -101,6 +104,12 @@ run_subject() {
         today 365d
 }
 
+# A laptop without the private server marker must not touch DavMail or vdirsyncer.
+setup_case
+rm "$XDG_CONFIG_HOME/calendar-bridge/server"
+if run_subject; then fail "an unconfigured calendar writer was accepted"; fi
+[[ ! -s $TEST_EVENT_LOG ]] || fail "unconfigured host started calendar operations"
+
 # Normal execution is an inbound sync, Khalorg sync, then outbound sync.
 setup_case
 run_subject || fail "normal run returned non-zero"
@@ -108,12 +117,24 @@ mapfile -t events < "$TEST_EVENT_LOG"
 assert_eq 4 "${#events[@]}" "normal event count"
 [[ ${events[0]} == davmail\|* ]] || fail "DavMail was not started first"
 assert_eq 'vdirsyncer|-v CRITICAL sync synthetic_calendar' "${events[1]}" "first vdirsyncer call"
-assert_eq "khalorg|sync --start today --stop 365d --state-dir $case_dir/data/khalorg --conflict-resolution khal synthetic_calendar $case_dir/calendar.org" "${events[2]}" "Khalorg invocation"
+assert_eq "calendar-bridge-local|export synthetic_calendar $case_dir/calendar.org today 365d" "${events[2]}" "read-only export invocation"
 assert_eq 'vdirsyncer|-v CRITICAL sync synthetic_calendar' "${events[3]}" "second vdirsyncer call"
 [[ ${events[2]} != *--delete-on-sync* ]] || fail "destructive flag reached Khalorg"
 [[ ${events[2]} != *--edit-dates* ]] || fail "date-edit flag reached Khalorg"
 pid=$(cat "$TEST_DAVMAIL_PID")
 kill -0 "$pid" 2>/dev/null && fail "owned DavMail process survived successful run"
+
+# Explicit requests are the only calendar write path. Verification precedes export.
+setup_case
+printf '{}\n' > "$case_dir/request.json"
+"$subject" --verbose --request "$case_dir/request.json" \
+    "$case_dir/davmail.properties" synthetic_calendar "$case_dir/calendar.org" today 365d \
+    || fail "explicit request failed"
+mapfile -t events < "$TEST_EVENT_LOG"
+assert_eq 7 "${#events[@]}" "explicit request stage count"
+assert_eq "calendar-bridge-local|apply synthetic_calendar $case_dir/request.json" "${events[2]}" "request apply stage"
+assert_eq "calendar-bridge-local|verify synthetic_calendar $case_dir/request.json" "${events[5]}" "request verification stage"
+assert_eq "calendar-bridge-local|export synthetic_calendar $case_dir/calendar.org today 365d" "${events[6]}" "post-verification export"
 
 # A Khalorg failure stops before outbound vdirsyncer and still cleans up owned DavMail.
 setup_case
