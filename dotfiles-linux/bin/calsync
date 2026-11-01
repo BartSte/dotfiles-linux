@@ -3,52 +3,29 @@ set -euo pipefail
 
 usage="Usage: $(basename "$0") [-q | --quiet] [-v | --verbose] [-h | --help] <davmail-config> <calendar-name> <org-file> <start> <stop>
 
-Synchronize one vdirsyncer calendar with Outlook through DavMail and synchronize
-a read-only Org projection. Org files never request calendar changes.
+Synchronize one vdirsyncer calendar with Outlook through DavMail and export
+a local Org agenda through khalorg. Org files never request calendar changes.
 
 Options:
   -q, --quiet    suppress stdout and stderr
   -v, --verbose  also write errors to stderr
   -h, --help     show this help message
-  --request FILE apply one explicit request (used by calendar-submit)
 "
 
-request_file=
 quiet=0
 verbose=0
-options=$(getopt -o qvh --long quiet,verbose,help,request: -- "$@") || {
-    echo "Incorrect options provided" >&2
-    exit 2
-}
-eval set -- "$options"
-while true; do
+positional=()
+while [[ $# -gt 0 ]]; do
     case "$1" in
-        -q | --quiet)
-            quiet=1
-            shift
-            ;;
-        -v | --verbose)
-            verbose=1
-            shift
-            ;;
-        -h | --help)
-            echo "$usage"
-            exit 0
-            ;;
-        --request)
-            request_file=$2
-            shift 2
-            ;;
-        --)
-            shift
-            break
-            ;;
-        *)
-            echo "Internal option parser error" >&2
-            exit 2
-            ;;
+        -q | --quiet) quiet=1; shift ;;
+        -v | --verbose) verbose=1; shift ;;
+        -h | --help) printf '%s\n' "$usage"; exit 0 ;;
+        --) shift; positional+=("$@"); break ;;
+        -*) printf 'Unknown option: %s\n' "$1" >&2; exit 2 ;;
+        *) positional+=("$1"); shift ;;
     esac
 done
+set -- "${positional[@]}"
 
 if [[ $# -ne 5 ]]; then
     echo "Expected exactly five positional arguments." >&2
@@ -71,12 +48,6 @@ if [[ $org_file == -* || $davmail_config == -* || $start == -* || $stop == -* ]]
     exit 2
 fi
 
-server_marker=${XDG_CONFIG_HOME:-$HOME/.config}/calendar-bridge/server
-if [[ ! -f $server_marker || $(cat "$server_marker") != "$(hostname)" ]]; then
-    echo "This host is not the calendar server. Use explicit requests to the Pi." >&2
-    exit 2
-fi
-
 state_home=${XDG_STATE_HOME:-$HOME/.local/state}
 mkdir -p "$state_home"
 log_file=$state_home/calsync.log
@@ -89,6 +60,7 @@ lock_fd=
 
 davmail_pid=
 active_pid=
+export_tmp=
 
 process_group_alive() {
     local pid=$1
@@ -117,6 +89,7 @@ cleanup_children() {
     terminate_group_bounded "$stage_pid"
     terminate_group_bounded "$davmail_pid"
     davmail_pid=
+    [[ -z $export_tmp ]] || rm -f -- "$export_tmp"
 }
 
 on_exit() {
@@ -232,19 +205,18 @@ sync_calendar() {
 
     start_davmail "$current_uid"
     run_stage vdirsyncer -v CRITICAL sync "$calendar"
-    if [[ -n $request_file ]]; then
-        # Only explicit requests can write calendar data. The helper validates
-        # calendar, action, UUID, one complete event, UID, and baseline.
-        run_stage calendar-bridge-local apply "$calendar" "$request_file" >/dev/null
-        run_stage vdirsyncer -v CRITICAL sync "$calendar" >&2
-        run_stage vdirsyncer -v CRITICAL sync "$calendar" >&2
-        run_stage calendar-bridge-local verify "$calendar" "$request_file"
-        run_stage calendar-bridge-local export "$calendar" "$org_file" "$start" "$stop" >&2
+    mkdir -p -- "$(dirname "$org_file")"
+    export_tmp=$(mktemp "$(dirname "$org_file")/.agenda.XXXXXX")
+    run_stage khalorg list -- "$calendar" "$start" "$stop" > "$export_tmp"
+    # Keep unchanged exports byte-identical without changing their modification time.
+    if [[ -f $org_file ]] && cmp -s -- "$export_tmp" "$org_file"; then
+        rm -f -- "$export_tmp"
     else
-        run_stage calendar-bridge-local export "$calendar" "$org_file" "$start" "$stop"
-        run_stage vdirsyncer -v CRITICAL sync "$calendar"
-        echo "Calendar sync done."
+        chmod 600 "$export_tmp"
+        mv -f -- "$export_tmp" "$org_file"
     fi
+    export_tmp=
+    echo "Calendar sync done."
 }
 
 if [[ -n ${TMUX:-} ]] && command -v tmux >/dev/null; then

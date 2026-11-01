@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Share the local calendar boundary with calsync; never import an Org file.
+set -euo pipefail
+case "${1:-}" in
+    new | edit | list | -h | --help) ;;
+    *)
+        # Capability probes are read-only, including probes for disabled commands.
+        if [[ ${2:-} != --help ]]; then
+            printf 'Use explicit new/edit actions. Whole-file sync and deletion are disabled.\n' >&2
+            exit 2
+        fi
+        ;;
+esac
+state_home=${XDG_STATE_HOME:-$HOME/.local/state}
+mkdir -p "$state_home"
+exec flock -w 30 "$state_home/calsync.lock" khalorg "$@"

@@ -11,18 +11,19 @@ for option in "$@"; do
     esac
 done
 
-mkdir -p "$HOME/dropbox/generated"
+agenda_dir=${XDG_DATA_HOME:-$HOME/.local/share}/khalorg/agendas
+mkdir -p "$agenda_dir"
 
 calsync \
     "$HOME/.config/davmail/davmail.work.properties" \
     outlook_work \
-    "$HOME/dropbox/generated/outlook_work.org" \
+    "$agenda_dir/outlook_work.org" \
     today 365d \
     "$@"
 
 calsync \
     "$HOME/.config/davmail/davmail.personal.properties" \
     outlook_personal \
-    "$HOME/dropbox/generated/outlook_personal.org" \
+    "$agenda_dir/outlook_personal.org" \
     today 365d \
     "$@"
