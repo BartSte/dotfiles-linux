@@ -38,7 +38,7 @@ Delete events in Outlook only. There is no Neovim deletion action in this workfl
 
 The first release supports title, description, location, and date changes for plain non-recurring events. It preserves the UID and unrelated iCalendar data. Use Outlook for invitations, recurring events, unsupported property changes, and ambiguous DST times. The server rejects these requests without changing the event.
 
-The default SSH destination is `barts@raspberrypi.local`. Set `CALENDAR_BRIDGE_HOST` before starting Neovim if another destination is required. The laptop needs non-interactive SSH access. Requests travel through stdin, not shell interpolation.
+Bart's Neovim configuration uses the literal SSH alias `pi`. This preserves the laptop's existing SSH settings. Set `CALENDAR_BRIDGE_HOST` before starting Neovim if another destination is required. The laptop needs non-interactive SSH access. Requests travel through stdin, not shell interpolation.
 
 ## Pending requests and conflicts
 
