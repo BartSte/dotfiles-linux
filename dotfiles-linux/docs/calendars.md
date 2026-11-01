@@ -30,3 +30,12 @@ The [base calendar instructions](https://github.com/BartSte/dotfiles/blob/master
 include Neovim actions, offline limits, and recovery instructions.
 The [Pi WebDAV guide](https://github.com/BartSte/dotfiles-pi/blob/main/dotfiles-pi/calendar-webdav/README.md)
 describes phone viewing.
+
+## Outlook reminders without a trigger
+
+Khal can fail to display a calendar if a display reminder has no `TRIGGER` property.
+The Khalorg module applies a small compatibility patch to the installed Khal alarm reader.
+It ignores that unsupported reminder during display and leaves the calendar file unchanged.
+Valid reminders retain their existing behavior.
+After upgrading the Khalorg tool environment, run the Khalorg module setup again to retain this fix.
+The patch is in `dotfiles-linux/khalorg/khal-missing-trigger.patch`.

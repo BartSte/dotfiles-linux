@@ -79,3 +79,17 @@ for cycle in 1 2 3; do
     [[ $(khalorg list --format '{uid}' -- synthetic 2030-01-03 1d | sed '/^[[:space:]]*$/d') == "$uid" ]]
 done
 printf 'PASS: real Khalorg explicit creation and editing preserve event identity\n'
+khalorg_bin=$(dirname "$(readlink -f "$(command -v khalorg)")")
+"$khalorg_bin/python" - <<'PY'
+import datetime
+from icalendar import Alarm
+from khal.khalendar.event import Event
+alarm = Alarm()
+alarm.add('ACTION', 'DISPLAY')
+before = alarm.to_ical()
+assert Event._can_handle_alarm(alarm) is False
+assert alarm.to_ical() == before
+alarm.add('TRIGGER', datetime.timedelta(minutes=-15))
+assert Event._can_handle_alarm(alarm) is True
+print('PASS: invalid reminder display does not change metadata; valid reminder retained')
+PY

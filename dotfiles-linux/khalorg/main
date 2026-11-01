@@ -6,3 +6,13 @@ lg "Linking khalorg config"
 mkdir -p ~/.config/khalorg
 ln -sf ~/dotfiles-linux/khalorg/khalorg_format.txt ~/.config/khalorg/khalorg_format.txt
 
+
+# Khal cannot display Outlook reminders that have no TRIGGER property.
+# Patch only the alarm reader. Calendar files and reminder metadata remain intact.
+if command -v khalorg >/dev/null; then
+    khalorg_bin=$(dirname "$(readlink -f "$(command -v khalorg)")")
+    event_module=$("$khalorg_bin/python" -c 'import inspect; from khal.khalendar import event; print(inspect.getfile(event))')
+    if ! grep -Fq 'getattr(trigger, "dt", None)' "$event_module"; then
+        patch --forward --backup "$event_module" "$HOME/dotfiles-linux/khalorg/khal-missing-trigger.patch"
+    fi
+fi
