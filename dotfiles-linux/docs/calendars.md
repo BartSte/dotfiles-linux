@@ -23,6 +23,7 @@ The Arch and Pi layers install five-minute user timers.
 They use independent storage and authentication.
 If credential lookup uses `rbw`, run `rbw unlock` interactively before background synchronization.
 An expired vault session blocks remote synchronization until the vault is unlocked again.
+On WSL, [automatic rbw unlock through Windows protection](rbw-windows-unlock.md) removes this prompt after initial enrollment.
 Existing exported files remain available. Preserve live DavMail properties during upgrades.
 The Pi WebDAV unit serves the standard data directory, so keep its XDG data root at the default.
 

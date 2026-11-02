@@ -10,6 +10,7 @@ Each machine connects to Outlook through its own DavMail, vdirsyncer, and khal s
 `mycalsync` exports local Org agendas through Khalorg without importing Org changes.
 The Neovim configuration uses the existing `nvim-khalorg` plugin for explicit event actions.
 See the [calendar guide](docs/calendars.md) for the local workflow.
+On WSL, [Windows-protected rbw unlock](docs/rbw-windows-unlock.md) permits automatic vault access after one enrollment.
 The Pi adds read-only WebDAV for Orgzly Revived; the laptop does not use that service.
 
 This repository owns `dotfiles-linux/README.md`. The base repository owns `~/README.md`.

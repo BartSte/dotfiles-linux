@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+set +x
+set -euo pipefail
+
+unlock_dir=$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")/../bitwarden" && pwd)
+# shellcheck source=bitwarden/windows-common.sh
+source "$unlock_dir/windows-common.sh"
+initialize_windows_unlock || exit 1
+
+title='' prompt='' rejected=false
+commands=()
+printf 'OK Windows-protected rbw pinentry\n'
+while IFS= read -r line; do
+    command=${line%% *}
+    value=${line#"$command"}
+    value=${value# }
+    case "$command" in
+        SETTITLE) title=$value ;;
+        SETPROMPT) prompt=$value ;;
+        SETERROR) rejected=true ;;
+        RESET) title='' prompt='' rejected=false; commands=() ;;
+        BYE) printf 'OK\n'; exit 0 ;;
+        GETPIN)
+            secret=''
+            if [[ $title == rbw && $prompt == 'Master Password' && $rejected == true ]]; then
+                windows_secret Delete </dev/null
+            fi
+            if [[ $title == rbw && $prompt == 'Master Password' && $rejected == false ]]; then
+                secret=$(windows_secret Read </dev/null 2>/dev/null) || secret=''
+            fi
+            if [[ -z $secret ]]; then
+                # Replay the original request for enrollment, retries, and 2FA.
+                # Keep Assuan encoding intact, including %, CR, and LF escapes.
+                response=$(printf '%s\n' "${commands[@]}" GETPIN | original_pinentry "$@") || response=''
+                while IFS= read -r response_line; do
+                    if [[ $response_line == 'D '* ]]; then
+                        secret+=${response_line#D }
+                    fi
+                done <<< "$response"
+                if [[ -n $secret && $title == rbw && $prompt == 'Master Password' ]]; then
+                    if ! printf '%s' "$secret" | windows_secret Write >/dev/null; then
+                        printf 'Could not save the Windows-protected vault secret.\n' >&2
+                    fi
+                fi
+            fi
+            if [[ -z $secret ]]; then
+                printf 'ERR 83886179 Password unavailable or entry cancelled\n'
+                exit 1
+            fi
+            printf 'D %s\nOK\n' "$secret"
+            unset secret response
+            exit 0
+            ;;
+        SET* | OPTION) ;;
+        *) printf 'ERR 67109139 Unsupported command\n'; continue ;;
+    esac
+    commands+=("$line")
+    printf 'OK\n'
+done
