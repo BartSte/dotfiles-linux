@@ -21,6 +21,7 @@ _zshrc_config() {
         "codex.zsh"
         "completion.zsh"
         "vi-mode.zsh"
+        "last-output.zsh"
         "bindings.zsh"
         "projectrc.zsh")
 
