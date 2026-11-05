@@ -1,131 +1,458 @@
 #!/usr/bin/env bash
+# Configure restricted SFTP. Read setup-ftpu.md before deploying.
+set -euo pipefail
 
-usage="Usage: setup-ftpu [options] <drive>
+DRIVE_MOUNT=/my-fdd-drive
+JAIL=/home/ftpu
+FSTAB=/etc/fstab
+SSHD_CONFIG=/etc/ssh/sshd_config
+STATE_DIR=/var/lib/setup-ftpu
+BACKUP_ROOT=/var/backups
+ALLOW_FROM=192.168.1.0/24
+DRY_RUN=false
+DRIVE=
+UUID=
+WORK=
+FSTAB_CHANGED=false
+SSH_CHANGED=false
+ACCOUNT_TOUCHED=false
+SUCCESS=false
 
-Configure a raspberry pi to run an sftp server to download/upload files to a 
-hard drive. The hard drive is mounted under /my-fdd-drive and is mapped to the
-user ftpu. The user ftpu has a home directory /home/ftpu/data which is mapped
-to the hard drive. The user ftpu can be used to access the hard drive from
-anywhere within the local network.
+usage() {
+    cat <<'EOF'
+Usage: sudo setup-ftpu [--dry-run] [--allow-from <IPv4-CIDR>] <partition>
 
-IMPORTANT: it is assumed that the hard drive is formatted as NTFS. If it is not
-formatted as NTFS, the script will not work.
+Set up password-based SFTP for ftpu, restricted to PhoneBackups on an NTFS
+partition. Default allowed subnet: 192.168.1.0/24. Other SSH accounts are unchanged.
 
-First, make sure that the hard drive is unmounted, you can check this by
-running:
+  --dry-run            Inspect and describe changes without changing the system.
+  --allow-from <CIDR>  Allow ftpu only from this IPv4 subnet.
+  -h, --help           Show this help.
 
-    sudo df --human-readable --print-type
+Example: sudo setup-ftpu --dry-run /dev/sda1
 
-And then unmount the drive by running:
+No formatting or data migration is performed. NTFS mount permissions apply
+across the drive. Read setup-ftpu.md for limitations and recovery instructions.
+EOF
+}
 
-    sudo umount --verbose /current_mount_point
+die() { printf 'Error: %s\n' "$*" >&2; exit 1; }
+log() { printf '%s\n' "$*"; }
+sshd() { /usr/sbin/sshd "$@"; }
+require_terminal() { [[ -t 0 ]] || die 'Run setup from an interactive terminal for password entry.'; }
 
-Run the following to locate the drive if you did not already know it (For me,
-it was \`/dev/sda1\`):
+parse_args() {
+    while (($#)); do
+        case $1 in
+            -h|--help) usage; exit 0 ;;
+            --dry-run) DRY_RUN=true; shift ;;
+            --allow-from)
+                (($# >= 2)) || die '--allow-from requires an IPv4 CIDR.'
+                ALLOW_FROM=$2; shift 2 ;;
+            -*) die "Unknown option: $1" ;;
+            *) [[ -z $DRIVE ]] || die 'Supply exactly one partition.'
+                DRIVE=$1; shift ;;
+        esac
+    done
+    [[ -n $DRIVE ]] || die 'Supply an NTFS partition, for example /dev/sda1.'
+    ALLOW_FROM=$(python3 - "$ALLOW_FROM" <<'PY'
+import ipaddress, sys
+try:
+    network = ipaddress.ip_network(sys.argv[1], strict=True)
+    if network.version != 4 or network.prefixlen == 0:
+        raise ValueError('use an IPv4 subnet narrower than /0')
+    print(network)
+except ValueError as e:
+    sys.exit(f'Invalid --allow-from: {e}')
+PY
+    ) || die 'Invalid allowed subnet.'
+}
 
-    sudo fdisk -l
+safe_path() {
+    python3 - "$1" <<'PY'
+from pathlib import Path
+import sys
+p = Path(sys.argv[1])
+for part in [p, *p.parents]:
+    if part.is_symlink():
+        sys.exit(f'Refusing symlinked path: {part}')
+PY
+}
 
-Provide the drive to the script as an argument. For example:
+assert_empty_directory() {
+    safe_path "$1"
+    if [[ -e $1 ]]; then
+        [[ -d $1 ]] || die "Not a directory: $1"
+        [[ -z $(find "$1" -mindepth 1 -maxdepth 1 -print -quit) ]] ||
+            die "Unmounted directory contains data: $1. Move it manually before setup."
+    fi
+}
 
-    setup-ftpu /dev/sda1
+mount_at() { findmnt -rn --mountpoint "$1" -o "$2"; }
 
-At the end of the script, \`sudo raspi-config\` is run to enable the SSH server. 
-Make sure to enable the SSH server by selecting 'Interfacing Options' -> 'SSH'
-and then selecting 'Yes' when prompted.
+verify_bind() {
+    [[ $(mount_at "$JAIL/data" UUID) == "$UUID" &&
+        $(mount_at "$JAIL/data" FSROOT) == /PhoneBackups ]] ||
+        die 'Upload mount does not point to PhoneBackups on the expected drive.'
+}
 
-The script was based on the following article: 
-- medium.com/kunalrdeshmukh/ftp-erver-with-raspberry-pi-and-hdd-3c10ce95f2d4
-
-Arguments:
-  <drive>         The drive to mount, e.g. /dev/sda1.
-
-Options:
-  -h, --help  Show this message and exit."
-
-final_message="Done. You can try any sftp client to connect to raspberry pi.
-Use ftp user as : ftpu
-- IP : IP address of raspberry pi.
-- Password : Password of ftpu user.
-This will allow you to access your Portable HDD from anywhere within your
-local network (most likely your home)."
-
-running_raspberry() {
-    if [ -f /proc/device-tree/model ]; then
-        grep -q "Raspberry Pi" /proc/device-tree/model
-        if [ $? -eq 0 ]; then
-            return 0
-        else
-            return 1
-        fi
+check_device() {
+    DRIVE=$(readlink -e -- "$DRIVE") || die 'Partition does not exist.'
+    [[ -b $DRIVE ]] || die 'The drive argument must be a block device.'
+    [[ $(blkid -c /dev/null -s TYPE -o value "$DRIVE") == ntfs ]] || die 'Only NTFS is supported.'
+    UUID=$(blkid -c /dev/null -s UUID -o value "$DRIVE")
+    [[ $UUID =~ ^[[:xdigit:]-]+$ ]] || die 'Missing or unsupported filesystem UUID.'
+    local -a matches
+    mapfile -t matches < <(blkid -c /dev/null -t "UUID=$UUID" -o device)
+    ((${#matches[@]} == 1)) || die 'The filesystem UUID is not unique.'
+    [[ $(readlink -e "${matches[0]}") == "$DRIVE" ]] || die 'UUID resolves to another device.'
+    local target
+    while IFS= read -r target; do
+        case $target in
+            "$DRIVE_MOUNT"|"$JAIL/data") ;;
+            *) die "Partition is mounted at $target; unmount it manually first." ;;
+        esac
+    done < <(findmnt -rn -S "$DRIVE" -o TARGET)
+    if mountpoint -q "$DRIVE_MOUNT"; then
+        [[ $(mount_at "$DRIVE_MOUNT" UUID) == "$UUID" ]] || die "$DRIVE_MOUNT contains another filesystem."
     else
+        assert_empty_directory "$DRIVE_MOUNT"
+    fi
+    if mountpoint -q "$JAIL/data"; then verify_bind; else assert_empty_directory "$JAIL/data"; fi
+    safe_path "$DRIVE_MOUNT/PhoneBackups"
+}
+
+check_account() {
+    local entry _name _password uid gid gecos home shell
+    entry=$(getent passwd ftpu || true)
+    if [[ -z $entry ]]; then
+        ! getent group ftpu >/dev/null || die 'An existing ftpu group needs manual inspection.'
+        [[ ! -e $STATE_DIR/identity ]] || die 'Managed account is missing; inspect the saved identity.'
+        [[ ! -e $JAIL ]] || die 'Existing ftpu home needs manual migration.'
+        return
+    fi
+    [[ -f $STATE_DIR/identity ]] || die 'Existing ftpu account is unmanaged; migrate it manually.'
+    [[ $(stat -c '%u:%a' "$STATE_DIR") == 0:700 &&
+        $(stat -c '%u:%a' "$STATE_DIR/identity") == 0:600 ]] || die 'Unsafe account identity state.'
+    IFS=: read -r _name _password uid gid gecos home shell <<< "$entry"
+    [[ $(cat "$STATE_DIR/identity") == "$UUID $uid $gid" &&
+        $gecos == 'Phone backups (setup-ftpu)' && $home == /data &&
+        $shell == /usr/sbin/nologin && $(id -G ftpu) == "$gid" ]] ||
+        die 'Existing ftpu identity, drive, or privileges differ; inspect them manually.'
+    if [[ -e $JAIL ]]; then
+        [[ -d $JAIL && $(stat -c '%u:%g:%a' "$JAIL") == 0:0:755 ]] || die 'Unsafe chroot ownership or permissions.'
+    fi
+}
+
+check_environment() {
+    ((EUID == 0)) || die 'Run with sudo, including for --dry-run.'
+    if [[ ! -f /proc/device-tree/model ]] || ! grep -q 'Raspberry Pi' /proc/device-tree/model; then
+        die 'This script requires Raspberry Pi OS/Debian on Raspberry Pi.'
+    fi
+    [[ -f /etc/debian_version ]] || die 'A Debian-based system is required.'
+    local path command_
+    for command_ in python3 blkid findmnt mountpoint flock useradd usermod passwd runuser systemctl unshare; do
+        command -v "$command_" >/dev/null || die "Required command is missing: $command_"
+    done
+    for path in "$FSTAB" "$SSHD_CONFIG" "$STATE_DIR" "$STATE_DIR/identity" "$STATE_DIR/lock" /home "$JAIL" "$JAIL/data" "$DRIVE_MOUNT"; do
+        safe_path "$path"
+    done
+    [[ -f $FSTAB && -f $SSHD_CONFIG ]] || die 'Existing fstab and SSH configuration are required.'
+    if [[ -e $STATE_DIR ]]; then
+        [[ -d $STATE_DIR && $(stat -c '%u:%a' "$STATE_DIR") == 0:700 ]] || die 'Unsafe setup state directory.'
+        for path in "$STATE_DIR/identity" "$STATE_DIR/lock"; do
+            if [[ -e $path ]]; then
+                [[ -f $path && $(stat -c '%u:%a:%h' "$path") == 0:600:1 ]] || die "Unsafe state file: $path"
+            fi
+        done
+    fi
+    [[ $(stat -c '%u:%g:%a' /home) == 0:0:755 ]] || die '/home must be root-owned with mode 0755.'
+    getent passwd barts >/dev/null || die 'Expected administrative account barts is missing.'
+    check_device
+    check_account
+}
+
+ntfs_options() {
+    printf 'uid=%s,gid=%s,fmask=0177,dmask=0077,nosuid,nodev,noexec,windows_names' "$1" "$2"
+}
+
+fstab_block() {
+    printf '%s\n' \
+        "UUID=$UUID $DRIVE_MOUNT ntfs-3g $(ntfs_options "$1" "$2"),nofail,x-systemd.device-timeout=10s 0 0" \
+        "$DRIVE_MOUNT/PhoneBackups $JAIL/data none bind,nosuid,nodev,noexec,nofail,x-systemd.requires=$DRIVE_MOUNT 0 0"
+}
+
+ssh_block() {
+    cat <<EOF
+Match User ftpu
+    AllowUsers ftpu@$ALLOW_FROM
+    AuthenticationMethods password
+    PasswordAuthentication yes
+    KbdInteractiveAuthentication no
+    PubkeyAuthentication no
+    ChrootDirectory $JAIL
+    ForceCommand internal-sftp -d /data -u 0077
+    DisableForwarding yes
+    PermitTTY no
+    PermitTunnel no
+    PermitUserRC no
+EOF
+}
+
+# Preserve unrelated text; reject legacy entries and broken managed sections.
+render_config() {
+    python3 - "$1" "$2" "$3" "$4" "$DRIVE_MOUNT" "$JAIL" "$DRIVE" "$UUID" <<'PY'
+from pathlib import Path
+import re, subprocess, sys
+kind, original, block, output, drive_mount, jail, device, uuid = sys.argv[1:]
+begin, end = '# BEGIN setup-ftpu', '# END setup-ftpu'
+lines = Path(original).read_text().splitlines(keepends=True)
+outside, inside, seen = [], False, False
+for line in lines:
+    if line.strip() == begin:
+        if inside or seen:
+            sys.exit('Duplicate or nested setup-ftpu section; inspect configuration.')
+        inside, seen = True, True
+    elif line.strip() == end:
+        if not inside:
+            sys.exit('Unexpected setup-ftpu end marker.')
+        inside = False
+    elif not inside:
+        outside.append(line)
+if inside:
+    sys.exit('Unterminated setup-ftpu section.')
+for line in outside:
+    fields = line.split('#', 1)[0].split()
+    if kind == 'fstab' and fields:
+        if len(fields) < 2:
+            sys.exit('Malformed fstab entry.')
+        source, target = fields[:2]
+        aliases = []
+        if source.startswith('/dev/'):
+            aliases = [source]
+        elif source.startswith(('LABEL=', 'PARTUUID=', 'PARTLABEL=')):
+            result = subprocess.run(['blkid', '-c', '/dev/null', '-t', source, '-o', 'device'],
+                                    text=True, capture_output=True, check=False)
+            if result.returncode not in (0, 2):
+                sys.exit('Could not resolve an existing fstab source safely.')
+            aliases = result.stdout.splitlines()
+        if any(Path(alias).resolve() == Path(device).resolve() for alias in aliases):
+            sys.exit('Conflicting device alias in fstab; migrate it manually.')
+        if (fields[0] in {device, f'UUID={uuid}', drive_mount, drive_mount+'/PhoneBackups'}
+                or source.upper() == f'UUID={uuid}'.upper()
+                or target in {drive_mount, jail+'/data'}):
+            sys.exit('Conflicting unmanaged fstab entry; migrate it manually.')
+    if kind == 'ssh' and fields and fields[0].lower() == 'match':
+        if re.search(r'\bftpu\b', line.split('#', 1)[0]):
+            sys.exit('Unmanaged SSH Match for ftpu; migrate it manually.')
+base = ''.join(outside).rstrip('\n')
+Path(output).write_text(base + '\n\n' + begin + '\n' + Path(block).read_text().rstrip('\n') + '\n' + end + '\n')
+PY
+}
+
+effective_ssh() {
+    sshd -T -f "$1" -C "user=$2,host=localhost,addr=$3"
+}
+
+validate_ssh() {
+    local candidate=$1 addr before after
+    sshd -t -f "$candidate"
+    for addr in 192.168.1.20 203.0.113.20 ::1; do
+        before=$(effective_ssh "$SSHD_CONFIG" barts "$addr")
+        after=$(effective_ssh "$candidate" barts "$addr")
+        [[ $before == "$after" ]] || die "SSH settings for barts would change ($addr)."
+        [[ $(effective_ssh "$candidate" ftpu "$addr" | sed -n 's/^port //p') == 22 ]] || die 'SSH must use port 22.'
+        effective_ssh "$candidate" ftpu "$addr" | python3 -c '
+import sys
+values = dict(line.rstrip().split(" ", 1) for line in sys.stdin if " " in line)
+expected = {
+    "allowusers": "ftpu@"+sys.argv[1], "authenticationmethods": "password",
+    "passwordauthentication": "yes", "kbdinteractiveauthentication": "no",
+    "pubkeyauthentication": "no", "chrootdirectory": sys.argv[2],
+    "forcecommand": "internal-sftp -d /data -u 0077", "disableforwarding": "yes",
+    "permittty": "no", "permittunnel": "no", "permituserrc": "no",
+}
+for key, value in expected.items():
+    if values.get(key) != value:
+        sys.exit(f"SSH restriction overridden: {key}")
+' "$ALLOW_FROM" "$JAIL"
+    done
+}
+
+verify_mounts() {
+    [[ $(mount_at "$DRIVE_MOUNT" UUID) == "$UUID" &&
+        $(mount_at "$DRIVE_MOUNT" FSTYPE) == fuseblk ]] || die 'Expected NTFS-3G mount is missing.'
+    verify_bind
+    local path options
+    for path in "$DRIVE_MOUNT" "$JAIL/data"; do
+        options=,$(mount_at "$path" OPTIONS),
+        [[ $options == *,rw,* && $options == *,nosuid,* &&
+            $options == *,nodev,* && $options == *,noexec,* ]] || die "Unsafe mount options at $path."
+    done
+    [[ $(stat -c '%u:%g:%a' "$DRIVE_MOUNT/PhoneBackups") == "$(id -u ftpu):$(id -g ftpu):700" ]] ||
+        die 'NTFS ownership or directory permissions do not match.'
+    runuser -u ftpu -- test -w "$JAIL/data" || die 'ftpu cannot write to the upload mount.'
+}
+
+# A non-recursive bind of the parent reveals the covered directory without
+# disconnecting uploads. The temporary bind exists only in a private namespace.
+verify_covered_directory() {
+    mkdir "$WORK/jail-view"
+    # Positional arguments belong to the child bash.
+    # shellcheck disable=SC2016
+    unshare --mount --propagation private bash -euc '
+        mount --bind "$1" "$2"
+        [[ $(stat -c "%u:%g:%a" "$2/data") == 0:0:555 ]]
+        [[ -z $(find "$2/data" -mindepth 1 -maxdepth 1 -print -quit) ]]
+    ' bash "$JAIL" "$WORK/jail-view" || die 'Covered upload directory is unsafe or contains data.'
+    rmdir "$WORK/jail-view"
+}
+
+atomic_replace() {
+    local source=$1 target=$2 temporary
+    temporary=$(mktemp "${target}.setup-ftpu.XXXXXX")
+    if ! cp --preserve=mode,ownership -- "$source" "$temporary" || ! mv -fT -- "$temporary" "$target"; then
+        rm -f -- "$temporary"
         return 1
     fi
 }
 
-assert_raspberry() {
-    if ! running_raspberry; then
-        echo "This script is meant to be run on a Raspberry Pi."
-        exit 1
-    fi
-
-}
-
-prepare() {
-    sudo apt-get -y update
-    sudo apt-get -y upgrade
-    sudo apt-get -y dist-upgrade
-}
-
-mount_drive() {
-    local drive_ mount_point_
-    drive_="$1"
-    mount_point_="$2"
-    cd /
-    sudo mkdir "$mount_point_"
-    sudo mount "$drive_" "$mount_point_"
-    sudo chmod 775 "$mount_point_"
-}
-
-# Add a line to the end of /etc/fstab if it does not exist
-extend_fstab() {
-    line="$1"
-    if ! grep -q "$line" /etc/fstab; then
-        echo "$line" | sudo tee -a /etc/fstab
-    fi
-}
-
-add_ftpu_user() {
-    sudo adduser ftpu
-    sudo mkdir /home/ftpu/data
-    sudo chown ftpu:ftpu /home/ftpu/data
-}
-
-drive=""
-mount_point="/my-fdd-drive"
-while [ "$1" != "" ]; do
-    case $1 in
-        -h | --help)
-            echo "$usage"
-            exit
-            ;;
-        *)
-            if [ -z "$drive" ]; then
-                drive="$1"
-            else
-                echo "Error: unknown argument"
-                echo "$usage"
-                exit 1
+cleanup() {
+    local status=$?
+    trap - EXIT
+    if ! $SUCCESS && [[ -n $WORK ]]; then
+        log "Setup failed. Recovery files: $WORK" >&2
+        if $ACCOUNT_TOUCHED; then
+            usermod -L ftpu || log 'Could not lock ftpu; lock it manually immediately.' >&2
+        fi
+        if $FSTAB_CHANGED; then
+            atomic_replace "$WORK/fstab.before" "$FSTAB" || log 'Restore fstab from its backup manually.' >&2
+            systemctl daemon-reload || true
+        fi
+        if $SSH_CHANGED; then
+            if ! atomic_replace "$WORK/sshd.before" "$SSHD_CONFIG" ||
+                ! sshd -t || ! systemctl reload ssh; then
+                log 'Restore/reload SSH manually from this session.' >&2
             fi
-            ;;
-    esac
-    shift
-done
+        fi
+        log 'Data was retained. Newly created accounts, packages, directories and mounts may remain; inspect them before retrying.' >&2
+        ((status != 0)) || status=1
+    fi
+    exit "$status"
+}
 
-assert_raspberry
-prepare
-mount_drive "$drive" "$mount_point"
-extend_fstab "$drive $mount_point ntfs defaults 0 0"
-add_ftpu_user
-extend_fstab "$mount_point /home/ftpu/data none bind 0 0"
-sudo raspi-config
-echo "$final_message"
+preflight_config() {
+    render_config fstab "$FSTAB" <(fstab_block UID GID) /dev/stdout >/dev/null
+    render_config ssh "$SSHD_CONFIG" <(ssh_block) /dev/stdout >/dev/null
+}
+
+describe() {
+    cat <<EOF
+Partition: $DRIVE (UUID=$UUID)
+Mount: $DRIVE_MOUNT, using NTFS-3G with private uid/gid permissions across the drive.
+Upload folder: $DRIVE_MOUNT/PhoneBackups -> $JAIL/data
+Account: ftpu; password login; SFTP only; chroot $JAIL
+Allowed IPv4 subnet: $ALLOW_FROM. Other source addresses are denied for ftpu.
+Missing packages will be installed; no upgrade or formatting will run.
+Configuration will be backed up and validated before SSH is reloaded.
+Existing barts SSH settings and firewall rules will be preserved.
+EOF
+}
+
+apply_setup() {
+    local -a packages=()
+    local package password_status uid gid
+    require_terminal
+    for package in openssh-server ntfs-3g; do
+        if [[ $(dpkg-query -W -f='${Status}' "$package" 2>/dev/null || true) != 'install ok installed' ]]; then
+            packages+=("$package")
+        fi
+    done
+    if ((${#packages[@]})); then
+        apt-get update
+        apt-get install -y -- "${packages[@]}"
+    fi
+    sshd -t
+    WORK=$(mktemp -d "$BACKUP_ROOT/setup-ftpu.XXXXXXXX")
+    cp -p -- "$FSTAB" "$WORK/fstab.before"
+    cp -p -- "$SSHD_CONFIG" "$WORK/sshd.before"
+    if ! getent passwd ftpu >/dev/null; then
+        useradd --user-group --no-create-home --home-dir /data --shell /usr/sbin/nologin \
+            --comment 'Phone backups (setup-ftpu)' ftpu
+        ACCOUNT_TOUCHED=true
+        printf '%s %s %s\n' "$UUID" "$(id -u ftpu)" "$(id -g ftpu)" > "$STATE_DIR/identity"
+        chmod 600 "$STATE_DIR/identity"
+    fi
+    password_status=$(passwd -S ftpu | awk '{print $2}')
+    ACCOUNT_TOUCHED=true
+    usermod -L ftpu
+    uid=$(id -u ftpu); gid=$(id -g ftpu)
+    install -d -o root -g root -m 755 "$JAIL"
+    if ! mountpoint -q "$JAIL/data"; then
+        assert_empty_directory "$JAIL/data"
+        install -d -o root -g root -m 555 "$JAIL/data"
+        runuser -u ftpu -- test ! -w "$JAIL/data" || die 'Unmounted upload directory is writable.'
+    else
+        verify_covered_directory
+    fi
+    if ! mountpoint -q "$DRIVE_MOUNT"; then
+        install -d -o root -g root -m 700 "$DRIVE_MOUNT"
+        mount -t ntfs-3g -o "$(ntfs_options "$uid" "$gid")" "$DRIVE" "$DRIVE_MOUNT"
+    fi
+    [[ $(mount_at "$DRIVE_MOUNT" UUID) == "$UUID" &&
+        $(mount_at "$DRIVE_MOUNT" FSTYPE) == fuseblk ]] || die 'Expected NTFS-3G filesystem is not mounted.'
+    [[ ,$(mount_at "$DRIVE_MOUNT" OPTIONS), == *,rw,* ]] || die 'Drive is not writable.'
+    safe_path "$DRIVE_MOUNT/PhoneBackups"
+    mkdir -p -- "$DRIVE_MOUNT/PhoneBackups"
+    [[ -d $DRIVE_MOUNT/PhoneBackups ]] || die 'PhoneBackups is not a directory.'
+
+    fstab_block "$uid" "$gid" > "$WORK/fstab.block"
+    ssh_block > "$WORK/sshd.block"
+    render_config fstab "$FSTAB" "$WORK/fstab.block" "$WORK/fstab.new"
+    render_config ssh "$SSHD_CONFIG" "$WORK/sshd.block" "$WORK/sshd.new"
+    chmod --reference="$FSTAB" "$WORK/fstab.new"
+    chmod --reference="$SSHD_CONFIG" "$WORK/sshd.new"
+    findmnt --verify --tab-file "$WORK/fstab.new"
+    validate_ssh "$WORK/sshd.new"
+
+    FSTAB_CHANGED=true
+    atomic_replace "$WORK/fstab.new" "$FSTAB"
+    systemctl daemon-reload
+    systemctl start "$(systemd-escape --path --suffix=mount "$JAIL/data")"
+    verify_mounts
+    SSH_CHANGED=true
+    atomic_replace "$WORK/sshd.new" "$SSHD_CONFIG"
+    sshd -t
+    systemctl enable ssh
+    if systemctl is-active --quiet ssh; then systemctl reload ssh; else systemctl start ssh; fi
+    systemctl is-active --quiet ssh
+    # Only permit login once the restricted configuration is active.
+    if [[ $password_status == P ]]; then usermod -U ftpu; else passwd ftpu; fi
+    [[ $(passwd -S ftpu | awk '{print $2}') == P ]] || die 'ftpu has no usable password.'
+    verify_mounts
+    SUCCESS=true
+    log "Done. Connect with SFTP on port 22 as ftpu, remote directory /data. Allowed subnet: $ALLOW_FROM."
+    log "Configuration backups: $WORK"
+}
+
+main() {
+    parse_args "$@"
+    check_environment
+    preflight_config
+    describe
+    if $DRY_RUN; then
+        log 'Dry run complete. No changes made; mount and SSH activation checks run during setup.'
+        return
+    fi
+    umask 077
+    install -d -o root -g root -m 700 "$STATE_DIR"
+    exec 9>"$STATE_DIR/lock"
+    flock -n 9 || die 'Another setup-ftpu process is running.'
+    trap cleanup EXIT
+    trap 'exit 130' INT
+    trap 'exit 143' TERM
+    check_environment
+    apply_setup
+}
+
+if [[ ${BASH_SOURCE[0]} == "$0" ]]; then main "$@"; fi
