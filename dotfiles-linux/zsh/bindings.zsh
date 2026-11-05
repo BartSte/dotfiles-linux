@@ -39,6 +39,8 @@ bindkey -M vicmd "\eO" _fzf-file-widget-open-home
 bindkey -M viins "\eO" _fzf-file-widget-open-home
 bindkey -M vicmd "\e=" _calc-line-widget
 bindkey -M viins "\e=" _calc-line-widget
+bindkey -M vicmd "\ey" _copy-last-output-widget
+bindkey -M viins "\ey" _copy-last-output-widget
 
 bindkey "^H" backward-kill-word
 bindkey '^?' backward-delete-char

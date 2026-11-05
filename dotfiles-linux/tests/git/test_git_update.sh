@@ -70,11 +70,13 @@ rg -q "Keep branch 'local-main': upstream still exists" "$test_root/output" || f
 rg -q "Keep branch 'main': checked out in" "$test_root/output" || fail 'checked-out branch skip reason was not reported'
 
 # Clean linked worktrees update their files and index, including newline paths.
+# Lock this active worktree so merged-worktree cleanup preserves it.
 setup_case
 git branch 'linked|branch' main
 git branch --set-upstream-to=origin/main 'linked|branch' >/dev/null
 worktree="$case_dir/"$'linked\nworktree'
 git worktree add --quiet "$worktree" 'linked|branch'
+git worktree lock "$worktree"
 printf 'remote content\n' > "$case_dir/seed/new.txt"
 git -C "$case_dir/seed" add new.txt
 git -C "$case_dir/seed" commit --quiet -m remote-file
@@ -298,7 +300,8 @@ for dirty_kind in changed staged untracked ignored; do
         untracked) reason='untracked files' ;;
         ignored) reason='ignored file: local.env' ;;
     esac
-    rg -q "Keep worktree: $reason" "$test_root/output" || fail "missing specific blocker: $dirty_kind"
+    rg -q "$reason" "$test_root/output" || fail "missing specific blocker: $dirty_kind"
+    rg -q 'Worktree \| Unique commits \| File changes \| Ignored files \| Reason' "$test_root/output" || fail 'missing review table'
 done
 
 # Generated ignored files no longer retain merged worktrees. Exercise spaces,
@@ -307,8 +310,8 @@ setup_case
 stale_branch generated-worktree
 worktree="$case_dir/generated worktree"
 git worktree add --quiet "$worktree" generated-worktree
-printf '__pycache__/\n.pytest_cache/\n.mypy_cache/\n.ruff_cache/\n*.egg-info/\n*.pyc\n*.pyo\n' >> "$(git rev-parse --git-path info/exclude)"
-for directory in 'src with spaces/__pycache__' .pytest_cache .mypy_cache .ruff_cache 'src/pkg.egg-info'; do
+printf '__pycache__/\n.pytest_cache/\n.mypy_cache/\n.ruff_cache/\n.venv/\n*.egg-info/\n*.pyc\n*.pyo\n' >> "$(git rev-parse --git-path info/exclude)"
+for directory in 'src with spaces/__pycache__' .pytest_cache .mypy_cache .ruff_cache .venv/bin 'src/pkg.egg-info'; do
     mkdir -p "$worktree/$directory"
     printf 'generated\n' > "$worktree/$directory/"$'cache[*]\nfile'
 done
@@ -320,7 +323,7 @@ assert_deleted generated-worktree
 
 # Unknown ignored files, untracked caches, unfinished operations, and unique
 # commits preserve generated files as well as the worktree.
-for protected_kind in ignored environment untracked operation unique nested; do
+for protected_kind in ignored untracked operation unique nested; do
     setup_case
     stale_branch protected-worktree
     worktree="$case_dir/protected worktree"
@@ -332,11 +335,6 @@ for protected_kind in ignored environment untracked operation unique nested; do
         ignored)
             printf '.env\n' >> "$(git rev-parse --git-path info/exclude)"
             printf 'secret\n' > "$worktree/.env"
-            ;;
-        environment)
-            printf '.venv/\n' >> "$(git rev-parse --git-path info/exclude)"
-            mkdir "$worktree/.venv"
-            printf 'environment\n' > "$worktree/.venv/state"
             ;;
         untracked)
             mkdir "$worktree/__pycache__"
@@ -357,20 +355,21 @@ for protected_kind in ignored environment untracked operation unique nested; do
     assert_branch protected-worktree
 done
 
-# Detached worktrees and branches without an upstream remain untouched.
+# Merged detached worktrees and worktrees without an upstream are removed.
 setup_case
 git worktree add --quiet --detach "$case_dir/detached worktree" main
 git worktree add --quiet -b unpublished-worktree "$case_dir/unpublished worktree" main
 run_command git-update </dev/null || fail 'protected worktree cleanup failed'
-[[ -d $case_dir/detached\ worktree && -d $case_dir/unpublished\ worktree ]] || fail 'protected worktree was removed'
-rg -q 'Keep worktree with detached HEAD:' "$test_root/output" || fail 'detached HEAD blocker was not reported'
+[[ ! -e $case_dir/detached\ worktree && ! -e $case_dir/unpublished\ worktree ]] || fail 'merged worktree was retained'
 assert_branch unpublished-worktree
 
-# An existing upstream and submodules prevent automatic worktree removal.
+# Existing upstreams permit merged-worktree removal. Submodules prevent it.
 setup_case
 git branch live-worktree main
 git branch --set-upstream-to=origin/main live-worktree >/dev/null
 git worktree add --quiet "$case_dir/live worktree" live-worktree
+run_command git-update </dev/null || fail 'live merged worktree cleanup failed'
+[[ ! -e $case_dir/live\ worktree ]] || fail 'existing upstream retained a merged worktree'
 printf '[submodule "example"]\n\tpath = example\n\turl = example.invalid\n' > .gitmodules
 git add .gitmodules
 git commit --quiet -m submodule-config
@@ -378,7 +377,7 @@ git push --quiet origin main
 stale_branch submodule-worktree
 git worktree add --quiet "$case_dir/submodule worktree" submodule-worktree
 run_command git-update </dev/null || fail 'live or submodule worktree cleanup failed'
-[[ -d $case_dir/live\ worktree && -d $case_dir/submodule\ worktree ]] || fail 'live or submodule worktree was removed'
+[[ -d $case_dir/submodule\ worktree ]] || fail 'submodule worktree was removed'
 assert_branch live-worktree
 assert_branch submodule-worktree
 
@@ -394,6 +393,89 @@ assert_branch unique-worktree
 run_command git-update <<< $'y\nn' || fail 'approved worktree removal failed'
 [[ ! -e $worktree ]] || fail 'approved worktree was not removed'
 assert_branch unique-worktree
+
+# Cleanup prefers develop, then main, then master, over the current branch.
+# A stale branch merged into the target can be deleted even outside current HEAD.
+for target_branch in develop main master; do
+    setup_case
+    git -C "$case_dir/seed" switch --quiet -c target-work
+    git -C "$case_dir/seed" commit --quiet --allow-empty -m target-only
+    target_tip=$(git -C "$case_dir/seed" rev-parse HEAD)
+    git -C "$case_dir/seed" push --quiet origin "HEAD:refs/heads/$target_branch"
+    if [[ $target_branch == develop ]]; then
+        git -C "$case_dir/seed" push --quiet origin main:master
+    elif [[ $target_branch == master ]]; then
+        git --git-dir="$case_dir/remote.git" symbolic-ref HEAD refs/heads/master
+        git -C "$case_dir/seed" push --quiet origin --delete main
+    fi
+    git fetch --quiet origin
+    stale_branch target-merged
+    git branch -f target-merged "$target_tip" >/dev/null
+    git worktree add --quiet "$case_dir/target merged" target-merged
+    # git-del-local does not update the current branch before cleanup.
+    run_command git-del-local </dev/null || fail "target cleanup failed: $target_branch"
+    [[ ! -e $case_dir/target\ merged ]] || fail "cleanup used current branch instead of $target_branch"
+    assert_deleted target-merged
+    rg -q "Cleanup target: refs/remotes/origin/$target_branch" "$test_root/output" || fail 'wrong target priority'
+done
+
+# Local merges into the current branch do not override the remote target.
+setup_case
+stale_branch local-only-merge
+git switch --quiet local-only-merge
+git commit --quiet --allow-empty -m local-only
+git switch --quiet main
+git merge --quiet --ff-only local-only-merge
+git worktree add --quiet "$case_dir/local only" local-only-merge
+run_command git-del-local </dev/null || fail 'local-only merge review failed'
+[[ -d $case_dir/local\ only ]] || fail 'current branch overrode the remote target'
+assert_branch local-only-merge
+rg -q '\| 1 \| 0 \| 0 \| commits outside the cleanup target' "$test_root/output" || fail 'local-only commit was not reported'
+
+# Without a default remote branch, cleanup falls back to the current branch.
+setup_case
+git push --quiet origin main:topic
+git --git-dir="$case_dir/remote.git" symbolic-ref HEAD refs/heads/topic
+git -C "$case_dir/seed" push --quiet origin --delete main
+git worktree add --quiet --detach "$case_dir/fallback merged" main
+run_command git-del-local </dev/null || fail 'fallback cleanup failed'
+[[ ! -e $case_dir/fallback\ merged ]] || fail 'fallback target retained merged worktree'
+rg -q 'Cleanup target: refs/heads/main' "$test_root/output" || fail 'current branch fallback was not selected'
+
+# Detached unique commits need a durable reference and approval for removal.
+setup_case
+worktree="$case_dir/unique detached"
+git worktree add --quiet --detach "$worktree" main
+git -C "$worktree" commit --quiet --allow-empty -m detached-only
+printf '.env\n' >> "$(git rev-parse --git-path info/exclude)"
+printf 'secret\n' > "$worktree/.env"
+printf 'local\n' > "$worktree/local.txt"
+run_command git-update </dev/null || fail 'detached review failed'
+rg -q '\| 1 \| 1 \| 1 \| untracked files' "$test_root/output" || fail 'review counts are incorrect'
+[[ $(rg -c '^Worktree \| Unique commits' "$test_root/output") == 1 ]] || fail 'review table appeared more than once'
+rm "$worktree/.env" "$worktree/local.txt"
+run_command git-update <<< y || fail 'unique detached cleanup failed'
+[[ -d $worktree ]] || fail 'unreferenced detached commit was removed'
+if rg -q '\[y/N\]' "$test_root/output"; then fail 'unreferenced detached commit was a removal candidate'; fi
+git tag preserved-detached "$(git -C "$worktree" rev-parse HEAD)"
+run_command git-update </dev/null || fail 'tagged detached review failed'
+[[ -d $worktree ]] || fail 'unmerged detached commit was removed without approval'
+run_command git-update <<< y || fail 'tagged detached removal failed'
+[[ ! -e $worktree ]] || fail 'approved tagged detached worktree was retained'
+git show-ref --verify --quiet refs/tags/preserved-detached || fail 'detached commit tag was removed'
+
+# Cleanup from a detached current worktree without a default target preserves
+# other worktrees whose commits have no named reference.
+setup_case
+git push --quiet origin main:topic
+git --git-dir="$case_dir/remote.git" symbolic-ref HEAD refs/heads/topic
+git -C "$case_dir/seed" push --quiet origin --delete main
+git worktree add --quiet --detach "$case_dir/current detached" main
+git worktree add --quiet --detach "$case_dir/other detached" main
+git -C "$case_dir/other detached" commit --quiet --allow-empty -m unique
+cd "$case_dir/current detached"
+run_command git-del-local </dev/null || fail 'detached fallback cleanup failed'
+[[ -d $case_dir/other\ detached ]] || fail 'detached worktree was removed without a target'
 
 # Running from a linked worktree preserves both the current and main worktrees.
 setup_case

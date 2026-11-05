@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+set +x
+set -euo pipefail
+
+usage='Usage: rbw-windows-unlock enable|enroll|status|disable|forget
+
+enable   Use Windows DPAPI for rbw master-password prompts. The next prompt
+         enrolls the password once, then subsequent unlocks need no prompt.
+enroll   Lock and unlock rbw interactively to enroll or replace the secret.
+status   Show helper and enrollment status without revealing the secret.
+disable  Restore the previous pinentry and stop the rbw agent.
+forget   Remove the Windows-protected secret and stop the rbw agent.'
+
+case ${1:-} in
+    enable | enroll | status | disable | forget) [[ $# == 1 ]] || { printf '%s\n' "$usage" >&2; exit 2; } ;;
+    -h | --help) printf '%s\n' "$usage"; exit 0 ;;
+    *) printf '%s\n' "$usage" >&2; exit 2 ;;
+esac
+unlock_dir=$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")/../bitwarden" && pwd)
+# shellcheck source=bitwarden/windows-common.sh
+source "$unlock_dir/windows-common.sh"
+initialize_windows_unlock
+helper=$unlock_dir/../bin/rbw-pinentry-windows
+
+case $1 in
+    enable)
+        windows_secret SelfTest </dev/null
+        previous=$(rbw config show | jq -r '.pinentry // "pinentry"')
+        if [[ $previous != "$helper" ]]; then
+            (umask 077; printf '%s\n' "$previous" > "$unlock_state/pinentry")
+        fi
+        rbw config set pinentry "$helper"
+        rbw stop-agent
+        printf 'Windows unlock enabled. Run rbw-windows-unlock enroll once in your terminal.\n'
+        ;;
+    enroll)
+        current=$(rbw config show | jq -r '.pinentry')
+        [[ $current == "$helper" ]] || { printf 'Run rbw-windows-unlock enable first.\n' >&2; exit 1; }
+        [[ -t 0 && -t 1 ]] || { printf 'Enrollment requires an interactive terminal.\n' >&2; exit 1; }
+        windows_secret Delete </dev/null
+        rbw lock
+        rbw unlock
+        printf 'Vault unlock completed.\n'
+        ;;
+    status)
+        current=$(rbw config show | jq -r '.pinentry')
+        if [[ $current == "$helper" ]]; then printf 'Helper: enabled\n'; else printf 'Helper: disabled\n'; fi
+        if windows_secret Status </dev/null; then printf 'Windows secret: enrolled\n'; else printf 'Windows secret: not enrolled\n'; fi
+        ;;
+    disable)
+        previous=pinentry
+        if [[ -f $unlock_state/pinentry ]]; then IFS= read -r previous < "$unlock_state/pinentry"; fi
+        rbw config set pinentry "$previous"
+        rbw stop-agent
+        printf 'Windows unlock disabled.\n'
+        ;;
+    forget)
+        windows_secret Delete </dev/null
+        rbw stop-agent
+        printf 'Windows-protected secret removed.\n'
+        ;;
+esac

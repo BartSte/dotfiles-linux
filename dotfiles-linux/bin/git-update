@@ -14,18 +14,23 @@ Prune missing worktree metadata after its expiration
 period (gc.worktreePruneExpire, or three months by default).
 Preserve missing metadata when commits lack a named reference.
 
-Automatically remove clean, unlocked linked worktrees and local branches
-whose upstream is gone and whose commits remain reachable from the current
-branch. Remove ignored Python bytecode, __pycache__, .pytest_cache,
-.mypy_cache, .ruff_cache, and *.egg-info files from eligible worktrees.
+Select the first existing cleanup target on the selected remote: develop,
+main, then master. Fall back to the current branch if none exists.
+Automatically remove clean, unlocked linked worktrees whose HEAD is an
+ancestor of the cleanup target, including detached worktrees and worktrees
+with existing upstreams or no upstream. Delete merged local branches only
+when their upstream is gone.
+Remove ignored Python bytecode, __pycache__, .pytest_cache,
+.mypy_cache, .ruff_cache, .venv, and *.egg-info files from eligible worktrees.
 Preserve worktrees with changed, untracked, or other ignored files, active
-tmux sessions or panes, detached HEAD, or submodules. Preserve the main and
-current worktrees, and branches without an upstream.
+tmux sessions or panes, unfinished Git operations, or submodules. Preserve
+the main and current worktrees. Show retained candidates in one review table
+with commit, file-change, and ignored-file counts, plus the blocking reason.
 Preserve branches still checked out in retained worktrees.
 In other worktrees, ignored files block updates only if Git must overwrite them.
 
 Other clean worktree candidates require confirmation. Branches with commits
-outside the current branch require confirmation before deletion, plus a
+outside the cleanup target require confirmation before deletion, plus a
 second confirmation for force deletion. Worktree removal never uses --force.
 
 Use the remote of the current branch by default. Otherwise, use the only
@@ -107,14 +112,6 @@ select_remote() {
     fail "Remote does not exist: $remote"
 }
 
-upstream_is_gone() {
-    local upstream upstream_remote
-    upstream=$(git for-each-ref --format='%(upstream)' "$1")
-    upstream_remote=$(git for-each-ref --format='%(upstream:remotename)' "$1")
-    [[ -n $upstream && $upstream_remote == "$remote" ]] || return 1
-    ! git show-ref --verify --quiet "$upstream"
-}
-
 worktree_is_clean() {
     local status
     blocker=''
@@ -165,7 +162,7 @@ collect_generated_files() {
             return 1
         fi
         case "/$file" in
-            */__pycache__/* | */.pytest_cache/* | */.mypy_cache/* | */.ruff_cache/* | */*.egg-info/* | *.pyc | *.pyo)
+            */__pycache__/* | */.pytest_cache/* | */.mypy_cache/* | */.ruff_cache/* | */.venv/* | */*.egg-info/* | *.pyc | *.pyo)
                 generated_files+=(":(literal)$file")
                 ;;
             *)
@@ -217,10 +214,49 @@ update_other_branches() {
 }
 
 commits_are_preserved() {
-    # A named branch keeps the commits reachable after cleanup. A detached HEAD
-    # is not a sufficiently durable reference for automatic deletion.
-    [[ -n $current_branch ]] &&
-        git merge-base --is-ancestor "$1" "refs/heads/$current_branch"
+    [[ -n $cleanup_target ]] && git merge-base --is-ancestor "$1" "$cleanup_target"
+}
+
+select_cleanup_target() {
+    local name
+    cleanup_target=''
+    for name in develop main master; do
+        if git show-ref --verify --quiet "refs/remotes/$remote/$name"; then
+            cleanup_target="refs/remotes/$remote/$name"
+            break
+        fi
+    done
+    if [[ -z $cleanup_target && -n $current_branch ]]; then
+        cleanup_target="refs/heads/$current_branch"
+    fi
+    log "Cleanup target: ${cleanup_target:-none (detached HEAD without a default branch)}"
+}
+
+review_worktree() {
+    local worktree=$1 head=$2 reason=$3 unique='?' changes='?' ignored='?' listing escaped_path escaped_reason
+    local -a ignored_files=()
+    if [[ -n $cleanup_target ]]; then
+        unique=$(git rev-list --count "$cleanup_target..$head" 2>/dev/null) || unique='?'
+    fi
+    # Porcelain quotes newlines in names. Each output line is one changed entry.
+    if listing=$(git -C "$worktree" status --porcelain --untracked-files=all --ignore-submodules=none); then
+        changes=0
+        if [[ -n $listing ]]; then
+            changes=$(printf '%s\n' "$listing" | wc -l)
+            changes=${changes//[[:space:]]/}
+        fi
+    fi
+    listing=$(mktemp) || return 1
+    if git -C "$worktree" ls-files --others --ignored --exclude-standard -z > "$listing"; then
+        mapfile -d '' -t ignored_files < "$listing"
+        ignored=${#ignored_files[@]}
+    fi
+    rm -f -- "$listing"
+    printf -v escaped_path '%q' "$worktree"
+    escaped_reason=${reason//$'\n'/\\n}
+    escaped_reason=${escaped_reason//$'\t'/\\t}
+    escaped_reason=${escaped_reason//|/\\|}
+    review_rows+=("$escaped_path | $unique | $changes | $ignored | $escaped_reason")
 }
 
 get_tmux_paths() {
@@ -296,53 +332,58 @@ cleanup_worktrees() {
     index=0
     for path in "${paths[@]}"; do
         branch=${branches[index]}
+        head=${heads[index]}
         locked=${locks[index]}
         index=$((index + 1))
         # Git lists the main worktree first. Never remove it or this worktree.
         [[ $index -gt 1 && -d $path ]] || continue
         [[ $(realpath -- "$path") != "$current_worktree" ]] || continue
         if [[ $locked == true ]]; then
-            log "Keep locked worktree: $path"
+            review_worktree "$path" "$head" 'locked worktree'
             continue
         fi
-        if [[ -z $branch ]]; then
-            log "Keep worktree with detached HEAD: $path"
-            continue
-        fi
-        upstream_is_gone "$branch" || continue
         if worktree_is_in_tmux "$path"; then
-            log "Keep worktree with an active tmux session or pane: $path"
+            review_worktree "$path" "$head" 'active tmux session or pane'
             continue
         fi
-        if [[ -e $path/.gitmodules ]]; then
-            log "Keep worktree with submodules: $path"
+        if [[ -e $path/.gitmodules || -d $(git -C "$path" rev-parse --git-path modules) ]]; then
+            review_worktree "$path" "$head" 'submodules'
             continue
         fi
         if ! worktree_is_clean "$path" || ! worktree_has_no_operation "$path" || ! collect_generated_files "$path"; then
-            log "Keep worktree: $blocker: $path"
+            review_worktree "$path" "$head" "$blocker"
             continue
         fi
-        if ! commits_are_preserved "$branch"; then
+        if ! commits_are_preserved "$head"; then
             if [[ $update_failed == true ]]; then
-                log "Keep worktree: commits outside the current branch; review with git-del-local: $path"
+                review_worktree "$path" "$head" 'commits outside the cleanup target'
                 continue
             fi
-            printf 'Worktree candidate: %s (commits outside the current branch)\n' "$path" >&2
-            confirm "Remove clean worktree '$path' (keep its branch for review)?" || continue
+            # A detached worktree cannot lose the last reference to its commits.
+            references=$(git for-each-ref --contains "$head" --format='%(refname)' refs/heads/ refs/tags/) || references=''
+            if [[ -z $references ]]; then
+                review_worktree "$path" "$head" 'commits outside the cleanup target; no branch or tag preserves HEAD'
+                continue
+            fi
+            printf 'Worktree candidate: %s (commits outside the cleanup target)\n' "$path" >&2
+            if ! confirm "Remove clean worktree '$path' (keep its branch or tag for review)?"; then
+                review_worktree "$path" "$head" 'commits outside the cleanup target'
+                continue
+            fi
         fi
         # Remove only ignored files from the allowlist, after all safeguards and
         # any required confirmation. Literal pathspecs protect unusual names.
         if [[ ${#generated_files[@]} -gt 0 ]]; then
             log "Remove generated files from worktree: $path"
             if ! git -C "$path" clean -f -X "${git_options[@]}" -- "${generated_files[@]}"; then
-                log "Keep worktree: generated file cleanup failed: $path"
+                review_worktree "$path" "$head" 'generated file cleanup failed'
                 continue
             fi
         fi
         if git worktree remove -- "$path"; then
             log "Removed worktree: $path"
         else
-            log "Keep worktree: Git refused to remove $path"
+            review_worktree "$path" "$head" 'Git refused removal'
         fi
     done
 }
@@ -384,12 +425,14 @@ cleanup_branches() {
     fi
     for branch in "${candidates[@]}"; do
         if commits_are_preserved "refs/heads/$branch"; then
-            git branch -d "${git_options[@]}" -- "$branch"
+            # -d checks the current branch when the upstream is gone. Our
+            # explicit ancestry check proves preservation by the cleanup target.
+            git branch -D "${git_options[@]}" -- "$branch"
             log "Deleted branch: $branch"
             continue
         fi
         if [[ $update_failed == true ]]; then
-            log "Keep branch '$branch': commits outside the current branch; review with git-del-local"
+            log "Keep branch '$branch': commits outside the cleanup target; review with git-del-local"
             continue
         fi
         if ! confirm "Delete branch '$branch'?"; then
@@ -434,7 +477,14 @@ if [[ $mode != cleanup-only ]]; then
     fi
 fi
 if [[ $mode != no-cleanup ]]; then
+    select_cleanup_target
+    review_rows=()
     cleanup_worktrees
+    if [[ ${#review_rows[@]} -gt 0 ]]; then
+        printf '\nWorktree review (commit counts relative to %s)\n' "${cleanup_target:-no target}" >&2
+        printf 'Worktree | Unique commits | File changes | Ignored files | Reason\n' >&2
+        printf '%s\n' "${review_rows[@]}" >&2
+    fi
     cleanup_branches
 fi
 if [[ $update_failed == true ]]; then
