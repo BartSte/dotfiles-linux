@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Unprivileged regression tests. No real accounts, mounts or services are changed."""
 import os
+import json
+import runpy
 from pathlib import Path
 import shlex
 import subprocess
@@ -8,6 +10,7 @@ import tempfile
 import unittest
 
 SCRIPT = Path(__file__).resolve().parents[2] / 'scripts/setup-ftpu'
+SUPPORT = runpy.run_path(str(SCRIPT.with_name('setup-ftpu-support.py')))
 
 
 class SetupTests(unittest.TestCase):
@@ -35,7 +38,8 @@ class SetupTests(unittest.TestCase):
         for args in ['', '--wrong /dev/test', '/dev/a /dev/b', '--allow-from',
                      '--allow-from 192.168.1.20/24 /dev/test',
                      '--allow-from ::/0 /dev/test', '--allow-from 0.0.0.0/0 /dev/test',
-                     '--allow-from "bad;command" /dev/test']:
+                     '--allow-from "bad;command" /dev/test', '--tailscale-phone',
+                     '--tailscale-phone phone --lan-only /dev/test']:
             with self.subTest(args=args):
                 self.bash('parse_args ' + args, ok=False)
 
@@ -85,6 +89,7 @@ render_config ssh "$TEST_ROOT/ssh" "$TEST_ROOT/sshblock" "$TEST_ROOT/sshnew"
             ('fstab', 'UUID=1234 /elsewhere ntfs defaults 0 0\n'),
             ('fstab', '/dev/other /my-fdd-drive ntfs defaults 0 0\n'),
             ('fstab', '/my-fdd-drive /home/ftpu/data none bind 0 0\n'),
+            ('fstab', '/dev/other /home/ftpu/drive none bind 0 0\n'),
             ('ssh', 'Match User ftpu\n    ForceCommand something\n'),
             ('ssh', '# BEGIN setup-ftpu\n'),
             ('ssh', '# END setup-ftpu\n'),
@@ -101,7 +106,9 @@ render_config ssh "$TEST_ROOT/ssh" "$TEST_ROOT/sshblock" "$TEST_ROOT/sshnew"
     def test_dry_run_never_calls_mutators(self):
         result = self.bash('''
 check_environment() { UUID=1234; }
+discover_phone() { :; }
 preflight_config() { :; }
+connection_details() { :; }
 install() { die 'mutation reached'; }
 apply_setup() { die 'mutation reached'; }
 main --dry-run /dev/test
@@ -139,8 +146,13 @@ verify_bind
 ''', ok=False)
         self.bash('''
 UUID=1234
+mount_at() { case $2 in UUID) echo 1234;; FSROOT) echo /PhoneBackups;; esac; }
+verify_drive_bind
+''', ok=False)
+        self.bash('''
+UUID=1234
 mount_at() {
-    case $2 in UUID) echo 1234;; FSROOT) echo /PhoneBackups;;
+    case $2 in UUID) echo 1234;; FSROOT) if [[ $1 == "$JAIL/drive" ]]; then echo /; else echo /PhoneBackups; fi;;
         FSTYPE) echo fuseblk;; OPTIONS) echo rw,nosuid,nodev;; esac
 }
 verify_mounts
@@ -173,6 +185,10 @@ SYSTEMD_FSTAB="$TEST_ROOT/fstab" /usr/lib/systemd/system-generators/systemd-fsta
         self.assertIn('After=' + drive_unit, bind)
         self.assertIn('What=/my-fdd-drive/PhoneBackups', bind)
         self.assertIn('What=/dev/disk/by-uuid/1234', drive)
+        full_drive = (self.root / 'normal/home-ftpu-drive.mount').read_text()
+        self.assertIn('Requires=' + drive_unit, full_drive)
+        self.assertIn('After=' + drive_unit, full_drive)
+        self.assertIn('What=/my-fdd-drive\n', full_drive)
         self.assertFalse((self.root / 'normal/local-fs.target.requires' / drive_unit).exists())
         timeout_files = list((self.root / 'normal').glob('*.device.d/*.conf'))
         self.assertTrue(timeout_files)
@@ -219,6 +235,8 @@ apply_setup
         fixture = r'''
 FSTAB="$TEST_ROOT/fstab"; SSHD_CONFIG="$TEST_ROOT/sshd"
 STATE_DIR="$TEST_ROOT/state"; BACKUP_ROOT="$TEST_ROOT/backups"
+SFTP_CONFIG="$TEST_ROOT/sftp"; SFTP_UNIT="$TEST_ROOT/sftp.service"
+UFW_DIR="$TEST_ROOT/ufw"
 DRIVE_MOUNT="$TEST_ROOT/drive"; JAIL="$TEST_ROOT/jail"
 DRIVE=/dev/test; UUID=1234
 mkdir -p "$STATE_DIR" "$BACKUP_ROOT"
@@ -246,14 +264,20 @@ mountpoint() {
     else [[ -e $TEST_ROOT/bind-active ]]; fi
 }
 mount() { record mount; [[ ${FAIL_AT:-} != mount ]] || return 11; touch "$TEST_ROOT/drive-active"; }
+systemd-mount() { mount "$@"; }
 mount_at() { case $2 in UUID) echo 1234;; FSTYPE) echo fuseblk;; OPTIONS) echo rw,nosuid,nodev,noexec;; esac; }
 findmnt() { :; }
 validate_ssh() { record validate; [[ ${FAIL_AT:-} != validate ]]; }
+validate_sftp() { record validate-sftp; }
+systemd-analyze() { :; }
+configure_firewall() { record configure-firewall; [[ ${FAIL_AT:-} != firewall ]]; }
+connection_details() { :; }
 verify_covered_directory() { record covered-directory; }
 verify_mounts() { record verify-mounts; }
 systemctl() {
     record "systemctl $*"
     if [[ ${FAIL_AT:-} == reload && $1 == reload ]]; then return 12; fi
+    if [[ ${FAIL_AT:-} == sftp-reload && $1 == reload && $2 == ftpu-sftp ]]; then return 13; fi
     if [[ $1 == start && $2 == *.mount ]]; then touch "$TEST_ROOT/bind-active"; fi
 }
 trap cleanup EXIT
@@ -272,7 +296,8 @@ apply_setup
         self.assertEqual(trace.count('usermod -U ftpu'), 2)
         self.assertLess(trace.index('validate'), trace.index('systemctl reload ssh'))
         self.assertLess(trace.index('systemctl reload ssh'), trace.index('usermod -U ftpu'))
-        for failure in ('mount', 'validate', 'reload'):
+        before_sftp = (self.root / 'sftp').read_text(), (self.root / 'sftp.service').read_text()
+        for failure in ('mount', 'validate', 'reload', 'sftp-reload', 'firewall'):
             with self.subTest(failure=failure):
                 if failure == 'mount':
                     (self.root / 'drive-active').unlink()
@@ -280,7 +305,121 @@ apply_setup
                 self.bash(f'FAIL_AT={failure}\n' + fixture, ok=False)
                 self.assertEqual(before, ((self.root / 'fstab').read_text(), (self.root / 'sshd').read_text()))
                 self.assertEqual((self.root / 'password').read_text(), 'L\n')
+                self.assertEqual(before_sftp, ((self.root / 'sftp').read_text(), (self.root / 'sftp.service').read_text()))
                 (self.root / 'password').write_text('P\n')
+
+
+    def test_drive_mount_is_owned_by_systemd(self):
+        for load_state in ('loaded', 'not-found'):
+            with self.subTest(load_state=load_state):
+                self.bash('''
+systemctl() {
+    if [[ $1 == show ]]; then echo "$TEST_LOAD_STATE";
+    else printf '%s\\n' "$*" > "$TEST_ROOT/systemctl"; fi
+}
+systemd-mount() { printf '%s\\n' "$*" > "$TEST_ROOT/systemd-mount"; }
+mount() { die 'raw mount must never start the NTFS daemon'; }
+DRIVE=/dev/test
+''' + f'TEST_LOAD_STATE={load_state}\nmount_drive_managed 1001 1001')
+                if load_state == 'loaded':
+                    self.assertIn('start my\\x2dfdd\\x2ddrive.mount', (self.root / 'systemctl').read_text())
+                else:
+                    self.assertIn('--collect --automount=no --type=ntfs-3g',
+                                  (self.root / 'systemd-mount').read_text())
+
+    def test_phone_selection_and_saved_identity(self):
+        select = SUPPORT['select_phone']
+        old = {'ID': 'old-id', 'HostName': 'Old phone', 'DNSName': 'old.tail.ts.net.',
+               'OS': 'android', 'Online': False, 'TailscaleIPs': ['100.100.100.100']}
+        phone = {'ID': 'phone-id', 'HostName': 'Bart Phone', 'DNSName': 'bart-phone.tail.ts.net.',
+                 'OS': 'android', 'Online': True,
+                 'TailscaleIPs': ['100.100.100.101', 'fd7a:115c:a1e0::1234']}
+        status = {'BackendState': 'Running', 'Self': {'DNSName': 'pi.tail.ts.net.',
+                  'TailscaleIPs': ['100.100.100.1']}, 'Peer': {'old': old, 'phone': phone}}
+        saved = select(status)
+        self.assertEqual(saved['phone']['id'], 'phone-id')
+        self.assertEqual(len(saved['phone']['ips']), 2)
+        for name in ('Bart Phone', 'bart-phone', 'bart-phone.tail.ts.net.', 'phone-id',
+                     '100.100.100.101', 'fd7a:115c:a1e0::1234'):
+            self.assertEqual(select(status, name)['phone']['id'], 'phone-id')
+        phone['Online'], old['Online'] = False, True
+        self.assertEqual(select(status, saved=saved)['phone']['id'], 'phone-id')
+        phone['Online'] = True
+        with self.assertRaises(ValueError):
+            select(status)
+        del status['Peer']['phone']
+        with self.assertRaises(ValueError):
+            select(status, saved=saved)
+        self.assertEqual(select(status)['phone']['id'], 'old-id')
+        old['TailscaleIPs'] = ['192.168.1.42']
+        with self.assertRaises(ValueError):
+            select(status)
+        status['BackendState'] = 'NeedsLogin'
+        with self.assertRaises(ValueError):
+            select(status)
+
+    def test_exact_sources_and_lan_only(self):
+        self.bash('''
+PHONE_JSON='{"phone":{"ips":["100.100.100.101","fd7a:115c:a1e0::1234"]}}'
+[[ $(allowed_users) == 'ftpu@192.168.1.0/24 ftpu@100.100.100.101 ftpu@fd7a:115c:a1e0::1234' ]]
+LAN_ONLY=true
+tailscale() { die 'Tailscale was reached in LAN-only mode'; }
+discover_phone
+[[ $(allowed_users) == 'ftpu@192.168.1.0/24' ]]
+''')
+
+    def test_firewall_changes_only_own_rules(self):
+        plan = SUPPORT['firewall_plan']
+        original = """Added user rules:
+ufw allow 22/tcp
+ufw allow from 100.100.100.100 to any port 2222 proto tcp comment 'setup-ftpu'
+ufw allow from 10.0.0.0/8 to any port 2222 proto tcp comment 'admin-owned'
+"""
+        result = plan(original, ['192.168.1.0/24', '100.100.100.101'])
+        self.assertEqual(len(result['remove']), 1)
+        self.assertEqual(result['remove'][0][2], '100.100.100.100')
+        self.assertEqual(len(result['add']), 2)
+        rendered = '\n'.join('ufw ' + shlex.join(rule) for rule in result['add'])
+        self.assertEqual(plan(rendered, ['192.168.1.0/24', '100.100.100.101']), {'add': [], 'remove': []})
+        admin_rule = "ufw allow from 100.100.100.101 to any port 2222 proto tcp comment 'admin-owned'"
+        self.assertEqual(plan(admin_rule, ['100.100.100.101']), {'add': [], 'remove': []})
+
+    def test_firewall_execution_and_rollback(self):
+        (self.root / 'bin').mkdir()
+        (self.root / 'ufw').mkdir()
+        (self.root / 'backup').mkdir()
+        (self.root / 'ufw/user.rules').write_text('original IPv4')
+        (self.root / 'ufw/user6.rules').write_text('original IPv6')
+        mock = self.root / 'bin/ufw'
+        mock.write_text('''#!/usr/bin/env python3
+import json, os, pathlib, sys
+root = pathlib.Path(os.environ['TEST_ROOT'])
+args = sys.argv[1:]
+with (root / 'ufw-trace').open('a') as log:
+    log.write(json.dumps(args) + '\\n')
+if args == ['status']:
+    print('Status: active')
+elif args == ['show', 'added']:
+    print("ufw allow from 100.100.100.100 to any port 2222 proto tcp comment 'setup-ftpu'")
+elif args != ['reload']:
+    (root / 'ufw/user.rules').write_text('changed IPv4')
+    (root / 'ufw/user6.rules').write_text('changed IPv6')
+''')
+        mock.chmod(0o755)
+        self.bash('''
+export PATH="$TEST_ROOT/bin:$PATH"
+UFW_DIR="$TEST_ROOT/ufw"; WORK="$TEST_ROOT/backup"
+PHONE_JSON='{"phone":{"ips":["100.100.100.101","fd7a:115c:a1e0::1234"]}}'
+trap cleanup EXIT
+configure_firewall
+false
+''', ok=False)
+        self.assertEqual((self.root / 'ufw/user.rules').read_text(), 'original IPv4')
+        self.assertEqual((self.root / 'ufw/user6.rules').read_text(), 'original IPv6')
+        trace = [json.loads(line) for line in (self.root / 'ufw-trace').read_text().splitlines()]
+        self.assertEqual(sum(args[:3] == ['--force', 'delete', 'allow'] for args in trace), 1)
+        self.assertEqual(sum(args[:1] == ['allow'] for args in trace), 3)
+        self.assertEqual(trace[-1], ['reload'])
 
 
 if __name__ == '__main__':

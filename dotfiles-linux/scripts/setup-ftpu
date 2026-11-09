@@ -8,7 +8,18 @@ FSTAB=/etc/fstab
 SSHD_CONFIG=/etc/ssh/sshd_config
 STATE_DIR=/var/lib/setup-ftpu
 BACKUP_ROOT=/var/backups
+SFTP_CONFIG=/etc/ssh/sshd_config.ftpu
+SFTP_UNIT=/etc/systemd/system/ftpu-sftp.service
+UFW_DIR=/etc/ufw
+SUPPORT=$(dirname "$(readlink -f -- "${BASH_SOURCE[0]}")")/setup-ftpu-support.py
 ALLOW_FROM=192.168.1.0/24
+TAILSCALE_PHONE=
+LAN_ONLY=false
+PHONE_JSON=
+SFTP_CHANGED=false
+SFTP_WAS_ACTIVE=false
+SFTP_WAS_ENABLED=false
+UFW_CHANGED=false
 DRY_RUN=false
 DRIVE=
 UUID=
@@ -20,13 +31,18 @@ SUCCESS=false
 
 usage() {
     cat <<'EOF'
-Usage: sudo setup-ftpu [--dry-run] [--allow-from <IPv4-CIDR>] <partition>
+Usage: sudo setup-ftpu [options] <partition>
 
-Set up password-based SFTP for ftpu, restricted to PhoneBackups on an NTFS
-partition. Default allowed subnet: 192.168.1.0/24. Other SSH accounts are unchanged.
+Set up password-based SFTP for ftpu on an NTFS partition. /data holds phone
+backups; /drive gives read-write access to the whole external drive.
+LAN plus one Android phone over Tailscale; SFTP port 2222.
+Default LAN subnet: 192.168.1.0/24. Administrative SSH is unchanged.
 
   --dry-run            Inspect and describe changes without changing the system.
-  --allow-from <CIDR>  Allow ftpu only from this IPv4 subnet.
+  --allow-from <CIDR>  Set the allowed LAN subnet.
+  --tailscale-phone <name|IP|ID>
+                      Select a phone explicitly; otherwise detect and remember it.
+  --lan-only          Skip Tailscale; allow only the LAN subnet.
   -h, --help           Show this help.
 
 Example: sudo setup-ftpu --dry-run /dev/sda1
@@ -46,6 +62,10 @@ parse_args() {
         case $1 in
             -h|--help) usage; exit 0 ;;
             --dry-run) DRY_RUN=true; shift ;;
+            --lan-only) LAN_ONLY=true; shift ;;
+            --tailscale-phone)
+                if (($# < 2)) || [[ -z $2 ]]; then die '--tailscale-phone requires a name, IP or ID.'; fi
+                TAILSCALE_PHONE=$2; shift 2 ;;
             --allow-from)
                 (($# >= 2)) || die '--allow-from requires an IPv4 CIDR.'
                 ALLOW_FROM=$2; shift 2 ;;
@@ -55,6 +75,7 @@ parse_args() {
         esac
     done
     [[ -n $DRIVE ]] || die 'Supply an NTFS partition, for example /dev/sda1.'
+    if $LAN_ONLY && [[ -n $TAILSCALE_PHONE ]]; then die '--lan-only conflicts with --tailscale-phone.'; fi
     ALLOW_FROM=$(python3 - "$ALLOW_FROM" <<'PY'
 import ipaddress, sys
 try:
@@ -96,6 +117,12 @@ verify_bind() {
         die 'Upload mount does not point to PhoneBackups on the expected drive.'
 }
 
+verify_drive_bind() {
+    [[ $(mount_at "$JAIL/drive" UUID) == "$UUID" &&
+        $(mount_at "$JAIL/drive" FSROOT) == / ]] ||
+        die 'The drive view does not point to the root of the expected external drive.'
+}
+
 check_device() {
     DRIVE=$(readlink -e -- "$DRIVE") || die 'Partition does not exist.'
     [[ -b $DRIVE ]] || die 'The drive argument must be a block device.'
@@ -109,7 +136,7 @@ check_device() {
     local target
     while IFS= read -r target; do
         case $target in
-            "$DRIVE_MOUNT"|"$JAIL/data") ;;
+            "$DRIVE_MOUNT"|"$JAIL/data"|"$JAIL/drive") ;;
             *) die "Partition is mounted at $target; unmount it manually first." ;;
         esac
     done < <(findmnt -rn -S "$DRIVE" -o TARGET)
@@ -119,6 +146,7 @@ check_device() {
         assert_empty_directory "$DRIVE_MOUNT"
     fi
     if mountpoint -q "$JAIL/data"; then verify_bind; else assert_empty_directory "$JAIL/data"; fi
+    if mountpoint -q "$JAIL/drive"; then verify_drive_bind; else assert_empty_directory "$JAIL/drive"; fi
     safe_path "$DRIVE_MOUNT/PhoneBackups"
 }
 
@@ -151,16 +179,17 @@ check_environment() {
     fi
     [[ -f /etc/debian_version ]] || die 'A Debian-based system is required.'
     local path command_
-    for command_ in python3 blkid findmnt mountpoint flock useradd usermod passwd runuser systemctl unshare; do
+    for command_ in python3 blkid findmnt mountpoint flock useradd usermod passwd runuser systemctl systemd-mount systemd-analyze ss unshare; do
         command -v "$command_" >/dev/null || die "Required command is missing: $command_"
     done
-    for path in "$FSTAB" "$SSHD_CONFIG" "$STATE_DIR" "$STATE_DIR/identity" "$STATE_DIR/lock" /home "$JAIL" "$JAIL/data" "$DRIVE_MOUNT"; do
+    for path in "$FSTAB" "$SSHD_CONFIG" "$SFTP_CONFIG" "$SFTP_UNIT" "$STATE_DIR" "$STATE_DIR/identity" "$STATE_DIR/lock" "$STATE_DIR/phone.json" /home "$JAIL" "$JAIL/data" "$JAIL/drive" "$DRIVE_MOUNT"; do
         safe_path "$path"
     done
     [[ -f $FSTAB && -f $SSHD_CONFIG ]] || die 'Existing fstab and SSH configuration are required.'
+    [[ -f $SUPPORT ]] || die "Missing companion helper: $SUPPORT"
     if [[ -e $STATE_DIR ]]; then
         [[ -d $STATE_DIR && $(stat -c '%u:%a' "$STATE_DIR") == 0:700 ]] || die 'Unsafe setup state directory.'
-        for path in "$STATE_DIR/identity" "$STATE_DIR/lock"; do
+        for path in "$STATE_DIR/identity" "$STATE_DIR/lock" "$STATE_DIR/phone.json"; do
             if [[ -e $path ]]; then
                 [[ -f $path && $(stat -c '%u:%a:%h' "$path") == 0:600:1 ]] || die "Unsafe state file: $path"
             fi
@@ -172,20 +201,63 @@ check_environment() {
     check_account
 }
 
+discover_phone() {
+    PHONE_JSON=
+    $LAN_ONLY && return 0
+    command -v tailscale >/dev/null || die 'Install and sign in to Tailscale first, or use --lan-only.'
+    PHONE_JSON=$(tailscale status --json | python3 "$SUPPORT" phone "$TAILSCALE_PHONE" "$STATE_DIR/phone.json")
+    tailscale debug prefs | python3 -c '
+import json, sys
+if json.load(sys.stdin).get("ShieldsUp"):
+    sys.exit("Tailscale blocks incoming connections. Run sudo tailscale set --shields-up=false first.")
+'
+}
+
+allowed_sources() {
+    printf '%s\n' "$ALLOW_FROM"
+    if [[ -n $PHONE_JSON ]]; then
+        python3 -c 'import json,sys; print("\n".join(json.load(sys.stdin)["phone"]["ips"]))' <<< "$PHONE_JSON"
+    fi
+}
+
+allowed_users() {
+    local source patterns=
+    while IFS= read -r source; do patterns+="ftpu@$source "; done < <(allowed_sources)
+    printf '%s' "${patterns% }"
+}
+
 ntfs_options() {
     printf 'uid=%s,gid=%s,fmask=0177,dmask=0077,nosuid,nodev,noexec,windows_names' "$1" "$2"
+}
+
+mount_drive_managed() {
+    local unit
+    unit=$(systemd-escape --path --suffix=mount "$DRIVE_MOUNT")
+    # Keep the FUSE driver in the mount unit's cgroup, independent of the
+    # setup terminal or transient setup service that launched this script.
+    if [[ $(systemctl show "$unit" -p LoadState --value) == loaded ]]; then
+        systemctl start "$unit"
+    else
+        systemd-mount --collect --automount=no --type=ntfs-3g \
+            --options="$(ntfs_options "$1" "$2")" "$DRIVE" "$DRIVE_MOUNT"
+    fi
 }
 
 fstab_block() {
     printf '%s\n' \
         "UUID=$UUID $DRIVE_MOUNT ntfs-3g $(ntfs_options "$1" "$2"),nofail,x-systemd.device-timeout=10s 0 0" \
-        "$DRIVE_MOUNT/PhoneBackups $JAIL/data none bind,nosuid,nodev,noexec,nofail,x-systemd.requires=$DRIVE_MOUNT 0 0"
+        "$DRIVE_MOUNT/PhoneBackups $JAIL/data none bind,nosuid,nodev,noexec,nofail,x-systemd.requires=$DRIVE_MOUNT 0 0" \
+        "$DRIVE_MOUNT $JAIL/drive none bind,nosuid,nodev,noexec,nofail,x-systemd.requires=$DRIVE_MOUNT 0 0"
 }
 
 ssh_block() {
+    printf 'Match User ftpu\n'
+    ssh_settings "ftpu@$ALLOW_FROM"
+}
+
+ssh_settings() {
     cat <<EOF
-Match User ftpu
-    AllowUsers ftpu@$ALLOW_FROM
+    AllowUsers $1
     AuthenticationMethods password
     PasswordAuthentication yes
     KbdInteractiveAuthentication no
@@ -196,6 +268,40 @@ Match User ftpu
     PermitTTY no
     PermitTunnel no
     PermitUserRC no
+EOF
+}
+
+sftp_config() {
+    cat <<EOF
+# Managed by setup-ftpu
+Port 2222
+PidFile /run/ftpu-sftp/sshd.pid
+UsePAM yes
+PermitRootLogin no
+Subsystem sftp internal-sftp
+EOF
+    ssh_settings "$(allowed_users)"
+}
+
+sftp_unit() {
+    cat <<EOF
+# Managed by setup-ftpu
+[Unit]
+Description=Restricted phone backup SFTP
+After=network.target tailscaled.service
+
+[Service]
+Type=simple
+RuntimeDirectory=ftpu-sftp
+RuntimeDirectoryMode=0755
+ExecStartPre=/usr/sbin/sshd -t -f $SFTP_CONFIG
+ExecStart=/usr/sbin/sshd -D -e -f $SFTP_CONFIG
+ExecReload=/bin/kill -HUP \$MAINPID
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
 EOF
 }
 
@@ -240,7 +346,7 @@ for line in outside:
             sys.exit('Conflicting device alias in fstab; migrate it manually.')
         if (fields[0] in {device, f'UUID={uuid}', drive_mount, drive_mount+'/PhoneBackups'}
                 or source.upper() == f'UUID={uuid}'.upper()
-                or target in {drive_mount, jail+'/data'}):
+                or target in {drive_mount, jail+'/data', jail+'/drive'}):
             sys.exit('Conflicting unmanaged fstab entry; migrate it manually.')
     if kind == 'ssh' and fields and fields[0].lower() == 'match':
         if re.search(r'\bftpu\b', line.split('#', 1)[0]):
@@ -262,11 +368,18 @@ validate_ssh() {
         after=$(effective_ssh "$candidate" barts "$addr")
         [[ $before == "$after" ]] || die "SSH settings for barts would change ($addr)."
         [[ $(effective_ssh "$candidate" ftpu "$addr" | sed -n 's/^port //p') == 22 ]] || die 'SSH must use port 22.'
-        effective_ssh "$candidate" ftpu "$addr" | python3 -c '
+        validate_restrictions "$candidate" "$addr" "ftpu@$ALLOW_FROM" 22
+    done
+}
+
+validate_restrictions() {
+    effective_ssh "$1" ftpu "$2" | python3 -c '
 import sys
-values = dict(line.rstrip().split(" ", 1) for line in sys.stdin if " " in line)
+entries = [line.rstrip().split(" ", 1) for line in sys.stdin if " " in line]
+values = dict(entries)
+values["allowusers"] = " ".join(value for key, value in entries if key == "allowusers")
 expected = {
-    "allowusers": "ftpu@"+sys.argv[1], "authenticationmethods": "password",
+    "allowusers": sys.argv[1], "port": sys.argv[3], "authenticationmethods": "password",
     "passwordauthentication": "yes", "kbdinteractiveauthentication": "no",
     "pubkeyauthentication": "no", "chrootdirectory": sys.argv[2],
     "forcecommand": "internal-sftp -d /data -u 0077", "disableforwarding": "yes",
@@ -275,16 +388,81 @@ expected = {
 for key, value in expected.items():
     if values.get(key) != value:
         sys.exit(f"SSH restriction overridden: {key}")
-' "$ALLOW_FROM" "$JAIL"
+' "$3" "$JAIL" "$4"
+}
+
+validate_sftp() {
+    local addr
+    sshd -t -f "$1"
+    for addr in 192.168.1.20 203.0.113.20 ::1; do
+        validate_restrictions "$1" "$addr" "$(allowed_users)" 2222
     done
+}
+
+check_sftp_conflicts() {
+    local file permissions
+    for file in "$SFTP_CONFIG" "$SFTP_UNIT"; do
+        if [[ -e $file ]]; then
+            if [[ ! -f $file ]] || [[ $(head -n 1 "$file") != '# Managed by setup-ftpu' ]]; then
+                die "Unmanaged SFTP configuration exists: $file"
+            fi
+            [[ $(stat -c '%u:%h' "$file") == 0:1 ]] || die "Unsafe SFTP file owner or hard links: $file"
+            permissions=$(stat -c '%a' "$file")
+            (( (8#$permissions & 8#022) == 0 )) || die "SFTP configuration is writable by another user: $file"
+        fi
+    done
+    if [[ -n $(ss -H -ltn 'sport = :2222') ]]; then
+        if [[ ! -f $SFTP_CONFIG || ! -f $SFTP_UNIT ]] || ! systemctl is-active --quiet ftpu-sftp; then
+            die 'Port 2222 is already used by another service.'
+        fi
+    fi
+}
+
+configure_firewall() {
+    local -a sources
+    command -v ufw >/dev/null || return 0
+    [[ $(LC_ALL=C ufw status) == 'Status: active'* ]] || return 0
+    local file
+    for file in user.rules user6.rules; do
+        safe_path "$UFW_DIR/$file"
+        cp -p -- "$UFW_DIR/$file" "$WORK/ufw-$file.before"
+    done
+    mapfile -t sources < <(allowed_sources)
+    ufw show added | python3 "$SUPPORT" firewall "${sources[@]}" > "$WORK/ufw-plan.json"
+    UFW_CHANGED=true
+    python3 - "$WORK/ufw-plan.json" <<'PY'
+import json, subprocess, sys
+plan = json.load(open(sys.argv[1]))
+for rule in plan['remove']:
+    subprocess.run(['ufw', '--force', 'delete', *rule], check=True)
+for rule in plan['add']:
+    subprocess.run(['ufw', *rule], check=True)
+PY
+}
+
+connection_details() {
+    log 'FolderSync settings: SFTP; port 2222; username ftpu; remote directory /data.'
+    log 'Manual file management: /drive exposes the whole external drive with read-write access.'
+    if [[ -n $PHONE_JSON ]]; then
+        python3 -c '
+import json,sys
+d=json.load(sys.stdin)
+print("Phone: " + d["phone"]["name"] + " (" + ", ".join(d["phone"]["ips"]) + ")")
+print("Tailscale host: " + (d["server"]["name"] or d["server"]["ips"][0]))
+print("Tailscale must be connected on the phone; tailnet policy must permit TCP 2222.")
+' <<< "$PHONE_JSON"
+    fi
+    log 'SSH host-key fingerprint:'
+    ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub || log 'Read the configured SSH host-key fingerprint before connecting.'
 }
 
 verify_mounts() {
     [[ $(mount_at "$DRIVE_MOUNT" UUID) == "$UUID" &&
         $(mount_at "$DRIVE_MOUNT" FSTYPE) == fuseblk ]] || die 'Expected NTFS-3G mount is missing.'
     verify_bind
+    verify_drive_bind
     local path options
-    for path in "$DRIVE_MOUNT" "$JAIL/data"; do
+    for path in "$DRIVE_MOUNT" "$JAIL/data" "$JAIL/drive"; do
         options=,$(mount_at "$path" OPTIONS),
         [[ $options == *,rw,* && $options == *,nosuid,* &&
             $options == *,nodev,* && $options == *,noexec,* ]] || die "Unsafe mount options at $path."
@@ -292,19 +470,21 @@ verify_mounts() {
     [[ $(stat -c '%u:%g:%a' "$DRIVE_MOUNT/PhoneBackups") == "$(id -u ftpu):$(id -g ftpu):700" ]] ||
         die 'NTFS ownership or directory permissions do not match.'
     runuser -u ftpu -- test -w "$JAIL/data" || die 'ftpu cannot write to the upload mount.'
+    runuser -u ftpu -- test -w "$JAIL/drive" || die 'ftpu cannot write to the external drive view.'
 }
 
 # A non-recursive bind of the parent reveals the covered directory without
 # disconnecting uploads. The temporary bind exists only in a private namespace.
 verify_covered_directory() {
+    local name=${1:-data}
     mkdir "$WORK/jail-view"
     # Positional arguments belong to the child bash.
     # shellcheck disable=SC2016
     unshare --mount --propagation private bash -euc '
         mount --bind "$1" "$2"
-        [[ $(stat -c "%u:%g:%a" "$2/data") == 0:0:555 ]]
-        [[ -z $(find "$2/data" -mindepth 1 -maxdepth 1 -print -quit) ]]
-    ' bash "$JAIL" "$WORK/jail-view" || die 'Covered upload directory is unsafe or contains data.'
+        [[ $(stat -c "%u:%g:%a" "$2/$3") == 0:0:555 ]]
+        [[ -z $(find "$2/$3" -mindepth 1 -maxdepth 1 -print -quit) ]]
+    ' bash "$JAIL" "$WORK/jail-view" "$name" || die "Covered $name directory is unsafe or contains data."
     rmdir "$WORK/jail-view"
 }
 
@@ -335,6 +515,25 @@ cleanup() {
                 log 'Restore/reload SSH manually from this session.' >&2
             fi
         fi
+        if $SFTP_CHANGED; then
+            local file label
+            for label in sftp-config sftp-unit; do
+                if [[ $label == sftp-config ]]; then file=$SFTP_CONFIG; else file=$SFTP_UNIT; fi
+                if [[ -f $WORK/$label.before ]]; then
+                    atomic_replace "$WORK/$label.before" "$file" || log "Restore $file manually." >&2
+                else
+                    rm -f -- "$file"
+                fi
+            done
+            systemctl daemon-reload || true
+            if ! $SFTP_WAS_ENABLED; then systemctl disable ftpu-sftp || true; fi
+            if $SFTP_WAS_ACTIVE; then systemctl restart ftpu-sftp || true; else systemctl stop ftpu-sftp || true; fi
+        fi
+        if $UFW_CHANGED; then
+            atomic_replace "$WORK/ufw-user.rules.before" "$UFW_DIR/user.rules" || true
+            atomic_replace "$WORK/ufw-user6.rules.before" "$UFW_DIR/user6.rules" || true
+            ufw reload || log 'Restore the saved UFW rules manually.' >&2
+        fi
         log 'Data was retained. Newly created accounts, packages, directories and mounts may remain; inspect them before retrying.' >&2
         ((status != 0)) || status=1
     fi
@@ -342,6 +541,7 @@ cleanup() {
 }
 
 preflight_config() {
+    check_sftp_conflicts
     render_config fstab "$FSTAB" <(fstab_block UID GID) /dev/stdout >/dev/null
     render_config ssh "$SSHD_CONFIG" <(ssh_block) /dev/stdout >/dev/null
 }
@@ -351,18 +551,24 @@ describe() {
 Partition: $DRIVE (UUID=$UUID)
 Mount: $DRIVE_MOUNT, using NTFS-3G with private uid/gid permissions across the drive.
 Upload folder: $DRIVE_MOUNT/PhoneBackups -> $JAIL/data
+Whole external drive: $DRIVE_MOUNT -> $JAIL/drive (read-write)
 Account: ftpu; password login; SFTP only; chroot $JAIL
-Allowed IPv4 subnet: $ALLOW_FROM. Other source addresses are denied for ftpu.
+Allowed LAN IPv4 subnet: $ALLOW_FROM.
+SFTP service: TCP 2222; LAN access, plus the selected phone when Tailscale is enabled.
 Missing packages will be installed; no upgrade or formatting will run.
 Configuration will be backed up and validated before SSH is reloaded.
-Existing barts SSH settings and firewall rules will be preserved.
+Existing barts SSH and Tailscale SSH settings will be preserved.
+If UFW is active, only this script's port-2222 rules will be added or updated.
 EOF
+    connection_details
 }
 
 apply_setup() {
     local -a packages=()
-    local package password_status uid gid
-    require_terminal
+    local package password_status uid gid name
+    if ! getent passwd ftpu >/dev/null || [[ $(passwd -S ftpu | awk '{print $2}') != P ]]; then
+        require_terminal
+    fi
     for package in openssh-server ntfs-3g; do
         if [[ $(dpkg-query -W -f='${Status}' "$package" 2>/dev/null || true) != 'install ok installed' ]]; then
             packages+=("$package")
@@ -376,6 +582,10 @@ apply_setup() {
     WORK=$(mktemp -d "$BACKUP_ROOT/setup-ftpu.XXXXXXXX")
     cp -p -- "$FSTAB" "$WORK/fstab.before"
     cp -p -- "$SSHD_CONFIG" "$WORK/sshd.before"
+    if [[ -e $SFTP_CONFIG ]]; then cp -p -- "$SFTP_CONFIG" "$WORK/sftp-config.before"; fi
+    if [[ -e $SFTP_UNIT ]]; then cp -p -- "$SFTP_UNIT" "$WORK/sftp-unit.before"; fi
+    if systemctl is-active --quiet ftpu-sftp; then SFTP_WAS_ACTIVE=true; fi
+    if systemctl is-enabled --quiet ftpu-sftp; then SFTP_WAS_ENABLED=true; fi
     if ! getent passwd ftpu >/dev/null; then
         useradd --user-group --no-create-home --home-dir /data --shell /usr/sbin/nologin \
             --comment 'Phone backups (setup-ftpu)' ftpu
@@ -388,16 +598,18 @@ apply_setup() {
     usermod -L ftpu
     uid=$(id -u ftpu); gid=$(id -g ftpu)
     install -d -o root -g root -m 755 "$JAIL"
-    if ! mountpoint -q "$JAIL/data"; then
-        assert_empty_directory "$JAIL/data"
-        install -d -o root -g root -m 555 "$JAIL/data"
-        runuser -u ftpu -- test ! -w "$JAIL/data" || die 'Unmounted upload directory is writable.'
-    else
-        verify_covered_directory
-    fi
+    for name in data drive; do
+        if ! mountpoint -q "$JAIL/$name"; then
+            assert_empty_directory "$JAIL/$name"
+            install -d -o root -g root -m 555 "$JAIL/$name"
+            runuser -u ftpu -- test ! -w "$JAIL/$name" || die "Unmounted $name directory is writable."
+        else
+            verify_covered_directory "$name"
+        fi
+    done
     if ! mountpoint -q "$DRIVE_MOUNT"; then
         install -d -o root -g root -m 700 "$DRIVE_MOUNT"
-        mount -t ntfs-3g -o "$(ntfs_options "$uid" "$gid")" "$DRIVE" "$DRIVE_MOUNT"
+        mount_drive_managed "$uid" "$gid"
     fi
     [[ $(mount_at "$DRIVE_MOUNT" UUID) == "$UUID" &&
         $(mount_at "$DRIVE_MOUNT" FSTYPE) == fuseblk ]] || die 'Expected NTFS-3G filesystem is not mounted.'
@@ -414,11 +626,18 @@ apply_setup() {
     chmod --reference="$SSHD_CONFIG" "$WORK/sshd.new"
     findmnt --verify --tab-file "$WORK/fstab.new"
     validate_ssh "$WORK/sshd.new"
+    sftp_config > "$WORK/sftp.new"
+    sftp_unit > "$WORK/ftpu-sftp.service"
+    chmod 600 "$WORK/sftp.new"
+    chmod 644 "$WORK/ftpu-sftp.service"
+    validate_sftp "$WORK/sftp.new"
+    systemd-analyze verify "$WORK/ftpu-sftp.service"
 
     FSTAB_CHANGED=true
     atomic_replace "$WORK/fstab.new" "$FSTAB"
     systemctl daemon-reload
     systemctl start "$(systemd-escape --path --suffix=mount "$JAIL/data")"
+    systemctl start "$(systemd-escape --path --suffix=mount "$JAIL/drive")"
     verify_mounts
     SSH_CHANGED=true
     atomic_replace "$WORK/sshd.new" "$SSHD_CONFIG"
@@ -426,18 +645,32 @@ apply_setup() {
     systemctl enable ssh
     if systemctl is-active --quiet ssh; then systemctl reload ssh; else systemctl start ssh; fi
     systemctl is-active --quiet ssh
+    SFTP_CHANGED=true
+    atomic_replace "$WORK/sftp.new" "$SFTP_CONFIG"
+    atomic_replace "$WORK/ftpu-sftp.service" "$SFTP_UNIT"
+    systemctl daemon-reload
+    systemctl enable ftpu-sftp
+    if $SFTP_WAS_ACTIVE; then systemctl reload ftpu-sftp; else systemctl start ftpu-sftp; fi
+    systemctl is-active --quiet ftpu-sftp
+    configure_firewall
     # Only permit login once the restricted configuration is active.
     if [[ $password_status == P ]]; then usermod -U ftpu; else passwd ftpu; fi
     [[ $(passwd -S ftpu | awk '{print $2}') == P ]] || die 'ftpu has no usable password.'
     verify_mounts
+    if [[ -n $PHONE_JSON ]]; then
+        printf '%s\n' "$PHONE_JSON" > "$WORK/phone.json.new"
+        atomic_replace "$WORK/phone.json.new" "$STATE_DIR/phone.json"
+    fi
     SUCCESS=true
-    log "Done. Connect with SFTP on port 22 as ftpu, remote directory /data. Allowed subnet: $ALLOW_FROM."
+    log 'Done. Restricted SFTP is ready on port 2222.'
+    connection_details
     log "Configuration backups: $WORK"
 }
 
 main() {
     parse_args "$@"
     check_environment
+    discover_phone
     preflight_config
     describe
     if $DRY_RUN; then
