@@ -15,6 +15,7 @@ Use the connected GitHub plugin first for PR metadata, diffs, file context, revi
 
 - Require a specific PR URL or `owner/repo#number`. Ask if it cannot be inferred unambiguously.
 - Resolve the open PR, current head SHA, changed-file patches, authenticated user, and that user's pending review.
+- Retrieve every comment and the body of an existing pending review before proposing its submission.
 - Reuse earlier `/review` output only when it applies to this PR and head, then verify every finding against the current diff.
 - If there is no usable `/review` output, execute `/review` for the PR first.
 - Keep actionable, non-duplicate findings. Preserve supplied priority or severity labels. Report stale, addressed, duplicate, disputed, and non-actionable findings separately.
@@ -39,6 +40,9 @@ Continue to the complete draft before requesting selection or approval. Do not a
 - Use `REQUEST_CHANGES` only when the user chooses it.
 - Never use `APPROVE` while selected unresolved findings remain; use it only on explicit user direction.
 - Prefer the authenticated user's existing pending review: add the selected comments, then submit that exact review with the approved action and summary.
+- Submission publishes every existing comment in that review. Show their exact text, targets, and IDs for approval alongside new comments.
+- If existing comments lack approval or cannot be retrieved completely, leave the review unsubmitted and report the limitation.
+- Do not delete or edit existing comments to narrow a submission without approval of those separate actions.
 - If no user-owned pending review exists, create and submit one review containing all selected comments and the summary.
 
 ### Keep pending
@@ -50,7 +54,14 @@ Continue to the complete draft before requesting selection or approval. Do not a
 
 ## 4. Combine selection and exact-draft approval
 
-Default to all actionable candidates, `submit`, and `COMMENT`, unless the user already specifies other choices. Resolve the target before asking for approval.
+For conversational approval, default to all actionable candidates, `submit`, and `COMMENT`, unless the user specifies other choices.
+Resolve the target before asking for approval.
+
+For checkbox approval documents, start every action unchecked and use stable action IDs.
+Checked actions determine selection. Unchecked actions remain unauthorized regardless of conversational defaults.
+Show `keep pending` and `submit` as mutually exclusive finalization choices, with exact targets and summary behavior.
+Require one finalization choice before writing. Resolve conflicting choices before writing the review.
+Apply checked actions only after the user requests execution. A general request to execute does not authorize unchecked actions.
 
 Add a short summary covering only the selected points. When the user can select a subset, show one numbered summary bullet per candidate. State that the final summary contains only the selected bullets, in draft order, with any required attribution unchanged. Do not rewrite the approved summary after selection.
 
@@ -63,16 +74,20 @@ Show the exact final draft with:
 - review action for `submit`;
 - target: existing pending review ID, new submitted review, or new pending review;
 - numbered inline candidates with every path, line, side, and complete body;
+- every existing pending comment with its ID, target, and exact text, explicitly included in submission approval;
 - the complete review summary or its deferred status;
 - an explicit statement of whether the result will be submitted.
 
 If the user can choose either finalization mode, show the exact target and summary behavior for each mode. Show the review action for `submit` and state that `keep pending` does not submit the review. If only one mode is available, show that mode and explain the limitation.
 
-Ask once: `Approve all, or specify comment numbers, and choose submit or keep pending. Your selection and mode approve the displayed draft for those choices. You can also request edits or choose none.`
+For conversational approval, ask once: `Approve all, or specify comment numbers, and choose submit or keep pending. Your selection and mode approve the displayed draft for those choices. You can also request edits or choose none.`
+For checkbox documents, use the checked actions and finalization choice instead of this prompt and the conversational defaults below.
 
 - Treat `all, submit`, `1,3 keep pending`, or equivalent clear selection and mode as approval. Revalidate and write without another confirmation.
 - Treat `yes`, `approved`, `post it`, or `add them` as approval of the displayed defaults.
 - Apply subset selections and finalization choices directly when the displayed draft covers them. These choices do not require another approval.
+- When submitting an existing pending review, subset selection applies to new candidates only. Explain this scope in the draft.
+- If the user excludes an existing pending comment from submission, leave the review unsubmitted until an approved plan resolves the conflict.
 - For `none`, do not write a review unless the user explicitly approves a displayed summary-only review.
 - If the response requests edits or introduces an undisplayed action, target, mode, or summary, show the revised exact draft for approval.
 - If revalidation changes the head, anchor, target, or content, show the revised exact draft for approval.
@@ -82,8 +97,13 @@ Ask once: `Approve all, or specify comment numbers, and choose submit or keep pe
 Immediately before writing:
 
 - Re-fetch the head SHA, review state, selected patches, and duplicates.
+- Re-fetch all existing pending comments and the review body before submission. Compare them with the approved submission draft.
 - Stop and rebuild the draft if the head, anchor, target review, or selected content changed.
+- Stop if an existing pending comment was added, edited, or removed outside the approved plan.
 - Ensure the pending review belongs to the authenticated user.
+
+During approved multi-step work, record and verify expected effects such as a new pending review ID or newly added comments.
+Use those verified effects for subsequent steps without another approval. Unexpected relevant changes require a revised draft and approval.
 
 Then apply only the approved draft:
 
@@ -99,6 +119,8 @@ Then apply only the approved draft:
 - Report the review URL or ID when available, posted and skipped counts, partial failures, and whether the review is submitted or pending.
 
 ## Draft format
+
+This example uses conversational approval. For checkbox documents, replace the defaults and approval prompt with unchecked actions and explicit finalization choices.
 
 ```markdown
 Ready to apply this review with your selection and approval:

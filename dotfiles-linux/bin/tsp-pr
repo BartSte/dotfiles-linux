@@ -3,16 +3,24 @@ set -euo pipefail
 
 config=${TMUX_SESSION_DIRS_CONFIG:-"$HOME/.config/tmux-session/dirs"}
 resolve_only=false
+prepare_only=false
+expected_head=
 
 usage() {
     cat <<'EOF'
-Usage: tsp-pr [--config FILE] [--resolve-only] OWNER/REPO PR BASE_BRANCH HEAD_BRANCH
+Usage: tsp-pr [--config FILE] [--resolve-only | --prepare-only] [--expected-head SHA] OWNER/REPO PR BASE_BRANCH HEAD_BRANCH
 
 Resolve a GitHub repository through the tmux-session dirs config and open
 the pull request in a worktree with tsp. Repositories under ~/code/work or
 ~/code/personal use a worktrees folder beside the original repository.
 Other repositories use ~/code/worktrees.
 PR worktrees use <worktrees>/<project>/pr-<number>.
+Fetch the PR head and fast-forward clean existing worktrees before opening.
+With --expected-head, require that exact remote and checkout commit.
+Stop automatic updates for local changes, unfinished operations, or divergence.
+Local commits ahead of the PR remain available without --expected-head.
+With --prepare-only, print the updated worktree path without opening tmux.
+Progress output goes to stderr in this mode.
 EOF
 }
 
@@ -31,6 +39,16 @@ while (($#)); do
         --resolve-only)
             resolve_only=true
             shift
+            ;;
+        --prepare-only)
+            prepare_only=true
+            shift
+            ;;
+        --expected-head)
+            (($# >= 2)) || die "$1 requires a commit SHA"
+            expected_head=$2
+            [[ "$expected_head" =~ ^[0-9a-f]{40}$ ]] || die "expected head must be a full commit SHA"
+            shift 2
             ;;
         -h | --help)
             usage
@@ -107,6 +125,7 @@ done < "$config"
 
 declare -a candidates=()
 declare -A seen=()
+declare -A repository_remotes=()
 wanted_repo=${repo,,}
 
 while IFS= read -r -d '' git_marker; do
@@ -125,6 +144,7 @@ while IFS= read -r -d '' git_marker; do
         remote_url=$(git -C "$directory" remote get-url "$remote" 2>/dev/null) || continue
         if [[ "$(normalize_repo "$remote_url")" == "$wanted_repo" ]]; then
             candidates+=("$directory")
+            repository_remotes[$directory]=$remote
             break
         fi
     done < <(git -C "$directory" remote)
@@ -192,10 +212,55 @@ fi
 
 project_directory=${candidates[$best_index]}
 
+if $resolve_only && $prepare_only; then
+    die "--resolve-only and --prepare-only cannot be combined"
+fi
 if $resolve_only; then
     printf '%s\n' "$project_directory"
     exit 0
 fi
+if $prepare_only; then
+    exec 3>&1
+    exec 1>&2
+fi
+
+repository_remote=${repository_remotes[$project_directory]}
+pr_reference="refs/pr-attention/$pr_number/head"
+if ! git -C "$project_directory" fetch --no-tags --no-write-fetch-head -- "$repository_remote" \
+    "+refs/pull/$pr_number/head:$pr_reference"; then
+    die "cannot fetch $repo#$pr_number; the worktree was not updated"
+fi
+remote_head=$(git -C "$project_directory" rev-parse --verify "$pr_reference^{commit}")
+if [[ -n "$expected_head" && "$remote_head" != "$expected_head" ]]; then
+    die "PR head changed since the selected snapshot; refresh the queue before opening the worktree"
+fi
+
+update_worktree() {
+    local directory=$1 actual_head changes operation operation_path
+    actual_head=$(git -C "$directory" rev-parse HEAD)
+    [[ "$actual_head" != "$remote_head" ]] || return 0
+
+    if git -C "$directory" merge-base --is-ancestor "$remote_head" "$actual_head"; then
+        [[ -z "$expected_head" ]] || die "local commits are ahead of the selected PR head: $directory"
+        printf 'Keeping local commits ahead of %s#%s: %s\n' "$repo" "$pr_number" "$directory"
+        return 0
+    fi
+    git -C "$directory" merge-base --is-ancestor "$actual_head" "$remote_head" ||
+        die "worktree history diverged from the PR; inspect local commits or a force push: $directory"
+
+    for operation in MERGE_HEAD CHERRY_PICK_HEAD REVERT_HEAD rebase-merge rebase-apply sequencer; do
+        operation_path=$(git -C "$directory" rev-parse --path-format=absolute --git-path "$operation")
+        [[ ! -e "$operation_path" ]] || die "finish the current Git operation before updating: $directory"
+    done
+    changes=$(git -C "$directory" status --porcelain --untracked-files=normal --ignore-submodules=none) ||
+        die "cannot inspect worktree changes: $directory"
+    [[ -z "$changes" ]] || die "commit or stash local changes before updating: $directory"
+
+    printf 'Updating %s#%s (%s -> %s)\n' "$repo" "$pr_number" "${actual_head:0:8}" "${remote_head:0:8}"
+    if ! git -C "$directory" -c submodule.recurse=false merge --ff-only --no-autostash --no-overwrite-ignore "$remote_head"; then
+        die "cannot fast-forward the worktree; inspect the Git error: $directory"
+    fi
+}
 
 worktree_root="$HOME/code/worktrees"
 code_root=$(realpath -m "$HOME/code")
@@ -233,6 +298,9 @@ if [[ -e "$worktree_directory" ]]; then
     [[ "$(realpath "$project_git")" == "$(realpath "$worktree_git")" ]] ||
         die "destination belongs to another repository: $worktree_directory"
     current_branch=$(git -C "$worktree_directory" branch --show-current)
+    [[ "$current_branch" == "$worktree_branch" || "$current_branch" == "pr-$pr_number" ]] ||
+        die "destination is not on $worktree_branch: $worktree_directory"
+    update_worktree "$worktree_directory"
     if [[ "$current_branch" == "pr-$pr_number" && "$current_branch" != "$worktree_branch" ]]; then
         git -C "$project_directory" show-ref --verify --quiet "refs/heads/$worktree_branch" &&
             die "branch $worktree_branch already exists; move the old PR worktree before retrying"
@@ -251,6 +319,21 @@ else
     printf 'Fetching %s#%s (%s)\n' "$repo" "$pr_number" "$head_branch"
     (cd "$project_directory" && gh pr checkout "$pr_number" --repo "$repo" \
         --branch "$worktree_branch" --worktree "$worktree_directory")
+    update_worktree "$worktree_directory"
+fi
+
+if [[ -n "$expected_head" ]]; then
+    actual_head=$(git -C "$worktree_directory" rev-parse HEAD)
+    if [[ "$actual_head" != "$expected_head" ]]; then
+        printf 'tsp-pr: checkout head differs from the selected PR snapshot\n  Path: %s\n  Local: %s\n  Expected: %s\n' \
+            "$worktree_directory" "$actual_head" "$expected_head" >&2
+        die "the checkout does not match the selected head; inspect the worktree and refresh the PR queue"
+    fi
+fi
+
+if $prepare_only; then
+    printf '%s\n' "$worktree_directory" >&3
+    exit 0
 fi
 
 session_name=$(basename "$worktree_directory" | tr . _)

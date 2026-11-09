@@ -2,6 +2,8 @@
 
 Use search to collect candidates. Use current PR metadata and relevant feedback to determine the next action.
 Apply the user's host and repository scope to every source. Resolve the authenticated login; do not assume a saved identity is current.
+Use the scope resolved in `SKILL.md`. An unrestricted scope covers accessible repositories on that host, subject to reported source limits.
+Refresh coverage only for the selected scope. Preserve entries and coverage records from other scopes.
 
 ## Candidate sources
 

@@ -29,7 +29,14 @@ if [[ ${1:-} == -C && ${3:-} == rev-parse && ${4:-} == --show-toplevel && ! -e "
     printf '%s\n' "$2" >> "$TEST_NON_REPO_SCAN_LOG"
 fi
 if [[ ${1:-} == -C && ${3:-} == fetch ]]; then
-    exec "$TEST_REAL_GIT" -C "$2" fetch "$TEST_REMOTE" "${@:5}"
+    [[ ${TEST_FETCH_FAIL:-false} == false ]] || exit 1
+    fetch_arguments=("${@:4}")
+    for index in "${!fetch_arguments[@]}"; do
+        if [[ ${fetch_arguments[$index]} == origin ]]; then
+            fetch_arguments[$index]=$TEST_REMOTE
+        fi
+    done
+    exec "$TEST_REAL_GIT" -C "$2" fetch "${fetch_arguments[@]}"
 fi
 exec "$TEST_REAL_GIT" "$@"
 SH
@@ -79,6 +86,7 @@ printf 'PR\n' > "$project/file"
 git -C "$project" commit -qam PR
 pr_commit=$(git -C "$project" rev-parse HEAD)
 git -C "$project" push -q "$TEST_REMOTE" HEAD:refs/pull/42/head
+git -C "$project" push -q "$TEST_REMOTE" "$base_commit:refs/pull/43/head"
 git -C "$project" switch -q main
 git -C "$project" remote add origin https://github.com/example/project.git
 printf 'local changes\n' > "$project/file"
@@ -96,7 +104,28 @@ worktree="$TEST_WORKTREE_ROOT/project one/pr-42"
 [[ $(git -C "$project" branch --show-current) == main ]]
 [[ $(cat "$project/file") == 'local changes' ]]
 
+printf 'prepare sentinel\n' > "$TEST_OPENED"
+prepared_path=$("$subject" --config "$config" --prepare-only --expected-head "$pr_commit" example/project 42 main fork-feature)
+[[ "$prepared_path" == "$worktree" ]]
+[[ $(cat "$TEST_OPENED") == 'prepare sentinel' ]]
+if "$subject" --config "$config" --prepare-only --resolve-only example/project 42 main fork-feature > /dev/null 2>&1; then
+    printf 'FAIL: conflicting preparation modes were accepted\n' >&2
+    exit 1
+fi
+
 printf 'review changes\n' > "$worktree/file"
+(cd "$worktree" && "$subject" --config "$config" --expected-head "$pr_commit" example/project 42 main fork-feature)
+[[ $(cat "$worktree/file") == 'review changes' ]]
+if "$subject" --config "$config" --expected-head "$base_commit" example/project 42 main fork-feature > /dev/null 2>&1; then
+    printf 'FAIL: a stale checkout passed the expected-head check\n' >&2
+    exit 1
+fi
+[[ $(git -C "$worktree" rev-parse HEAD) == "$pr_commit" ]]
+[[ $(cat "$worktree/file") == 'review changes' ]]
+if "$subject" --config "$config" --expected-head 'invalid SHA' example/project 42 main fork-feature > /dev/null 2>&1; then
+    printf 'FAIL: an invalid expected head was accepted\n' >&2
+    exit 1
+fi
 (cd "$worktree" && "$subject" --config "$config" example/project 42 main fork-feature)
 [[ $(cat "$worktree/file") == 'review changes' ]]
 [[ $(cat "$TEST_CHECKOUT_LOG") == fork-feature ]]
@@ -147,6 +176,12 @@ unset TEST_CHECKOUT_FAIL
 [[ $(cat "$worktree/file") == 'more review changes' ]]
 [[ $(git -C "$worktree" config branch.fork-feature.remote) == "$TEST_HEAD_REMOTE" ]]
 [[ $(git -C "$worktree" config branch.fork-feature.merge) == refs/heads/fork-feature ]]
+if "$subject" --config "$config" --expected-head "$pr_commit" example/project 42 main fork-feature > /dev/null 2>&1; then
+    printf 'FAIL: unpublished local commits passed the exact-head requirement\n' >&2
+    exit 1
+fi
+[[ $(git -C "$worktree" rev-parse HEAD) == "$local_commit" ]]
+[[ $(cat "$worktree/file") == 'more review changes' ]]
 
 # A new source branch gets its own worktree and source tracking configuration.
 git -C "$project" push -q "$TEST_REMOTE" "$pr_commit:refs/pull/44/head"
@@ -165,6 +200,92 @@ if "$subject" --config "$config" example/project 45 main feature/failure > /dev/
 fi
 [[ $(cat "$TEST_OPENED") == "$new_worktree" ]]
 unset TEST_CHECKOUT_FAIL
+
+# Update a clean review checkout through the base repository's PR ref, including fork PRs.
+writer="$test_directory/update writer"
+git clone -q --no-checkout "$project" "$writer"
+git -C "$writer" config user.name Test
+git -C "$writer" config user.email test@example.com
+git -C "$writer" checkout -q --detach "$pr_commit"
+printf 'Updated PR\n' > "$writer/file"
+printf 'tracked upstream\n' > "$writer/ignored-note"
+git -C "$writer" add file ignored-note
+git -C "$writer" commit -qm 'upstream PR update'
+updated_commit=$(git -C "$writer" rev-parse HEAD)
+git -C "$writer" push -q "$TEST_REMOTE" HEAD:refs/pull/44/head
+printf 'not opened\n' > "$TEST_OPENED"
+
+# A stale queue snapshot stops before updating or opening the checkout.
+if "$subject" --config "$config" --expected-head "$pr_commit" example/project 44 main feature/new > /dev/null 2>&1; then
+    printf 'FAIL: a changed remote head was accepted for a stale queue snapshot\n' >&2
+    exit 1
+fi
+[[ $(git -C "$new_worktree" rev-parse HEAD) == "$pr_commit" ]]
+[[ $(cat "$TEST_OPENED") == 'not opened' ]]
+
+printf 'unfinished review edits\n' > "$new_worktree/file"
+if "$subject" --config "$config" --expected-head "$updated_commit" example/project 44 main feature/new > /dev/null 2>&1; then
+    printf 'FAIL: a dirty checkout was updated\n' >&2
+    exit 1
+fi
+[[ $(cat "$new_worktree/file") == 'unfinished review edits' ]]
+[[ $(git -C "$new_worktree" rev-parse HEAD) == "$pr_commit" ]]
+git -C "$new_worktree" restore file
+
+printf 'review notes\n' > "$new_worktree/untracked-note"
+if "$subject" --config "$config" --expected-head "$updated_commit" example/project 44 main feature/new > /dev/null 2>&1; then
+    printf 'FAIL: untracked review files were ignored during an update\n' >&2
+    exit 1
+fi
+[[ $(cat "$new_worktree/untracked-note") == 'review notes' ]]
+rm "$new_worktree/untracked-note"
+
+merge_marker=$(git -C "$new_worktree" rev-parse --path-format=absolute --git-path MERGE_HEAD)
+printf '%s\n' "$pr_commit" > "$merge_marker"
+if "$subject" --config "$config" --expected-head "$updated_commit" example/project 44 main feature/new > /dev/null 2>&1; then
+    printf 'FAIL: an unfinished Git operation was ignored\n' >&2
+    exit 1
+fi
+rm "$merge_marker"
+
+# Ignored local files must not be overwritten by newly tracked upstream files.
+exclude_file=$(git -C "$new_worktree" rev-parse --path-format=absolute --git-path info/exclude)
+printf 'ignored-note\n' >> "$exclude_file"
+printf 'private local notes\n' > "$new_worktree/ignored-note"
+if "$subject" --config "$config" --expected-head "$updated_commit" example/project 44 main feature/new > /dev/null 2>&1; then
+    printf 'FAIL: an ignored file was overwritten by the update\n' >&2
+    exit 1
+fi
+[[ $(cat "$new_worktree/ignored-note") == 'private local notes' ]]
+[[ $(git -C "$new_worktree" rev-parse HEAD) == "$pr_commit" ]]
+rm "$new_worktree/ignored-note"
+
+export TEST_FETCH_FAIL=true
+if "$subject" --config "$config" --expected-head "$updated_commit" example/project 44 main feature/new > /dev/null 2>&1; then
+    printf 'FAIL: a failed fetch reused a cached remote head\n' >&2
+    exit 1
+fi
+unset TEST_FETCH_FAIL
+[[ $(git -C "$new_worktree" rev-parse HEAD) == "$pr_commit" ]]
+[[ $(cat "$TEST_OPENED") == 'not opened' ]]
+
+"$subject" --config "$config" --expected-head "$updated_commit" example/project 44 main feature/new
+[[ $(git -C "$new_worktree" rev-parse HEAD) == "$updated_commit" ]]
+[[ $(cat "$new_worktree/file") == 'Updated PR' ]]
+[[ $(cat "$TEST_OPENED") == "$new_worktree" ]]
+
+# A force push must not reset a review branch that has a different history.
+git -C "$writer" checkout -q --detach "$pr_commit"
+printf 'Rebased PR\n' > "$writer/file"
+git -C "$writer" commit -qam 'replacement history'
+rebased_commit=$(git -C "$writer" rev-parse HEAD)
+git -C "$writer" push -q --force "$TEST_REMOTE" HEAD:refs/pull/44/head
+if "$subject" --config "$config" --expected-head "$rebased_commit" example/project 44 main feature/new > /dev/null 2>&1; then
+    printf 'FAIL: diverged history was reset automatically\n' >&2
+    exit 1
+fi
+[[ $(git -C "$new_worktree" rev-parse HEAD) == "$updated_commit" ]]
+[[ $(cat "$new_worktree/file") == 'Updated PR' ]]
 
 if "$subject" --config "$config" example/project invalid main fork-feature > /dev/null 2>&1; then
     printf 'FAIL: invalid PR number was accepted\n' >&2
@@ -211,4 +332,4 @@ for category in work/python personal/shell work personal; do
     [[ ! -e "$grouped_worktree" ]]
 done
 
-printf 'PASS: source branches, tracking, grouped worktrees, worktree reuse, legacy migration, isolation, and invalid input\n'
+printf 'PASS: worktree reuse, fast-forward updates, snapshot checks, local files, ignored files, Git operations, fork refs, divergence, and fetch failures\n'
