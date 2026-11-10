@@ -1,289 +1,250 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-USAGE="Usage: $0 <path>
-Opens a url or path in a preferred program. The <path> can also be read from
-stdin. Providing it as an argument take precedence over reading it from stdin.
+usage() {
+    cat <<'HELP'
+Usage: open [options] [--] [path[:line[:column]] | url]
+
+Open one URL or file. An argument takes precedence over standard input.
+Line and column numbers start at 1. Existing filenames take precedence over
+location suffixes. Programs run in the foreground and their exit status is
+returned to the caller.
 
 Options:
-    --linpath       Tries to convert a windows path to a linux path. Turned off 
-                    by default. This option has no effect if: wsl is not 
-                    running, or the path is already a linux path.
-    --winpath       Tries to convert a linux path to a windows path. Turned off
-                    by default. This option has no effect if: wsl is not
-                    running, or the path is already a windows path.
-    -h, --help      Show this message and exit.
-    -l, --log       Send debug messages a file.
-    -q, --quiet     Suppress all output.
-    -v, --verbose   Show more output.
-"
+    --linpath       Convert Windows input paths to Linux paths under WSL.
+    --winpath       Use Windows paths for local browser files under WSL.
+                    Linux tools always receive Linux paths.
+    -l, --log FILE  Append debug messages to FILE.
+    -q, --quiet     Suppress terminal output, including program output.
+    -v, --verbose   Show debug messages on standard error.
+    -h, --help      Show this help and exit.
+    --             Treat the remaining argument as a path or URL.
 
-################################################################################
-# Argument parsing
-################################################################################
-to_open=""
-linpath=false
-winpath=false
-while [[ $# -gt 0 ]]; do
-    case $1 in
-    -h | --help)
-        echo "$USAGE"
-        exit 0
-        ;;
-    --linpath)
-        linpath=true
-        ;;
-    --winpath)
-        winpath=true
-        ;;
-    -l | --log)
-        OPEN_LOG_FILE="$2"
-        shift
-        ;;
-    -q | --quiet)
-        OPEN_LOG_LEVEL="quiet"
-        ;;
-    -v | --verbose)
-        OPEN_LOG_LEVEL="verbose"
-        ;;
-    *)
-        if [[ -z $to_open ]]; then
-            to_open=$1
-        else
-            echo "Unknown option: $1" >&2
-            exit 1
-        fi
-        ;;
-    esac
-    shift
-done
-to_open=${to_open:-$(cat)}
-
-################################################################################
-# Main
-################################################################################
-
-# The main function of the program. It tries to open the input as a url, and if
-# that fails, it tries to open the input as a file.
-main() {
-    log_clear
-    try_url "$1" || try_file "$1" || exit "Could not open $1"
+WSLBROWSER and LINBROWSER each name one browser executable, without arguments.
+Under WSL, WSLBROWSER takes precedence. Otherwise, LINBROWSER is used.
+OPEN_LOG_FILE and OPEN_LOG_LEVEL (quiet or verbose) set logging defaults.
+HELP
 }
 
-# Tries to open a url in a browser. If the url is not a url, the function returns
-# 1.
-try_url() {
-    log "Try url: $1" -v
-    if is_url "$1"; then
-        open_url "$1"
-    else
-        return 1
-    fi
-}
-
-# Tries to open a file in a preferred program. If the file is not a file that is
-# supported, the function returns 1.
-#
-# The input may be a path to a file, or in the format: path:line:column. The line
-# and column are optional. If the line and column are not provided, the default
-# is 1.
-try_file() {
-    local path_line_column path line column
-    path_line_column=$1
-    log "try_file input is: $path_line_column"
-    # Split the `file_path` string by setting the word separator to a colon
-    # temporarily.
-    IFS=':' read -r path line column <<<"$path_line_column"
-    IFS=' ' # Reset IFS
-    line=${line:-1}
-    column=${column:-1}
-
-    if is_running wsl; then
-        path=$(no_qoutes <<<"$path")
-        log "Trying to open file $path" -v
-        if $linpath; then
-            path=$(backwards_to_forward_slashes <<<"$path")
-            log "Backward slashes replaced with forward slashes: $path" -v
-            path=$(wslpath -ua "$path")
-            log "Converted to linux path: $path" -v
-        elif $winpath; then
-            log "Trying to convert $path to windows path"
-            path=$(wslpath -ma "$path")
-            log "Resulting windows path: $path" -v
-        fi
-    fi
-
-    log "Try file: $path, line: $line, column: $column" -v
-    if has_type "$path" image; then
-        log "Opening image: $path" -v
-        open_img "$path"
-
-    elif has_type "$path" pdf; then
-        log "Opening pdf: $path" -v
-        zathura "$path"
-
-    elif has_type "$path" html; then
-        log "Opening html: $path" -v
-        open_url "$path"
-
-    elif has_type "$path" text; then
-        log "Opening text: $path" -v
-        open_text "$path" "$line"
-
-    elif has_type "$path" x-sc; then
-        log "Opening spreadsheet: $path" -v
-        TERM=xterm-256color sc-im "$path"
-
-    else
-        log "Unsupported file type: $path" -v
-        return 1
-    fi
-}
-
-################################################################################
-# Openers
-################################################################################
-
-# Opens a url in the preferred browser. If WSLBROWSER is set, it is used.
-# Otherwise, LINBROWSER is used. If neither are set, an error is raised.
-open_url() {
-    log "Url detected, opening in browser." -v
-    if [[ -n ${WSLBROWSER:-} ]]; then
-        log "Opening url with WSLBROWSER: $WSLBROWSER" -v
-        "$WSLBROWSER" "$1" 2>&1 | log -v &
-    elif [[ -n ${LINBROWSER:-} ]]; then
-        log "Opening url with LINBROWSER: $LINBROWSER" -v
-        "$LINBROWSER" "$1" 2>&1 | log -v &
-    else
-        log "No browser set. Please set WSLBROWSER or LINBROWSER." -v
-        return 1
-    fi
-}
-
-# Opens an image with imv.
-open_img() {
-    log "Opening image $1 with imv" -v
-    imv "$1" | log -v &
-}
-
-# Opens <path> in vim at line number that may be appended to the path using a :
-# separator. For example: /path/to/file:10
-#
-# The window 0 and pane 0 are used to open the file in tmux. If tmux is running
-# and we are opening the file in another pane, the key2pane command is used.
-#
-# If the -w or --win option is used, the path is converted to a wsl path if wsl
-# is running.
-open_text() {
-    local file line
-    file=$1
-    line=$2
-    log "Opening text file: $file at line $line" -v
-
-    if is_running tmux && [[ $(tmux display-message -p '#I:#P') != "0:0" ]]; then
-        log "Opening text file via key2pane" -v
-        key2pane --loglevel INFO -w 0 -i 0 "$file" "$line"
-    else
-        log "Opening text file in nvim" -v
-        nvim -c ":e $file | $line"
-    fi
-}
-
-################################################################################
-# Logger
-################################################################################
-
-# The log function has the following usage:
-#
-#     log [-v | --verbose] <message>
-#
-# Together with the following variables:
-# - OPEN_LOG_FILE: If the OPEN_LOG_FILE is set, always log to it.
-# - OPEN_LOG_LEVEL: If set to 'verbose', messages that are logged with the -v
-#     or --verbose option are logged to stderr and the file.
-# - OPEN_LOG_LEVEL: If set to 'quiet' all messages are suppressed.
 log() {
-    local verbose=false
-    local message=""
-    while [[ $# -gt 0 ]]; do
-        case $1 in
-        -v | --verbose)
-            verbose=true
-            ;;
-        *)
-            if [[ -z $message ]]; then
-                message=$1
-            else
-                echo "Unknown option: $1" >&2
-                exit 1
-            fi
-            ;;
-        esac
+    local level=$1 message=$2
+    if [[ -n ${log_file:-} ]]; then
+        printf '%s: %s\n' "$level" "$message" >> "$log_file"
+    fi
+    if [[ ${OPEN_LOG_LEVEL:-} != quiet ]] &&
+        [[ $level == error || ${OPEN_LOG_LEVEL:-} == verbose ]]; then
+        printf 'open: %s\n' "$message" >&2
+    fi
+}
+
+fail() {
+    log error "$1"
+    exit 1
+}
+
+parse_arguments() {
+    local positional=false options=true
+    to_open=''
+    linpath=false
+    winpath=false
+    while (($#)); do
+        if $options; then
+            case $1 in
+                -h | --help) usage; exit 0 ;;
+                --linpath) linpath=true; shift; continue ;;
+                --winpath) winpath=true; shift; continue ;;
+                -l | --log)
+                    [[ $# -ge 2 && -n $2 && $2 != -* ]] ||
+                        fail "$1 requires a log filename."
+                    OPEN_LOG_FILE=$2
+                    shift 2
+                    continue
+                    ;;
+                -q | --quiet) OPEN_LOG_LEVEL=quiet; shift; continue ;;
+                -v | --verbose) OPEN_LOG_LEVEL=verbose; shift; continue ;;
+                --) options=false; shift; continue ;;
+                -*) fail "Unknown option: $1" ;;
+            esac
+        fi
+        ! $positional || fail 'Provide only one path or URL.'
+        to_open=$1
+        positional=true
         shift
     done
-
-    if [[ -z $message ]]; then
-        message=$(cat)
+    if $linpath && $winpath; then
+        fail 'Use only one of --linpath and --winpath.'
     fi
+    if ! $positional; then
+        [[ ! -t 0 ]] || fail 'Provide a path or URL as an argument or through standard input.'
+        to_open=$(cat)
+    fi
+    [[ -n $to_open ]] || fail 'The path or URL is empty.'
+}
 
-    if [[ -z $message ]]; then
+# Remove one pair of surrounding quotes. Preserve quotes inside filenames.
+strip_quotes() {
+    if [[ $path == \"*\" || $path == \'*\' ]]; then
+        path=${path:1:${#path}-2}
+    fi
+}
+
+parse_location() {
+    path=$to_open
+    line=1
+    column=1
+    if $wsl && [[ ! -e $path && ! -L $path ]]; then
+        strip_quotes
+    fi
+    # A literal filename such as report:2026 takes precedence over a suffix.
+    if [[ ! -e $path && ! -L $path ]]; then
+        if [[ $path =~ ^(.*):([0-9]+):([0-9]*)$ ]]; then
+            path=${BASH_REMATCH[1]}
+            line=${BASH_REMATCH[2]}
+            column=${BASH_REMATCH[3]:-1}
+        elif [[ $path =~ ^(.*):([0-9]+)$ ]]; then
+            path=${BASH_REMATCH[1]}
+            line=${BASH_REMATCH[2]}
+        fi
+    fi
+    # Normalize decimal numbers without shell arithmetic or octal conversion.
+    [[ ! $line =~ ^0+$ && ! $column =~ ^0+$ ]] ||
+        fail 'Line and column numbers must be greater than zero.'
+    line=${line#"${line%%[!0]*}"}
+    column=${column#"${column%%[!0]*}"}
+    if $wsl; then
+        if [[ ! -e $path && ! -L $path ]]; then
+            strip_quotes
+        fi
+        if $linpath || $winpath; then
+            if [[ $path =~ ^[[:alpha:]]:[\\/] || $path == \\\\* || $path == //* ]]; then
+                path=$(wslpath -ua "${path//\\//}") || fail 'Windows path conversion failed.'
+            fi
+        fi
+    fi
+    [[ -n $path ]] || fail 'The file path is empty.'
+}
+
+run_program() {
+    local status
+    command -v -- "$1" >/dev/null 2>&1 || fail "Program not found: $1"
+    log debug "Run: $1"
+    if "$@"; then
+        return 0
+    else
+        status=$?
+        log error "$1 failed with status $status."
+        return "$status"
+    fi
+}
+
+open_url() {
+    local target=$1 local_file=${2:-false} browser
+    if $wsl && [[ -n ${WSLBROWSER:-} ]]; then
+        browser=$WSLBROWSER
+        if $local_file; then
+            target=$(wslpath -ma "$target") || fail 'Browser path conversion failed.'
+        fi
+    elif [[ -n ${LINBROWSER:-} ]]; then
+        browser=$LINBROWSER
+        if $wsl && $winpath && $local_file; then
+            target=$(wslpath -ma "$target") || fail 'Browser path conversion failed.'
+        fi
+    else
+        fail 'No browser configured. Set LINBROWSER or, under WSL, WSLBROWSER.'
+    fi
+    run_program "$browser" "$target"
+}
+
+open_text() {
+    local shell_path vim_path source session panes id window window_index pane_index command
+    local editor='' editor_window='' editor_index='' editor_pane=''
+    if [[ -z ${TMUX:-} ]]; then
+        run_program nvim -c "call cursor($line, $column)" -- "$path"
         return
     fi
+    source=${TMUX_PANE:-$(tmux display-message -p '#{pane_id}')}
+    session=$(tmux display-message -p -t "$source" '#{session_id}') ||
+        fail 'Cannot find the current tmux session.'
+    panes=$(tmux list-panes -s -t "$source" -F \
+        '#{pane_id} #{window_id} #{window_index} #{pane_index} #{pane_current_command}') ||
+        fail 'Cannot list tmux panes.'
+    while read -r id window window_index pane_index command; do
+        [[ $command == nvim || $command == vim ]] || continue
+        if [[ -z $editor || $id == "$source" ]]; then
+            editor=$id
+            editor_window=$window
+            editor_index=$window_index
+            editor_pane=$pane_index
+        fi
+        [[ $id != "$source" ]] || break
+    done <<< "$panes"
+    if [[ -n $editor ]]; then
+        # key2pane keeps the raw path for Codex. Its shell and Vim actions use
+        # separately escaped arguments from key2pane/config.json.
+        printf -v shell_path '%q' "$path"
+        vim_path=${path//\\/\\\\}
+        vim_path=${vim_path//\"/\\\"}
+        vim_path=${vim_path//$'\n'/\\n}
+        vim_path=${vim_path//$'\r'/\\r}
+        vim_path=${vim_path//$'\t'/\\t}
+        vim_path=${vim_path//$'\e'/\\e}
+        run_program key2pane --loglevel WARNING -s "$session" -w "$editor_index" -i "$editor_pane" -- \
+            "$path" "$line" "$column" "$shell_path" "\"$vim_path\""
+        tmux select-window -t "$editor_window"
+        tmux select-pane -t "$editor"
+    else
+        command -v nvim >/dev/null 2>&1 || fail 'Program not found: nvim'
+        run_program tmux split-window -h -t "$source" -c "$PWD" \
+            nvim -c "call cursor($line, $column)" -- "$path"
+    fi
+}
 
+open_file() {
+    local mime
+    parse_location
+    [[ -f $path ]] || fail "Not a regular file: $path"
+    # Absolute paths protect leading dashes and resolve tmux pane cwd differences.
+    [[ $path == /* ]] || path="$PWD/$path"
+    mime=$(file --mime-type -Lb -- "$path") || fail "Cannot detect file type: $path"
+    log debug "File: $path ($mime), line $line, column $column"
+    case $mime in
+        image/*) run_program imv "$path" ;;
+        application/pdf) run_program zathura "$path" ;;
+        text/html | application/xhtml+xml) open_url "$path" true ;;
+        application/x-sc) TERM=xterm-256color run_program sc-im "$path" ;;
+        text/* | inode/x-empty | application/x-empty | application/json | \
+        application/*+json | application/xml | application/*+xml | \
+        application/javascript | application/x-javascript | application/x-shellscript | \
+        application/toml | application/yaml | application/x-yaml | application/sql)
+            open_text
+            ;;
+        *) fail "Unsupported file type: $mime ($path)" ;;
+    esac
+}
+
+main() {
+    local wsl=false
     if [[ -n ${OPEN_LOG_FILE:-} ]]; then
-        echo "$message" >>"$OPEN_LOG_FILE"
+        if ! { mkdir -p -- "$(dirname -- "$OPEN_LOG_FILE")" && : >> "$OPEN_LOG_FILE"; }; then
+            fail "Cannot write log file: $OPEN_LOG_FILE"
+        fi
+        log_file=$OPEN_LOG_FILE
     fi
-
-    if [[ $verbose == true && ${OPEN_LOG_LEVEL:-""} != "verbose" ]]; then
-        return
+    if [[ -n ${WSL_DISTRO_NAME:-}${WSL_INTEROP:-} ]] || grep -qi microsoft /proc/version; then
+        wsl=true
     fi
-
-    echo "$message" >&2
-}
-
-# Clear the log file
-log_clear() {
-    if [[ -n ${OPEN_LOG_FILE:-} ]]; then
-        date >"$OPEN_LOG_FILE"
+    log debug "Input: $to_open"
+    if [[ $to_open =~ ^[[:alpha:]][[:alnum:]+.-]*:// || $to_open == www.* || $to_open == mailto:* ]]; then
+        open_url "$to_open"
+    else
+        open_file
     fi
 }
 
-################################################################################
-# Helper functions
-################################################################################
-
-# Checks if a file has a specific extension.
-has_ext() {
-    local file="$1"
-    local ext="${file##*.}"
-    [[ $ext == "$2" ]]
-}
-
-# Checks if a file has a specific mime type.
-has_type() {
-    file --mime-type -b "$1" | grep -q "$2"
-}
-
-# Checks if a string is a url.
-is_url() { [[ $1 =~ ^([a-zA-Z]+://|www\..*) ]]; }
-
-# Converts backward slashes (\) to forward slashes (/). For example:
-# - \\wsl.localhost\Arch\home
-# becomes:
-# - //wsl.localhost/Arch/home
-backwards_to_forward_slashes() {
-    sed 's,\\,/,g'
-}
-
-# Removes quotations from a string. For example:
-# - '\"Hello world\"'
-# becomes:
-# - Hello world
-no_qoutes() {
-    sed 's/"//g'
-}
-
-################################################################################
-# Entry point
-################################################################################
-main "$to_open"
+log_file=''
+parse_arguments "$@"
+if [[ ${OPEN_LOG_LEVEL:-} == quiet ]]; then
+    main >/dev/null 2>&1
+else
+    main
+fi

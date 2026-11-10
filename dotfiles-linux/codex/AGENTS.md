@@ -3,7 +3,9 @@
 ## Communication
 
 - Always communicate with the user in English, unless the user explicitly requests another language.
-- Give direct and efficient responses.
+- Keep responses and documentation concise and direct by default.
+- Add more detail only when the user explicitly requests it or correctness requires it.
+- Preserve the context that the intended reader needs to understand the text.
 - Do not add filler or sugar-coating.
 - Critically evaluate user suggestions. Do not agree by default.
 - If a suggestion is incorrect or inferior, explain why and propose a better option.

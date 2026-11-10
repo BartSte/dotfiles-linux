@@ -1,11 +1,11 @@
 ---
 name: pr-respond
-description: Gather pull-request reviewer comments, assess each one, and draft proposed code changes and replies for approval before any change or reply.
+description: Assess pull-request feedback, propose changes and replies, then use separate approvals for local changes and commits, and for pushes and posted responses.
 ---
 
 # Respond to Pull-Request Review Comments
 
-Use this skill to handle reviewer feedback on a pull request. Gather the feedback, assess it against the current pull request, and propose a response. Do not edit code or post review replies until the user approves the exact proposed actions.
+Use this skill to handle reviewer feedback on a pull request. Propose changes and replies before implementation. After the first approval, apply and commit the changes locally. Present the complete response again for final approval before you push commits or post replies.
 
 ## Gather and assess
 
@@ -34,24 +34,40 @@ Separate comments that could not be retrieved or assessed. Do not guess their co
 
 Use clear, concise, respectful language for proposed replies. Preserve code identifiers, paths, and quoted reviewer text exactly.
 
-## Approval gate
+## First approval: changes and proposed replies
 
-Before any mutation, ask the user to approve the numbered proposal. The user can approve all items or a specified set.
+Before any mutation, ask the user to approve the numbered proposal. The user can approve all items or a specified set. Explain that this approval authorizes local changes, checks, and one or more local commits for the selected items.
 
-Do not do any of these actions before approval:
+Do not edit source code, tests, documentation, or configuration before this approval. Approval of proposed replies at this stage does not authorize publication.
 
-- edit source code, tests, documentation, or configuration;
-- post, resolve, or dismiss a pull-request comment or review thread;
-- change the pull request in any other way.
+Do not push commits, post replies, or change remote PR content until the separate final approval.
 
-An approval applies only to the listed actions and exact reply text. If the proposed code change or reply changes materially, show the revised proposal and get approval again.
+An approval applies only to the selected items. If the proposed implementation changes materially, show the revised proposal and get approval before implementation.
 
-## Apply approved actions
+## Implement and commit locally
 
 1. Re-fetch the pull-request head and selected comments. Stop and rebuild the proposal if the head, comment state, or relevant code changed.
-2. Apply only the approved code changes. Run relevant checks and tests.
-   If the approved actions include a PR description change, use the
+2. Apply only the approved local changes. Run relevant checks and tests.
+3. Use the `commit` skill to create one or more focused local commits for the review response. Include only changes that belong to approved items. Do not include unrelated staged or unstaged changes. This workflow authorizes staging the approved changes and committing them without another approval.
+4. If the proposal includes a PR description change, prepare its exact text without updating the remote PR. Use the
    [PR description guidance](../implement-issue/references/pr-descriptions.md).
-3. Show the final diff and test results before posting replies, unless the user explicitly approved both the code changes and the exact replies in one approval.
-4. Post only the approved replies. Do not resolve or dismiss threads unless the user explicitly approved that action.
-5. Report the applied changes, test results, posted replies, skipped items, and any failure.
+
+## Final approval: push and publish
+
+Present the complete review response again after implementation, even if the user approved the exact proposed replies at the first stage. Include:
+
+- every selected comment number, its outcome, and the exact final reply;
+- the final diff and the commit hashes and subjects;
+- relevant check and test results, including failures and checks not run;
+- the destination repository and branch for the push;
+- the exact text of any proposed PR description change;
+- skipped items and any proposed thread actions.
+
+Ask for a separate final approval to push these commits and publish these responses. Keep all commits local and all responses unpublished until that approval arrives. If the final package changes materially, present the revised package for approval again.
+
+## Push and publish approved responses
+
+1. Re-fetch the remote PR head and selected comments. If the remote head, comment state, or relevant code changed, stop and rebuild the final proposal.
+2. Push only the approved commits to the approved PR branch. Do not force-push without explicit approval. If the push fails, stop before posting replies that claim the changes are available on the PR.
+3. Publish only the approved replies and PR description changes. Do not resolve or dismiss threads unless the user explicitly approved those actions.
+4. Report the pushed commits, check and test results, posted replies, skipped items, and any failure. If publication partially fails, report what succeeded and what remains. Do not duplicate successful replies during a retry.

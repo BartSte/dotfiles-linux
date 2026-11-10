@@ -2,6 +2,10 @@
 
 Apply this guidance when creating or updating a GitHub PR description. Keep the description current with the final implementation.
 
+Use the [simple-english skill](../../simple-english/SKILL.md) in pragmatic mode for every PR description. Run its self-check before posting the description.
+
+Assume that the reader has no prior context of the issue or discussion. Explain the affected feature or workflow, the problem or goal, and why the change matters. Describe the previous behavior and the resulting behavior. For a new feature, explain what the user can now do. Define unfamiliar terms that the reader needs to understand the change. Include enough context in the description for the reader to assess the change. Links to the issue or conversation provide further details.
+
 Explain the problem or goal first. Use a concrete trigger and before/after behavior when useful. Then explain the approach, important code changes, and reasons for those changes. Include compatibility or deployment details when they affect review.
 
 Keep routine automated results in CI or the agent's completion report. Do not add a command-by-command Validation section to the PR description. Omit passing lint, formatting, compilation, dependency-sync, and test inventories. Include a specific automated result only when it explains a material failure, limitation, or gap in CI coverage. Describe its implication briefly. Include an exact command only when a developer needs it to reproduce or investigate that condition.

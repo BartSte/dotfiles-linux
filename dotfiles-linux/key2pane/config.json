@@ -9,14 +9,15 @@
         {
             "regex": "bash|zsh",
             "keys": [
-                "nvim -c ':e {0} | {1}'",
+                "nvim -c 'call cursor({1}, {2})' -- {3}",
                 "Enter"
             ]
         },
         {
             "regex": "n?vim",
             "keys": [
-                ":e {0} | {1}",
+                "Escape",
+                ":execute 'edit ' . fnameescape({4}) | call cursor({1}, {2})",
                 "Enter"
             ]
         },

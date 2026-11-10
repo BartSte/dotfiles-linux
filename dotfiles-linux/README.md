@@ -4,6 +4,8 @@ This layer contains shell, Git, mail, calendar, Codex, and command-line configur
 Use it with the base layer and the appropriate Arch or Raspberry Pi layer.
 See the [base overview](https://github.com/BartSte/dotfiles/blob/master/README.md) for installation.
 
+See the [open command guide](docs/open.md) for file, URL, WSL, and tmux behavior.
+
 ## Calendars
 
 Each machine connects to Outlook through its own DavMail, vdirsyncer, and khal storage.

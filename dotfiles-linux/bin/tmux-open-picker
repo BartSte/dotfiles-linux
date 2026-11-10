@@ -1,0 +1,250 @@
+#!/usr/bin/env python3
+"""Select a file or URL from tmux history and pass it to the open command."""
+
+import json
+import os
+import re
+import shlex
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+URL = re.compile(r"(?:[a-zA-Z][a-zA-Z0-9+.-]*://|www\.|mailto:)[^\s<>\"']+")
+TRACEBACK = re.compile(r"File ([\"'])(.*?)\1, line ([0-9]+)")
+QUOTED = re.compile(r"([\"'`])(.*?)\1(:[0-9]+(?::[0-9]*)?)?")
+TOKEN = re.compile(r"[^\s<>\"'`=,;(){}\[\]]+")
+
+
+def main() -> int:
+    """Run the picker for one source pane."""
+    try:
+        if len(sys.argv) == 4 and sys.argv[1] == "--preview":
+            show_preview(Path(sys.argv[2]), int(sys.argv[3]))
+            return 0
+        if len(sys.argv) != 2 or not re.fullmatch(r"%[0-9]+", sys.argv[1]):
+            raise ValueError("Usage: tmux-open-picker %pane_id")
+        pane = sys.argv[1]
+        directory = Path(
+            tmux_output(
+                "display-message", "-p", "-t", pane, "#{pane_current_path}"
+            ).rstrip("\n")
+        )
+        content = tmux_output("capture-pane", "-Jp", "-t", pane, "-S", "-5000")
+        locations = find_candidate_lines(content, directory)
+        candidates = list(locations)
+        if not candidates:
+            subprocess.run(
+                ["tmux", "display-message", "No files or URLs found."],
+                check=True,
+            )
+            return 0
+        environment = dict(os.environ, TMUX_PANE=pane)
+        result = select_candidate(candidates, locations, content, environment)
+        if result.returncode in (1, 130):
+            return 0
+        if result.returncode:
+            raise RuntimeError(
+                f"fzf-tmux failed with status {result.returncode}."
+            )
+        selected = os.fsdecode(result.stdout.removesuffix(b"\0"))
+        if selected not in candidates:
+            raise ValueError("The picker returned an unknown item.")
+        status = subprocess.run(
+            [
+                str(Path(__file__).with_name("open")),
+                "--linpath",
+                "--",
+                selected,
+            ],
+            cwd=directory,
+            env=environment,
+            check=False,
+        ).returncode
+        if status:
+            subprocess.run(
+                [
+                    "tmux",
+                    "display-message",
+                    "Could not open the selected item.",
+                ],
+                check=False,
+            )
+        return status
+    except (
+        OSError,
+        ValueError,
+        RuntimeError,
+        subprocess.CalledProcessError,
+    ) as error:
+        print(f"tmux-open-picker: {error}", file=sys.stderr)
+        try:
+            subprocess.run(
+                [
+                    "tmux",
+                    "display-message",
+                    "File picker failed. See tmux command output.",
+                ],
+                check=False,
+            )
+        except OSError:
+            pass
+        return 1
+
+
+def select_candidate(
+    candidates: list[str],
+    locations: dict[str, int],
+    content: str,
+    environment: dict[str, str],
+) -> subprocess.CompletedProcess:
+    """Run fzf with a private history snapshot for its context preview."""
+    with tempfile.TemporaryDirectory(prefix="tmux-open-preview-") as temporary:
+        snapshot = Path(temporary) / "history.json"
+        snapshot.write_text(
+            json.dumps(
+                {
+                    "lines": content.splitlines(),
+                    "locations": list(locations.values()),
+                }
+            ),
+            encoding="utf-8",
+        )
+        preview = (
+            shlex.join(
+                [
+                    sys.executable,
+                    str(Path(__file__).resolve()),
+                    "--preview",
+                    str(snapshot),
+                ]
+            )
+            + " {n}"
+        )
+        return subprocess.run(
+            [
+                "fzf-tmux",
+                "-p",
+                "90%,80%",
+                "--no-multi",
+                "--no-select-1",
+                "--read0",
+                "--print0",
+                "--prompt=Open> ",
+                "--header=Files and URLs from this pane (newest first)",
+                "--preview",
+                preview,
+                "--preview-window=right,60%,wrap",
+            ],
+            input=b"\0".join(os.fsencode(item) for item in candidates) + b"\0",
+            stdout=subprocess.PIPE,
+            env=environment,
+            check=False,
+        )
+
+
+def show_preview(snapshot: Path, index: int) -> None:
+    """Show history around the selected result and highlight its source line."""
+    data = json.loads(snapshot.read_text(encoding="utf-8"))
+    if not 0 <= index < len(data["locations"]):
+        raise ValueError("Invalid preview index.")
+    selected = data["locations"][index]
+    height = max(1, int(os.environ.get("FZF_PREVIEW_LINES", "30")))
+    start = max(1, selected - height // 2)
+    for number in range(start, len(data["lines"]) + 1):
+        text = data["lines"][number - 1]
+        if number == selected:
+            print(f"\033[7m> {number:5} {text}\033[0m")
+        else:
+            print(f"  {number:5} {text}")
+
+
+def tmux_output(*arguments: str) -> str:
+    """Return tmux output without passing pane content through a shell."""
+    return subprocess.check_output(
+        ["tmux", *arguments], text=True, errors="surrogateescape"
+    )
+
+
+def find_candidates(content: str, directory: Path) -> list[str]:
+    """Find URLs and existing files, with the newest occurrence first."""
+    return list(find_candidate_lines(content, directory))
+
+
+def find_candidate_lines(content: str, directory: Path) -> dict[str, int]:
+    """Map each result to its most recent source line in pane history."""
+    candidates: dict[str, int] = {}
+    for number, line in reversed(list(enumerate(content.splitlines(), 1))):
+        covered: list[tuple[int, int]] = []
+        for pattern in (URL, TRACEBACK, QUOTED, TOKEN):
+            for match in pattern.finditer(line):
+                if any(start <= match.start() < end for start, end in covered):
+                    continue
+                if pattern is URL:
+                    value = match.group().rstrip(".,;!")
+                    for left, right in (("(", ")"), ("[", "]"), ("{", "}")):
+                        while value.endswith(right) and value.count(
+                            right
+                        ) > value.count(left):
+                            value = value[:-1]
+                else:
+                    if pattern is TRACEBACK:
+                        raw = f"{match[2]}:{match[3]}"
+                    elif pattern is QUOTED:
+                        raw = match[2] + (match[3] or "")
+                    else:
+                        raw = match.group()
+                    value = resolve_file(raw, directory)
+                if value is not None:
+                    candidates.setdefault(value, number)
+                    covered.append(match.span())
+    return candidates
+
+
+def resolve_file(raw: str, directory: Path) -> str | None:
+    """Resolve a filename and optional location against the source pane cwd."""
+    # Try the literal filename before removing punctuation or locations.
+    variations = [raw, raw.rstrip(".,:")]
+    for value in variations:
+        filename = existing_file(value, directory)
+        if filename is not None:
+            return filename
+    for value in variations:
+        match = re.fullmatch(r"(.*):([0-9]+):([0-9]*)", value)
+        if match:
+            path, line, column = match.groups()
+            suffix = f":{line}:{column or '1'}"
+        else:
+            match = re.fullmatch(r"(.*):([0-9]+)", value)
+            if not match:
+                continue
+            path, line = match.groups()
+            suffix = f":{line}"
+        filename = existing_file(path, directory)
+        if filename is not None:
+            return filename + suffix
+    return None
+
+
+def existing_file(value: str, directory: Path) -> str | None:
+    """Return an absolute path for an existing file, including WSL paths."""
+    if not value:
+        return None
+    if re.match(r"^[a-zA-Z]:[\\/]|^\\\\", value):
+        try:
+            value = subprocess.check_output(
+                ["wslpath", "-ua", value.replace("\\", "/")],
+                text=True,
+                stderr=subprocess.DEVNULL,
+            ).rstrip("\n")
+        except (OSError, subprocess.CalledProcessError):
+            return None
+    try:
+        path = directory / Path(value).expanduser()
+        return str(path) if path.is_file() else None
+    except (OSError, ValueError, RuntimeError):
+        return None
+
+
+if __name__ == "__main__":
+    sys.exit(main())
