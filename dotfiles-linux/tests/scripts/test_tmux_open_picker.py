@@ -84,12 +84,48 @@ class CandidateTests(unittest.TestCase):
         ):
             PICKER.show_preview(snapshot, 0)
         text = output.getvalue()
-        self.assertTrue(text.startswith("     50 history 50\n"))
+        plain_text = PICKER.ANSI_ESCAPE.sub("", text)
+        self.assertTrue(plain_text.startswith("     50 history 50\n"))
         self.assertIn("\033[7m>    55 history 55\033[0m", text)
-        self.assertIn("history 54\n", text)
-        self.assertIn("history 56\n", text)
+        self.assertIn("history 54\n", plain_text)
+        self.assertIn("history 56\n", plain_text)
         with self.assertRaises(ValueError):
             PICKER.show_preview(snapshot, -1)
+
+    def test_colors_do_not_change_paths_urls_or_traceback_locations(self):
+        content = (
+            "\033[31mnotes\033[0m.txt:\033[1m12:3\033[0m\n"
+            "\033[38;2;100;150;200mhttps://example.invalid/a\033[0m?q=1\n"
+            'File "\033[38;5;45mspace \' name.txt\033[0m", line 42\n'
+            "\033]8;;https://example.invalid\033\\README\033]8;;\033\\\n"
+        )
+        self.assertEqual(
+            self.find(content),
+            [
+                str(self.directory / "README"),
+                str(self.directory / "space ' name.txt") + ":42",
+                "https://example.invalid/a?q=1",
+                str(self.directory / "notes.txt") + ":12:3",
+            ],
+        )
+
+    def test_preview_preserves_colors_and_restores_selection_after_resets(self):
+        snapshot = self.directory / "preview.json"
+        lines = [
+            "\033[32mgreen context\033[39m",
+            "\033[31mred\033[0m selected\033[38;2;1;2;3m RGB\033[39m",
+        ]
+        snapshot.write_text(
+            json.dumps({"lines": lines, "locations": [2]}), encoding="utf-8"
+        )
+        output = io.StringIO()
+        with redirect_stdout(output):
+            PICKER.show_preview(snapshot, 0)
+        rendered = output.getvalue()
+        self.assertIn(lines[0], rendered)
+        self.assertIn("\033[31m\033[7mred\033[0m\033[7m selected", rendered)
+        self.assertIn("\033[38;2;1;2;3m\033[7m RGB", rendered)
+        self.assertTrue(rendered.endswith("\033[0m\n"))
 
     def test_traceback_and_quoted_paths(self):
         self.assertEqual(
@@ -189,7 +225,7 @@ class PickerTests(unittest.TestCase):
         if arguments[0] == "display-message":
             return str(self.directory) + "\n"
         self.assertEqual(
-            arguments, ("capture-pane", "-Jp", "-t", "%7", "-S", "-5000")
+            arguments, ("capture-pane", "-eJp", "-t", "%7", "-S", "-5000")
         )
         return self.content
 
@@ -243,6 +279,13 @@ class PickerTests(unittest.TestCase):
         self.assertEqual(self.run_picker(), 0)
         self.assertEqual(len(self.calls), 1)
         self.assertFalse(self.preview_snapshot.exists())
+
+    def test_colored_history_reaches_preview_but_selection_has_no_escape_codes(
+        self,
+    ):
+        self.content = f'\033[31m"{self.filename.name}"\033[0m\n'
+        self.assertEqual(self.run_picker(), 0)
+        self.assertEqual(self.calls[-1][0][-1], str(self.filename))
 
     def test_no_candidates_displays_a_message(self):
         self.content = "No files here.\n"

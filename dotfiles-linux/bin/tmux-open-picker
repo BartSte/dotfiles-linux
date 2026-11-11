@@ -14,6 +14,10 @@ URL = re.compile(r"(?:[a-zA-Z][a-zA-Z0-9+.-]*://|www\.|mailto:)[^\s<>\"']+")
 TRACEBACK = re.compile(r"File ([\"'])(.*?)\1, line ([0-9]+)")
 QUOTED = re.compile(r"([\"'`])(.*?)\1(:[0-9]+(?::[0-9]*)?)?")
 TOKEN = re.compile(r"[^\s<>\"'`=,;(){}\[\]]+")
+ANSI_ESCAPE = re.compile(
+    r"\x1b(?:\[[0-?]*[ -/]*[@-~]|\][^\x07\x1b]*(?:\x07|\x1b\\)|[@-_])"
+)
+SGR_ESCAPE = re.compile(r"\x1b\[[0-?]*[ -/]*m")
 
 
 def main() -> int:
@@ -30,7 +34,7 @@ def main() -> int:
                 "display-message", "-p", "-t", pane, "#{pane_current_path}"
             ).rstrip("\n")
         )
-        content = tmux_output("capture-pane", "-Jp", "-t", pane, "-S", "-5000")
+        content = tmux_output("capture-pane", "-eJp", "-t", pane, "-S", "-5000")
         locations = find_candidate_lines(content, directory)
         candidates = list(locations)
         if not candidates:
@@ -154,9 +158,11 @@ def show_preview(snapshot: Path, index: int) -> None:
     for number in range(start, len(data["lines"]) + 1):
         text = data["lines"][number - 1]
         if number == selected:
+            # Keep the selection visible after source colors reset its style.
+            text = SGR_ESCAPE.sub(lambda match: match[0] + "\033[7m", text)
             print(f"\033[7m> {number:5} {text}\033[0m")
         else:
-            print(f"  {number:5} {text}")
+            print(f"  {number:5} {text}\033[0m")
 
 
 def tmux_output(*arguments: str) -> str:
@@ -175,6 +181,7 @@ def find_candidate_lines(content: str, directory: Path) -> dict[str, int]:
     """Map each result to its most recent source line in pane history."""
     candidates: dict[str, int] = {}
     for number, line in reversed(list(enumerate(content.splitlines(), 1))):
+        line = ANSI_ESCAPE.sub("", line)
         covered: list[tuple[int, int]] = []
         for pattern in (URL, TRACEBACK, QUOTED, TOKEN):
             for match in pattern.finditer(line):

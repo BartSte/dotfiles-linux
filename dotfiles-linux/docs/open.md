@@ -71,6 +71,8 @@ Relative paths use the source pane's working directory.
 Paths with spaces must appear inside quotes.
 URLs remain available, and duplicate results appear once, with recent results first.
 The preview shows the surrounding pane history and highlights the selected result's latest occurrence.
+It preserves the original terminal colors.
+Color codes do not affect file or URL detection.
 The picker requires Python 3 and `fzf-tmux`.
 
 The selection goes through `open`, so images, PDFs, and HTML use their respective programs.
