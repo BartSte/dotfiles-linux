@@ -63,8 +63,8 @@ if ! window_exists shell; then
     create_window shell 'ssh pi'
 fi
 
-if ! window_exists hermes; then
-    create_window hermes 'ssh -t pi hermes chat'
+if ! window_exists hekkie; then
+    create_window hekkie 'ssh -t pi codex'
 fi
 
 # Match the standard project layout: nvim first, then shell and the agent.

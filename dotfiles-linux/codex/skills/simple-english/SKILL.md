@@ -5,7 +5,7 @@ version: 1.2.0
 author: AminBlg
 license: MIT
 metadata:
-  hermes:
+  writing:
     tags: [writing, documentation, simplified-technical-english, ASD-STE100]
     related_skills: []
   standard: ASD-STE100 Issue 9 (2025-01-15)

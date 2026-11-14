@@ -1,9 +1,5 @@
 fpath=(~/dotfiles-linux/zsh/completions $fpath)
 
-if [[ -f ~/.openclaw/completions/openclaw.zsh ]]; then
-    fpath=(~/.openclaw/completions $fpath)
-fi
-
 autoload -Uz compinit
 typeset -g ZSH_COMPDUMP="${ZDOTDIR:-$HOME}/.zcompdump"
 
