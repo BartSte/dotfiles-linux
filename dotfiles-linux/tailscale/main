@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+if [[ ! -d /run/systemd/system ]]; then
+    printf 'Tailscale setup requires systemd.\n' >&2
+    printf 'On WSL, run ~/dotfiles-linux/wsl/main, then run wsl --shutdown from Windows and reopen WSL.\n' >&2
+    printf 'Then run ~/dotfiles-linux/tailscale/main again.\n' >&2
+    exit 1
+fi
+
+if ! command -v tailscale >/dev/null 2>&1 || ! command -v tailscaled >/dev/null 2>&1; then
+    installer=$(mktemp)
+    trap 'rm -f "$installer"' EXIT
+    curl -fsSL --retry 2 https://tailscale.com/install.sh -o "$installer"
+    sh "$installer"
+fi
+
+sudo systemctl enable --now tailscaled.service
+printf 'Tailscale service enabled. For first-time login, run ~/dotfiles-linux/tailscale/auth.\n'

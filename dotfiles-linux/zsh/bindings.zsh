@@ -1,5 +1,11 @@
 bindkey -v
 
+# Ctrl+Enter: CSI-u and xterm modifyOtherKeys encodings.
+bindkey -M viins '\e[13;5u' accept-line
+bindkey -M vicmd '\e[13;5u' accept-line
+bindkey -M viins '\e[27;5;13~' accept-line
+bindkey -M vicmd '\e[27;5;13~' accept-line
+
 zle -N _fzf-cd-widget-home
 zle -N _fzf-dir-widget
 zle -N _fzf-dir-widget-home

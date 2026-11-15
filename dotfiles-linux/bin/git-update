@@ -29,7 +29,10 @@ with commit, file-change, and ignored-file counts, plus the blocking reason.
 Preserve branches still checked out in retained worktrees.
 In other worktrees, ignored files block updates only if Git must overwrite them.
 
-Other clean worktree candidates require confirmation. Branches with commits
+Other clean worktree candidates require confirmation unless you use
+--auto-remove-worktrees. This flag preserves branches with commits outside
+the cleanup target and skips their deletion prompts. All worktree safeguards
+still apply. Branches with commits
 outside the cleanup target require confirmation before deletion, plus a
 second confirmation for force deletion. Worktree removal never uses --force.
 
@@ -42,6 +45,9 @@ Options:
   -v, --verbose     Show output from Git commands.
   --no-cleanup      Update branches without branch cleanup.
   --cleanup-only    Fetch and clean worktrees and branches without an update.
+  --auto-remove-worktrees
+                    Remove eligible clean worktrees without confirmation.
+                    Keep branches with commits outside the cleanup target.
 
 The current branch must track an upstream on the selected remote for updates.
 git-pull-local uses --no-cleanup. git-del-local uses --cleanup-only.
@@ -52,11 +58,13 @@ git_options=(--quiet)
 mode=update
 remote=''
 update_failed=false
+auto_remove_worktrees=false
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -h | --help) printf '%s\n' "$usage"; exit 0 ;;
         -q | --quiet) quiet=true ;;
         -v | --verbose) git_options=() ;;
+        --auto-remove-worktrees) auto_remove_worktrees=true ;;
         --no-cleanup | --cleanup-only)
             [[ $mode == update ]] || { printf 'Specify only one operation mode.\n' >&2; exit 1; }
             mode=${1#--}
@@ -366,7 +374,7 @@ cleanup_worktrees() {
                 continue
             fi
             printf 'Worktree candidate: %s (commits outside the cleanup target)\n' "$path" >&2
-            if ! confirm "Remove clean worktree '$path' (keep its branch or tag for review)?"; then
+            if [[ $auto_remove_worktrees == false ]] && ! confirm "Remove clean worktree '$path' (keep its branch or tag for review)?"; then
                 review_worktree "$path" "$head" 'commits outside the cleanup target'
                 continue
             fi
@@ -432,6 +440,10 @@ cleanup_branches() {
             continue
         fi
         if [[ $update_failed == true ]]; then
+            log "Keep branch '$branch': commits outside the cleanup target; review with git-del-local"
+            continue
+        fi
+        if [[ $auto_remove_worktrees == true ]]; then
             log "Keep branch '$branch': commits outside the cleanup target; review with git-del-local"
             continue
         fi

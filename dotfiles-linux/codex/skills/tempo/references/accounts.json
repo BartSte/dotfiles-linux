@@ -23,6 +23,10 @@
     "key": "SOFTWAREEN",
     "name": "Software engineering other"
   },
+  "ICT": {
+    "key": "SOFTWAREEN",
+    "name": "Software engineering other"
+  },
   "NCI": {
     "key": "2023-009",
     "name": "Fleet Monitor WBSO"

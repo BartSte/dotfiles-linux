@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-echo "Update mirrors at /etc/pacman.d/mirrorlist"
-sudo reflector --latest 5 --sort rate --save /etc/pacman.d/mirrorlist

@@ -56,7 +56,7 @@ if ((${#tmux_session_args[@]} == 1)) && [[ -f "${tmux_session_args[0]}/.git" ]];
         "${project_directory##*/}" == "${main_directory##*/}" ]]; then
         name=$(printf '%s--%s' "${project_directory##*/}" "${directory##*/}" | tr . _)
         if tmux has-session -t "=$name" 2>/dev/null; then
-            session_path=$(tmux display-message -p -t "=$name" '#{session_path}')
+            session_path=$(tmux display-message -p -t "=$name:" '#{session_path}')
             if [[ "$(realpath -m "$session_path")" != "$directory" ]]; then
                 printf 'tsp: tmux session %s already points to %s\n' "$name" "$session_path" >&2
                 exit 1

@@ -14,7 +14,13 @@ set -euo pipefail
 printf '%s\n' "$*" >> "$TEST_TMUX_LOG"
 case "$1" in
     has-session) [[ -f "$TEST_SESSION_DIRECTORY/${3#=}" ]] ;;
-    display-message) cat "$TEST_SESSION_DIRECTORY/${4#=}" ;;
+    display-message)
+        # display-message expects a pane target. A trailing colon selects
+        # the active window in an exact session match.
+        [[ $4 == =*: ]] || exit 1
+        session_name=${4#=}
+        cat "$TEST_SESSION_DIRECTORY/${session_name%:}"
+        ;;
     new-session) printf '%s\n' "$6" > "$TEST_SESSION_DIRECTORY/$4" ;;
     list-windows) printf '%s\n' nvim shell codex ;;
 esac

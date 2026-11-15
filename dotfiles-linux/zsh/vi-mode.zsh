@@ -95,12 +95,19 @@ function zle-line-init() {
   typeset -g VI_KEYMAP=main
   [[ "$prev_vi_keymap" != 'main' ]] && _vi-mode-should-reset-prompt && zle reset-prompt
   (( ! ${+terminfo[smkx]} )) || echoti smkx
+  # Request modified keys from tmux while the shell prompt is active.
+  if [[ -n ${TMUX:-} ]]; then
+    printf '\e[>4;1m'
+  fi
   _vi-mode-set-cursor-shape-for-keymap "${VI_KEYMAP}"
 }
 zle -N zle-line-init
 
 function zle-line-finish() {
   typeset -g VI_KEYMAP=main
+  if [[ -n ${TMUX:-} ]]; then
+    printf '\e[>4;0m'
+  fi
   (( ! ${+terminfo[rmkx]} )) || echoti rmkx
   _vi-mode-set-cursor-shape-for-keymap default
 }

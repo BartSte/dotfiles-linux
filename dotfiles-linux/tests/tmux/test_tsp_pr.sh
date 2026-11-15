@@ -42,6 +42,18 @@ exec "$TEST_REAL_GIT" "$@"
 SH
 cat > "$test_directory/bin/tmux" <<'SH'
 #!/usr/bin/env bash
+set -euo pipefail
+if [[ -n ${TEST_SESSION_PATH:-} ]]; then
+    case "$1" in
+        has-session) [[ $3 == '=project one--pr-42' ]] ;;
+        display-message)
+            [[ $4 == '=project one--pr-42:' ]] || exit 1
+            printf '%s\n' "$TEST_SESSION_PATH"
+            ;;
+        *) exit 1 ;;
+    esac
+    exit
+fi
 exit 1
 SH
 cat > "$test_directory/bin/tsp" <<'SH'
@@ -103,6 +115,16 @@ worktree="$TEST_WORKTREE_ROOT/project one/pr-42"
 [[ $(git -C "$project" rev-parse HEAD) == "$base_commit" ]]
 [[ $(git -C "$project" branch --show-current) == main ]]
 [[ $(cat "$project/file") == 'local changes' ]]
+
+# Reuse an existing tmux session only when it points to this worktree.
+TEST_SESSION_PATH="$worktree" "$subject" --config "$config" example/project 42 main fork-feature
+[[ $(cat "$TEST_OPENED") == "$worktree" ]]
+printf 'not opened\n' > "$TEST_OPENED"
+if TEST_SESSION_PATH="$project" "$subject" --config "$config" example/project 42 main fork-feature > /dev/null 2>&1; then
+    printf 'FAIL: conflicting tmux session path was accepted\n' >&2
+    exit 1
+fi
+[[ $(cat "$TEST_OPENED") == 'not opened' ]]
 
 printf 'prepare sentinel\n' > "$TEST_OPENED"
 prepared_path=$("$subject" --config "$config" --prepare-only --expected-head "$pr_commit" example/project 42 main fork-feature)

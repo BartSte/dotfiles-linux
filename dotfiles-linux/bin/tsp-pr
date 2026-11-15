@@ -174,7 +174,7 @@ for index in "${!candidates[@]}"; do
     fi
 
     session_name=$(basename "$directory" | tr . _)
-    session_path=$(tmux display-message -p -t "$session_name" '#{session_path}' 2>/dev/null || true)
+    session_path=$(tmux display-message -p -t "=$session_name:" '#{session_path}' 2>/dev/null || true)
     if [[ -n "$session_path" && "$(realpath -m "$session_path")" == "$directory" ]]; then
         ((score += 500))
     fi
@@ -341,7 +341,8 @@ if [[ "$(dirname "$worktree_directory")" == "$worktree_root/$project" ]]; then
     session_name=$(printf '%s--%s' "$project" "${worktree_directory##*/}" | tr . _)
 fi
 if tmux has-session -t "=$session_name" 2>/dev/null; then
-    session_path=$(tmux display-message -p -t "=$session_name" '#{session_path}')
+    # display-message takes a pane target. The colon selects this session's active window.
+    session_path=$(tmux display-message -p -t "=$session_name:" '#{session_path}')
     [[ "$(realpath -m "$session_path")" == "$(realpath -m "$worktree_directory")" ]] ||
         die "tmux session $session_name already points to $session_path"
 fi

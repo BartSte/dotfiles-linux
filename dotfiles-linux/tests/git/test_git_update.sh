@@ -394,6 +394,37 @@ run_command git-update <<< $'y\nn' || fail 'approved worktree removal failed'
 [[ ! -e $worktree ]] || fail 'approved worktree was not removed'
 assert_branch unique-worktree
 
+# Automatic worktree removal preserves unique branches without any prompts,
+# even with affirmative input. Existing worktree safeguards still apply.
+setup_case
+stale_branch auto-unique
+worktree="$case_dir/automatic worktree"
+git worktree add --quiet "$worktree" auto-unique
+git -C "$worktree" commit --quiet --allow-empty -m unique
+unique_tip=$(git rev-parse auto-unique)
+stale_branch auto-orphan
+git worktree add --quiet "$case_dir/orphan" auto-orphan
+git -C "$case_dir/orphan" commit --quiet --allow-empty -m orphan
+git worktree remove "$case_dir/orphan"
+for protected_kind in dirty locked detached; do
+    git worktree add --quiet -b "auto-$protected_kind" "$case_dir/$protected_kind" main
+    git -C "$case_dir/$protected_kind" commit --quiet --allow-empty -m "$protected_kind"
+done
+printf 'untracked\n' > "$case_dir/dirty/untracked"
+git worktree lock "$case_dir/locked"
+git -C "$case_dir/detached" switch --quiet --detach
+git branch -D auto-detached >/dev/null
+run_command git-update --auto-remove-worktrees <<< $'y\ny\ny\ny' || fail 'automatic unique worktree removal failed'
+[[ ! -e $worktree ]] || fail 'automatic unique worktree was retained'
+[[ $(git rev-parse auto-unique) == "$unique_tip" ]] || fail 'automatic removal changed unique commits'
+assert_branch auto-orphan
+for protected_kind in dirty locked detached; do
+    [[ -d $case_dir/$protected_kind ]] || fail "automatic removal bypassed $protected_kind safeguard"
+done
+if rg -q '\[y/N\]' "$test_root/output"; then
+    fail 'automatic worktree removal prompted for confirmation'
+fi
+
 # Cleanup prefers develop, then main, then master, over the current branch.
 # A stale branch merged into the target can be deleted even outside current HEAD.
 for target_branch in develop main master; do

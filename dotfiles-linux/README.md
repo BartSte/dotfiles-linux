@@ -6,6 +6,23 @@ See the [base overview](https://github.com/BartSte/dotfiles/blob/master/README.m
 
 See the [open command guide](docs/open.md) for file, URL, WSL, and tmux behavior.
 
+## Tailscale
+
+The main setup installs Tailscale if missing and enables its systemd service at boot.
+It uses the official Linux installer and requires Linux `sudo` access.
+To run this module separately, use `~/dotfiles-linux/tailscale/main`.
+
+On each new machine, run `~/dotfiles-linux/tailscale/auth` and open the login URL.
+The repository's `auth` script also runs this step.
+Each machine keeps its own identity in `/var/lib/tailscale`; do not copy this directory into dotfiles.
+Repeated setup runs preserve the existing login.
+
+On WSL 2, enable systemd first with `~/dotfiles-linux/wsl/main`.
+Then run `wsl --shutdown` from Windows, reopen WSL, and run the Linux setup.
+This requires no Windows administrator access if WSL 2 is already installed.
+Tailscale connects the WSL environment; Windows applications do not automatically use it.
+Avoid simultaneous Tailscale connections on Windows and inside WSL.
+
 ## Calendars
 
 Each machine connects to Outlook through its own DavMail, vdirsyncer, and khal storage.
