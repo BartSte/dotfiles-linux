@@ -14,3 +14,10 @@ On WSL, [Windows-protected rbw unlock](docs/rbw-windows-unlock.md) permits autom
 The Pi adds read-only WebDAV for Orgzly Revived; the laptop does not use that service.
 
 This repository owns `dotfiles-linux/README.md`. The base repository owns `~/README.md`.
+
+## Files over Tailscale
+
+FreeFileSync synchronizes local `~/Files` with the Pi's SFTP Files folder.
+The Arch layer installs the packages. Setup installs an inactive user timer.
+Enrollment and scheduling are explicit steps. Automatic deletion remains off.
+See the [Files guide](docs/ftpu-files.md).

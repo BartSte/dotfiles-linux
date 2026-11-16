@@ -368,6 +368,47 @@ discover_phone
 [[ $(allowed_users) == 'ftpu@192.168.1.0/24' ]]
 ''')
 
+    def test_laptop_selection_persists_exact_identity_and_both_addresses(self):
+        select = SUPPORT['select_phone']
+        phone = dict(ID='phone', HostName='phone', OS='android', Online=True,
+                     TailscaleIPs=['100.100.100.101'])
+        laptop = dict(ID='laptop-id', HostName='laptop', OS='linux', Online=False,
+                      TailscaleIPs=['100.100.100.102', 'fd7a:115c:a1e0::2'])
+        status = dict(BackendState='Running', Self=dict(TailscaleIPs=['100.100.100.1']),
+                      Peer=dict(phone=phone, laptop=laptop))
+        self.assertNotIn('laptop', select(status))
+        saved = select(status, laptop_selector='laptop')
+        self.assertEqual(saved['phone']['id'], 'phone')
+        self.assertEqual(saved['laptop']['id'], 'laptop-id')
+        self.assertEqual(len(saved['laptop']['ips']), 2)
+        laptop['HostName'] = 'renamed'
+        laptop['TailscaleIPs'][0] = '100.100.100.103'
+        self.assertEqual(select(status, saved=saved)['laptop']['ips'][0], '100.100.100.103')
+        laptop['Expired'] = True
+        with self.assertRaises(ValueError):
+            select(status, saved=saved)
+        laptop['Expired'] = False
+        laptop['ID'] = 'replacement'
+        with self.assertRaises(ValueError):
+            select(status, saved=saved)
+        laptop['TailscaleIPs'] = ['192.168.1.100']
+        with self.assertRaises(ValueError):
+            select(status, laptop_selector='renamed')
+        self.bash('parse_args --tailscale-laptop laptop --dry-run /dev/test; '
+                  '[[ $TAILSCALE_LAPTOP == laptop ]]')
+        self.bash('parse_args --tailscale-laptop', ok=False)
+        self.bash('parse_args --tailscale-laptop laptop --lan-only /dev/test', ok=False)
+
+    def test_laptop_and_phone_sources_reach_sftp_and_firewall_only_as_exact_ips(self):
+        self.bash('''
+PHONE_JSON='{"phone":{"ips":["100.100.100.101"]},"laptop":{"ips":["100.100.100.102","fd7a:115c:a1e0::2"]}}'
+[[ $(allowed_users) == 'ftpu@192.168.1.0/24 ftpu@100.100.100.101 ftpu@100.100.100.102 ftpu@fd7a:115c:a1e0::2' ]]
+sftp_config > "$TEST_ROOT/sftp-with-laptop"
+''')
+        rendered = (self.root / 'sftp-with-laptop').read_text()
+        self.assertIn('ftpu@100.100.100.102', rendered)
+        self.assertNotIn('100.64.0.0/10', rendered)
+
     def test_firewall_changes_only_own_rules(self):
         plan = SUPPORT['firewall_plan']
         original = """Added user rules:

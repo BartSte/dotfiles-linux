@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+if ! command -v FreeFileSync >/dev/null && ! command -v freefilesync >/dev/null; then
+    printf '%s\n' 'Skipping Files enrollment: install FreeFileSync on the laptop first.'
+    exit 0
+fi
+if [[ -f ${XDG_CONFIG_HOME:-$HOME/.config}/ftpu-files/config.json ]]; then
+    printf '%s\n' 'Files profile already exists. Use ftpu-files preview to review it.'
+    exit 0
+fi
+exec python3 "$HOME/dotfiles-linux/files/client.py" configure "$@"

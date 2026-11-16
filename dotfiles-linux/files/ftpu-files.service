@@ -1,0 +1,10 @@
+[Unit]
+Description=Synchronize Files over Tailscale with FreeFileSync (deletions off)
+PartOf=graphical-session.target
+ConditionPathExists=%h/.config/ftpu-files/config.json
+
+[Service]
+Type=oneshot
+ExecStart=%h/dotfiles-linux/bin/ftpu-files sync
+UMask=0077
+TimeoutStartSec=30min

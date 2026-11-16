@@ -28,6 +28,17 @@ For another home subnet, supply a network address with its prefix, for example `
 
 ## Automatic Tailscale setup
 
+For the Linux Files client, add `--tailscale-laptop NAME` to the setup command.
+Use the laptop's exact Tailscale name or stable device ID.
+Run with `--dry-run` first and use the verified existing partition.
+The script preserves the selected phone and permits both exact laptop addresses.
+It remembers the laptop identity in the existing root-only peer state.
+Later runs retain that identity and refresh its addresses, even while it is offline.
+A missing or expired laptop causes an error rather than selecting a replacement.
+`--lan-only` disables both peers without deleting their saved identities.
+Tailnet policy must permit the laptop to reach TCP 2222.
+This flag does not start laptop synchronization or change phone folder pairs.
+
 On first setup the script selects the only Android device, or the only online Android device if there are several. It shows the selected phone before setup and records its stable Tailscale device ID after success. Later runs keep that same phone even if another phone is online. Missing, expired or ambiguous devices cause an error rather than granting access to a replacement automatically.
 
 If selection is ambiguous, use `--tailscale-phone 'Bart Phone'` (or its MagicDNS name, Tailscale IP or device ID). Use the same option to replace the saved device intentionally. Only the selected phone's exact IPv4 and IPv6 Tailscale addresses are allowed; the whole tailnet is not added. `--lan-only` removes Tailscale access from the generated service configuration while keeping the saved phone choice for future use.

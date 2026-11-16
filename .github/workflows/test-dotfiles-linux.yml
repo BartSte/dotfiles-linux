@@ -22,6 +22,12 @@ jobs:
         shell: bash
         run: bash dotfiles-linux/tests/twg/test_main.sh
 
+      - name: Test Files client and SFTP source restrictions
+        shell: bash
+        run: |
+          python3 dotfiles-linux/tests/scripts/test_ftpu_files.py
+          python3 dotfiles-linux/tests/scripts/test_setup_ftpu.py
+
       - name: Run base initialize (curl)
         shell: bash
         run: |
