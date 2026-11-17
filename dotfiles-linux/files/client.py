@@ -134,6 +134,15 @@ def run_client(cfg, state, batch):
     if not (os.environ.get('DISPLAY') or os.environ.get('WAYLAND_DISPLAY')):
         raise ValueError('FreeFileSync needs a desktop session, including for batch jobs.')
     binary = executable()
+    command = [binary]
+    environment = os.environ.copy()
+    if batch:
+        display_runner = shutil.which('xvfb-run')
+        if not display_runner or not shutil.which('Xvfb') or not shutil.which('xauth'):
+            raise ValueError('Silent sync needs xvfb-run, Xvfb, and xauth. Install xorg-server-xvfb and xorg-xauth.')
+        command = [display_runner, '--auto-servernum', binary]
+        environment.pop('WAYLAND_DISPLAY', None)
+        environment['GDK_BACKEND'] = 'x11'
     if not shutil.which('tailscale'):
         raise ValueError('Install Tailscale first.')
     status = subprocess.run(['tailscale', 'status', '--json'], capture_output=True, text=True, timeout=15)
@@ -165,7 +174,7 @@ def run_client(cfg, state, batch):
             job = Path(directory) / ('Files.ffs_batch' if batch else 'Files.ffs_gui')
             with open(job, 'xb', opener=lambda p, f: os.open(p, f, 0o600)) as stream:
                 stream.write(configuration(cfg, logs, batch, password))
-            result = subprocess.run([binary, str(job)])
+            result = subprocess.run([*command, str(job)], env=environment)
         if batch and result.returncode == 0:
             (state / 'last-success').touch(mode=0o600)
         return result.returncode

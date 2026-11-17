@@ -67,6 +67,12 @@ FreeFileSync reports unreachable servers as transfer errors. No local directory 
 Offline local files remain usable. A later timer run retries after reconnection.
 The client never unlocks the vault automatically. A locked vault prevents that run.
 
+Batch synchronization uses a private Xvfb display. Manual `sync` commands and timer jobs stay off the desktop.
+Install `xorg-server-xvfb` and `xorg-xauth` on Arch Linux.
+If these tools are missing, synchronization reports an error before it starts.
+`preview` uses the normal desktop display for interactive comparison.
+Batch results remain available in terminal output, the user journal, and the sync logs.
+
 Use these commands:
 
 ```sh

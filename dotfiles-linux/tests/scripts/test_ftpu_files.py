@@ -86,8 +86,13 @@ class ClientTests(unittest.TestCase):
             if args[0] == 'rbw':
                 self.assertEqual(args, ['rbw', 'get', '--', 'Private item'])
                 return subprocess.CompletedProcess(args, 1 if vault_locked else 0, secret + '\n')
-            self.assertEqual(args[0], '/fixture/FreeFileSync')
-            job = Path(args[1])
+            if mode == 'sync':
+                self.assertEqual(args[:-1], ['/fixture/tool', '--auto-servernum', '/fixture/FreeFileSync'])
+                self.assertEqual(kwargs['env']['GDK_BACKEND'], 'x11')
+                self.assertNotIn('WAYLAND_DISPLAY', kwargs['env'])
+            else:
+                self.assertEqual(args[0], '/fixture/FreeFileSync')
+            job = Path(args[-1])
             self.assertEqual(job.stat().st_mode & 0o777, 0o600)
             self.assertEqual(job.parent.stat().st_mode & 0o777, 0o700)
             root = ET.parse(job).getroot()
@@ -113,13 +118,13 @@ class ClientTests(unittest.TestCase):
         self.assertEqual(result, 0)
         self.assertEqual(len(calls), 3)
         self.assertTrue((self.state / 'last-success').exists())
-        self.assertFalse(Path(calls[-1][1]).exists())
+        self.assertFalse(Path(calls[-1][-1]).exists())
 
     def test_preview_never_fetches_vault_password(self):
         _, calls = self.run_client('preview')
         self.assertFalse(any(args[0] == 'rbw' for args in calls))
         self.assertFalse((self.state / 'last-success').exists())
-        self.assertFalse(Path(calls[-1][1]).exists())
+        self.assertFalse(Path(calls[-1][-1]).exists())
 
     def test_offline_and_locked_vault_fail_before_sync(self):
         for options in (dict(offline=True), dict(vault_locked=True)):
@@ -132,7 +137,7 @@ class ClientTests(unittest.TestCase):
         result, calls = self.run_client(exitcode=1)
         self.assertEqual(result, 1)
         self.assertFalse((self.state / 'last-success').exists())
-        self.assertFalse(Path(calls[-1][1]).exists())
+        self.assertFalse(Path(calls[-1][-1]).exists())
 
     def test_missing_desktop_or_local_folder_never_starts_sync(self):
         with patch.dict(os.environ, {}, clear=True), self.assertRaises(ValueError):
@@ -156,7 +161,7 @@ class ClientTests(unittest.TestCase):
                 return subprocess.CompletedProcess(args, 0, '{"BackendState":"Running"}')
             if args[0] == 'rbw':
                 return subprocess.CompletedProcess(args, 0, 'fixture-password\n')
-            jobs.append(Path(args[1]))
+            jobs.append(Path(args[-1]))
             self.assertTrue(jobs[-1].exists())
             raise OSError('fixture launch failure')
 
@@ -167,6 +172,15 @@ class ClientTests(unittest.TestCase):
             CLIENT.run_client(self.cfg, self.state, True)
         self.assertEqual(len(jobs), 1)
         self.assertFalse(jobs[0].exists())
+
+    def test_missing_virtual_display_never_falls_back_to_a_visible_sync(self):
+        with patch.dict(os.environ, {'DISPLAY': ':fixture'}), \
+                patch.object(CLIENT, 'executable', return_value='/fixture/FreeFileSync'), \
+                patch.object(CLIENT.shutil, 'which', side_effect=lambda name: None if name == 'xvfb-run' else '/fixture/tool'), \
+                patch.object(CLIENT.subprocess, 'run') as run:
+            with self.assertRaisesRegex(ValueError, 'Silent sync needs'):
+                CLIENT.run_client(self.cfg, self.state, True)
+        run.assert_not_called()
 
     def test_enable_needs_successful_batch_before_systemd(self):
         config_dir = self.root / 'config'
