@@ -17,6 +17,14 @@ SPEC.loader.exec_module(CLIENT)
 
 
 class ClientTests(unittest.TestCase):
+    def test_session_uses_dependency_target_and_imports_executable_path(self):
+        with patch.dict(os.environ, {'DISPLAY': ':0', 'PATH': '/fixture/bin'}), \
+                patch.object(CLIENT.subprocess, 'run') as run:
+            CLIENT.session_start()
+        self.assertIn('PATH', run.call_args_list[0].args[0])
+        self.assertEqual(run.call_args_list[1].args[0],
+                         ['systemctl', '--user', 'start', 'ftpu-files-session.target'])
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix='ftpu files test ')
         self.addCleanup(self.temp.cleanup)
@@ -51,6 +59,39 @@ class ClientTests(unittest.TestCase):
                 CLIENT.validate(dict(self.cfg, **{field: value}))
         with self.assertRaises(ValueError):
             CLIENT.validate(dict(self.cfg, deletion=True))
+        for value in ('true', 1, None):
+            with self.subTest(sync_deletions=value), self.assertRaises(ValueError):
+                CLIENT.validate(dict(self.cfg, sync_deletions=value))
+
+    def test_deletions_apply_both_directions_and_keep_versioning_outside_files(self):
+        cfg = CLIENT.validate(dict(self.cfg, sync_deletions=True))
+        root = ET.fromstring(CLIENT.configuration(cfg, self.state / 'logs', batch=True))
+        self.assertEqual(root.find('Synchronize/Changes/Left').get('Delete'), 'right')
+        self.assertEqual(root.find('Synchronize/Changes/Right').get('Delete'), 'left')
+        self.assertEqual(root.findtext('Synchronize/DeletionPolicy'), 'Versioning')
+        versions = Path(root.findtext('Synchronize/VersioningFolder'))
+        self.assertFalse(versions.is_relative_to(self.local))
+
+    def test_policy_changes_preserve_profile_and_do_not_reset_sync_history(self):
+        config_dir = self.root / 'profile'
+        CLIENT.private_directory(config_dir)
+        database = self.local / '.sync.ffs_db'
+        database.write_bytes(b'previous sync history')
+        CLIENT.set_deletions(config_dir, self.state, self.cfg, True)
+        saved = CLIENT.load_config(config_dir / 'config.json')
+        self.assertEqual(saved, dict(self.cfg, sync_deletions=True))
+        self.assertEqual((config_dir / 'config.json').stat().st_mode & 0o777, 0o600)
+        CLIENT.set_deletions(config_dir, self.state, saved, False)
+        self.assertFalse(CLIENT.load_config(config_dir / 'config.json')['sync_deletions'])
+        self.assertEqual(database.read_bytes(), b'previous sync history')
+
+    def test_policy_change_refuses_an_active_sync(self):
+        CLIENT.private_directory(self.state)
+        with (self.state / 'client.lock').open('a') as lock:
+            CLIENT.fcntl.flock(lock, CLIENT.fcntl.LOCK_EX | CLIENT.fcntl.LOCK_NB)
+            with self.assertRaisesRegex(ValueError, 'process is active'):
+                CLIENT.set_deletions(self.root, self.state, self.cfg, True)
+        self.assertFalse((self.root / 'config.json').exists())
 
     def test_enrollment_private_repeat_does_not_overwrite(self):
         args = type('Args', (), dict(host=self.cfg['host'], password_entry='Private item', local=str(self.local)))()
@@ -78,8 +119,13 @@ class ClientTests(unittest.TestCase):
             if args[0] == 'rbw':
                 self.assertEqual(args, ['rbw', 'get', '--', 'Private item'])
                 return subprocess.CompletedProcess(args, 1 if vault_locked else 0, secret + '\n')
-            self.assertEqual(args[0], '/fixture/FreeFileSync')
-            job = Path(args[1])
+            if mode == 'sync':
+                self.assertEqual(args[:-1], ['/fixture/tool', '--auto-servernum', '/fixture/FreeFileSync'])
+                self.assertEqual(kwargs['env']['GDK_BACKEND'], 'x11')
+                self.assertNotIn('WAYLAND_DISPLAY', kwargs['env'])
+            else:
+                self.assertEqual(args[0], '/fixture/FreeFileSync')
+            job = Path(args[-1])
             self.assertEqual(job.stat().st_mode & 0o777, 0o600)
             self.assertEqual(job.parent.stat().st_mode & 0o777, 0o700)
             root = ET.parse(job).getroot()
@@ -105,13 +151,13 @@ class ClientTests(unittest.TestCase):
         self.assertEqual(result, 0)
         self.assertEqual(len(calls), 3)
         self.assertTrue((self.state / 'last-success').exists())
-        self.assertFalse(Path(calls[-1][1]).exists())
+        self.assertFalse(Path(calls[-1][-1]).exists())
 
     def test_preview_never_fetches_vault_password(self):
         _, calls = self.run_client('preview')
         self.assertFalse(any(args[0] == 'rbw' for args in calls))
         self.assertFalse((self.state / 'last-success').exists())
-        self.assertFalse(Path(calls[-1][1]).exists())
+        self.assertFalse(Path(calls[-1][-1]).exists())
 
     def test_offline_and_locked_vault_fail_before_sync(self):
         for options in (dict(offline=True), dict(vault_locked=True)):
@@ -124,7 +170,7 @@ class ClientTests(unittest.TestCase):
         result, calls = self.run_client(exitcode=1)
         self.assertEqual(result, 1)
         self.assertFalse((self.state / 'last-success').exists())
-        self.assertFalse(Path(calls[-1][1]).exists())
+        self.assertFalse(Path(calls[-1][-1]).exists())
 
     def test_missing_desktop_or_local_folder_never_starts_sync(self):
         with patch.dict(os.environ, {}, clear=True), self.assertRaises(ValueError):
@@ -148,7 +194,7 @@ class ClientTests(unittest.TestCase):
                 return subprocess.CompletedProcess(args, 0, '{"BackendState":"Running"}')
             if args[0] == 'rbw':
                 return subprocess.CompletedProcess(args, 0, 'fixture-password\n')
-            jobs.append(Path(args[1]))
+            jobs.append(Path(args[-1]))
             self.assertTrue(jobs[-1].exists())
             raise OSError('fixture launch failure')
 
@@ -159,6 +205,15 @@ class ClientTests(unittest.TestCase):
             CLIENT.run_client(self.cfg, self.state, True)
         self.assertEqual(len(jobs), 1)
         self.assertFalse(jobs[0].exists())
+
+    def test_missing_virtual_display_never_falls_back_to_a_visible_sync(self):
+        with patch.dict(os.environ, {'DISPLAY': ':fixture'}), \
+                patch.object(CLIENT, 'executable', return_value='/fixture/FreeFileSync'), \
+                patch.object(CLIENT.shutil, 'which', side_effect=lambda name: None if name == 'xvfb-run' else '/fixture/tool'), \
+                patch.object(CLIENT.subprocess, 'run') as run:
+            with self.assertRaisesRegex(ValueError, 'Silent sync needs'):
+                CLIENT.run_client(self.cfg, self.state, True)
+        run.assert_not_called()
 
     def test_enable_needs_successful_batch_before_systemd(self):
         config_dir = self.root / 'config'

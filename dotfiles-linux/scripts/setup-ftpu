@@ -195,7 +195,8 @@ check_environment() {
     [[ -f $SUPPORT ]] || die "Missing companion helper: $SUPPORT"
     if [[ -e $STATE_DIR ]]; then
         [[ -d $STATE_DIR && $(stat -c '%u:%a' "$STATE_DIR") == 0:700 ]] || die 'Unsafe setup state directory.'
-        for path in "$STATE_DIR/identity" "$STATE_DIR/lock" "$STATE_DIR/phone.json"; do
+        for path in "$STATE_DIR/identity" "$STATE_DIR/lock" "$STATE_DIR/phone.json" "$STATE_DIR/local-recovery"; do
+            safe_path "$path"
             if [[ -e $path ]]; then
                 [[ -f $path && $(stat -c '%u:%a:%h' "$path") == 0:600:1 ]] || die "Unsafe state file: $path"
             fi
@@ -229,6 +230,11 @@ allowed_sources() {
 allowed_users() {
     local source patterns=
     while IFS= read -r source; do patterns+="ftpu@$source "; done < <(allowed_sources)
+    # Root-owned opt-in for encrypted recovery through the local SFTP server.
+    if [[ -f $STATE_DIR/local-recovery ]]; then
+        [[ $(stat -c '%u:%a' "$STATE_DIR/local-recovery") == 0:600 ]] || die 'Unsafe local recovery marker.'
+        patterns+='ftpu@127.0.0.1 ftpu@::1 '
+    fi
     printf '%s' "${patterns% }"
 }
 

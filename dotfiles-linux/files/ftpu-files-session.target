@@ -1,0 +1,8 @@
+[Unit]
+Description=Files synchronization desktop session
+Requires=graphical-session.target
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Install]
+WantedBy=default.target

@@ -4,7 +4,9 @@ FreeFileSync connects local `~/Files` to `ftpu` SFTP `/drive/Files` on port 2222
 Android FolderSync uses the same server folder. No remote mount is required.
 
 The client uses database-based rules for new and edited files in both directions.
-Both deletion actions are `none`. Unresolved conflicts stay unchanged for manual review.
+Deletion propagation is an explicit profile option and defaults to off.
+Use `ftpu-files deletions on` to propagate future deletions in both directions.
+Unresolved conflicts stay unchanged for manual review.
 Skipped conflicts and transfer failures appear in the logs and return a nonzero exit status.
 Renames can leave the old name on the other device while deletions are disabled.
 
@@ -27,7 +29,7 @@ Use `~/dotfiles-linux/scripts/setup-ftpu`. Do not guess the drive partition.
 The saved laptop identity survives later setup runs. No whole-tailnet allowance is added.
 Existing phone backup pairs and history jobs remain separate.
 The Files exclusions prevent the phone from restoring an old FreeFileSync database onto the server.
-Apply these exclusions to the Files pair only. Keep deletion syncing off.
+Apply these exclusions to the Files pair only. Coordinate deletion settings as described below.
 
 ## Laptop enrollment
 
@@ -43,9 +45,9 @@ Apply these exclusions to the Files pair only. Keep deletion syncing off.
 10. Review both paths and the proposed actions before synchronization.
 
 `preview` opens the comparison GUI. It does not automatically start synchronization.
-The GUI permits manual actions, so leave deletion rules unchanged.
+The GUI permits manual actions. Review the profile's deletion policy before synchronization.
 On first comparison, different files with the same name need manual review.
-Preserve existing laptop documents and Dropbox originals until comparison is complete.
+Preserve existing laptop documents and migration archives until comparison is complete.
 
 The private profile is `~/.config/ftpu-files/config.json`, mode 600.
 It contains the endpoint and vault item name, but no password.
@@ -67,12 +69,20 @@ FreeFileSync reports unreachable servers as transfer errors. No local directory 
 Offline local files remain usable. A later timer run retries after reconnection.
 The client never unlocks the vault automatically. A locked vault prevents that run.
 
+Batch synchronization uses a private Xvfb display. Manual `sync` commands and timer jobs stay off the desktop.
+Install `xorg-server-xvfb` and `xorg-xauth` on Arch Linux.
+If these tools are missing, synchronization reports an error before it starts.
+`preview` uses the normal desktop display for interactive comparison.
+Batch results remain available in terminal output, the user journal, and the sync logs.
+
 Use these commands:
 
 ```sh
 ftpu-files preview
 ftpu-files sync
 ftpu-files status
+ftpu-files deletions on
+ftpu-files deletions off
 ftpu-files disable
 journalctl --user -u ftpu-files.service
 ```
@@ -85,6 +95,17 @@ Both Arch Sway profiles enable XWayland for the GTK2 FreeFileSync binary.
 The enable command also initializes the current graphical session.
 The standard service expects the default `~/.config` location. Adapt it before using a custom XDG config root.
 
+### WSLg
+
+On WSL, install FreeFileSync for the current Linux user from its official Linux installer.
+Run `~/dotfiles-linux/files/main` to install the units and WSLg display configuration.
+The current-user installer provides `~/.local/bin/freefilesync`.
+`ftpu-files session-start` imports the executable path and starts a dedicated session target.
+This target starts `graphical-session.target` through a dependency, as systemd requires.
+After a successful sync, `ftpu-files enable` also enables that session target at WSL startup.
+The WSLg service configuration supplies the display and executable path after a restart.
+The vault must be unlocked before scheduled transfers can succeed.
+
 ## Credentials and recovery
 
 Batch jobs obtain the password from `rbw` at runtime.
@@ -96,30 +117,51 @@ FreeFileSync can retain private connection history in its own user configuration
 Keep that configuration, `~/.config/ftpu-files`, and the client state outside all Git repositories.
 Tailscale provides the authenticated network path. Do not assume FreeFileSync reads OpenSSH `known_hosts`.
 
-The client preserves overwritten versions in `~/.local/state/ftpu-files/versions`.
+The client preserves overwritten files and files it deletes during synchronization in `~/.local/state/ftpu-files/versions`.
+These timestamped versions stay outside the synchronized Files tree.
 Logs are in `~/.local/state/ftpu-files/logs`. Keep these folders private and monitor disk usage.
 Pi history also protects files changed by Android, subject to its snapshot interval.
 Neither same-drive history nor local versioning replaces an independent backup.
 The retired `Generated` folder stays excluded.
 
-## Deletion syncing later
+## Deletion propagation
 
-Deletion propagation is deliberately unavailable in this initial client command.
-Do not change the temporary profiles or replace this job with Mirror mode.
-First establish an independent backup and verify a restore.
-Reconcile the phone, Pi, and laptop copies before changing the rules.
-Then change both database-based Delete directions to their opposite destinations.
-Coordinate that change with Android FolderSync and test deletion in both directions.
-Keep versioning enabled. Preserved phone copies can otherwise restore deleted files.
+Keep an independent backup and reconcile the phone, Pi, and laptop copies before activation.
+Pause scheduled transfers while changing the policy. Let an active transfer finish.
+Enable deletion propagation for this profile with:
+
+```sh
+ftpu-files deletions on
+```
+
+The command saves `sync_deletions: true` in the private configuration.
+It preserves the existing synchronization databases and keeps versioning enabled.
+The remote root remains restricted to `/drive/Files`; photo backups and drive archives are outside this job.
+New profiles and existing profiles without this option retain the no-deletion default.
+
+Enable **Sync deletions** on Android's active Files pair before resuming that pair.
+Keep the metadata exclusions and manual conflict handling.
+A phone pair with deletion propagation disabled can restore files deleted on the laptop or Pi.
+Change only the Files pair. Keep the camera and WhatsApp backup settings separate.
+
+Test deletion from each device with disposable files, then restore a version and compare its contents.
+A deletion that conflicts with an edit needs manual resolution.
+Existing differences are not a list of historical deletion requests; reconcile them before changing policy.
+
+To stop propagating future deletions, run `ftpu-files deletions off`.
+This does not restore already deleted files.
+To restore a file, pause synchronization and copy the selected timestamped version back to its original relative path under `~/Files`.
+Resolve any conflicting copy before resuming synchronization.
+Pi snapshot history provides another recovery route, subject to its snapshot interval.
 
 ## Rollback
 
 Run `ftpu-files disable` to stop scheduling.
 Wait for any active transfer before stopping `ftpu-files.service`.
-Preserve `~/Files`, the Pi files, version history, and Dropbox originals.
+Preserve `~/Files`, the Pi files, version history, and migration archives.
 Remove the client unit links only after disabling the timer.
 Use the existing server setup backup procedure to reverse server access changes.
-No Syncthing pairing, remote mount, Dropbox cancellation, or cloud deletion is part of this setup.
+No Syncthing pairing, remote mount, or cloud deletion is part of this setup.
 
 ## References
 

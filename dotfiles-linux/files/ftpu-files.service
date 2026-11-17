@@ -1,5 +1,5 @@
 [Unit]
-Description=Synchronize Files over Tailscale with FreeFileSync (deletions off)
+Description=Synchronize Files over Tailscale with FreeFileSync and versioning
 PartOf=graphical-session.target
 ConditionPathExists=%h/.config/ftpu-files/config.json
 

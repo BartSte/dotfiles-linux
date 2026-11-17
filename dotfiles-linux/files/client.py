@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""FreeFileSync client for the private ftpu Files share. No deletion propagation."""
+"""FreeFileSync client for the private ftpu Files share with versioned recovery."""
 import argparse
 import base64
 import fcntl
@@ -30,8 +30,11 @@ def private_directory(path):
 
 
 def validate(cfg):
-    if not isinstance(cfg, dict) or set(cfg) != {'host', 'port', 'username', 'remote', 'local', 'password_entry'}:
+    required = {'host', 'port', 'username', 'remote', 'local', 'password_entry'}
+    if not isinstance(cfg, dict) or not required <= set(cfg) or set(cfg) - required - {'sync_deletions'}:
         raise ValueError('Unexpected configuration fields. Run ftpu-files configure.')
+    if type(cfg.get('sync_deletions', False)) is not bool:
+        raise ValueError('sync_deletions must be a boolean.')
     if not isinstance(cfg['host'], str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9.-]*', cfg['host']):
         raise ValueError('Use the Pi MagicDNS name or its IPv4 address without a URL or options.')
     if type(cfg['port']) is not int or not 1 <= cfg['port'] <= 65535:
@@ -59,17 +62,18 @@ def load_config(path):
 
 
 def configuration(cfg, log_dir, batch=False, password=None):
-    """XML format 23: database-based changes with both delete directions disabled."""
+    """Build database-based sync rules with optional deletions and versioning."""
+    deletes = cfg.get('sync_deletions', False)
     root = ET.Element('FreeFileSync', XmlType='BATCH' if batch else 'GUI', XmlFormat='23')
-    ET.SubElement(root, 'Notes').text = 'ftpu Files: deletion propagation OFF; resolve conflicts manually.'
+    ET.SubElement(root, 'Notes').text = f'ftpu Files: deletion propagation {"ON" if deletes else "OFF"}; resolve conflicts manually.'
     compare = ET.SubElement(root, 'Compare')
     ET.SubElement(compare, 'Variant').text = 'TimeAndSize'
     ET.SubElement(compare, 'Symlinks').text = 'Exclude'
     ET.SubElement(compare, 'IgnoreTimeShift')
     sync = ET.SubElement(root, 'Synchronize')
     changes = ET.SubElement(sync, 'Changes')
-    ET.SubElement(changes, 'Left', Create='right', Update='right', Delete='none')
-    ET.SubElement(changes, 'Right', Create='left', Update='left', Delete='none')
+    ET.SubElement(changes, 'Left', Create='right', Update='right', Delete='right' if deletes else 'none')
+    ET.SubElement(changes, 'Right', Create='left', Update='left', Delete='left' if deletes else 'none')
     # Preserve overwritten versions as well as the Pi's independent periodic history.
     ET.SubElement(sync, 'DeletionPolicy').text = 'Versioning'
     ET.SubElement(sync, 'VersioningFolder', Style='TimeStamp-Folder').text = str(log_dir.parent / 'versions')
@@ -122,18 +126,49 @@ def executable():
     return binary
 
 
+def set_deletions(config_dir, state, cfg, enabled):
+    """Persist the policy while holding the same lock as synchronization."""
+    private_directory(state)
+    with (state / 'client.lock').open('a') as lock:
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            raise ValueError('Another ftpu-files process is active.') from None
+        cfg = dict(cfg, sync_deletions=enabled)
+        path = config_dir / 'config.json'
+        with tempfile.NamedTemporaryFile(mode='w', dir=config_dir, delete=False) as stream:
+            temporary = Path(stream.name)
+            json.dump(cfg, stream, indent=2)
+            stream.write('\n')
+        try:
+            temporary.chmod(0o600)
+            temporary.replace(path)
+        finally:
+            temporary.unlink(missing_ok=True)
+    print(f'Deletion propagation {"enabled" if enabled else "disabled"} for /drive/Files. Versioning remains enabled.')
+
+
 def session_start():
-    variables = [name for name in ('DISPLAY', 'WAYLAND_DISPLAY', 'XAUTHORITY') if os.environ.get(name)]
+    variables = [name for name in ('DISPLAY', 'WAYLAND_DISPLAY', 'XAUTHORITY', 'PATH') if os.environ.get(name)]
     if not variables:
         raise ValueError('This command needs a desktop session.')
     subprocess.run(['systemctl', '--user', 'import-environment', *variables], check=True)
-    subprocess.run(['systemctl', '--user', 'start', 'graphical-session.target'], check=True)
+    subprocess.run(['systemctl', '--user', 'start', 'ftpu-files-session.target'], check=True)
 
 
 def run_client(cfg, state, batch):
     if not (os.environ.get('DISPLAY') or os.environ.get('WAYLAND_DISPLAY')):
         raise ValueError('FreeFileSync needs a desktop session, including for batch jobs.')
     binary = executable()
+    command = [binary]
+    environment = os.environ.copy()
+    if batch:
+        display_runner = shutil.which('xvfb-run')
+        if not display_runner or not shutil.which('Xvfb') or not shutil.which('xauth'):
+            raise ValueError('Silent sync needs xvfb-run, Xvfb, and xauth. Install xorg-server-xvfb and xorg-xauth.')
+        command = [display_runner, '--auto-servernum', binary]
+        environment.pop('WAYLAND_DISPLAY', None)
+        environment['GDK_BACKEND'] = 'x11'
     if not shutil.which('tailscale'):
         raise ValueError('Install Tailscale first.')
     status = subprocess.run(['tailscale', 'status', '--json'], capture_output=True, text=True, timeout=15)
@@ -165,7 +200,7 @@ def run_client(cfg, state, batch):
             job = Path(directory) / ('Files.ffs_batch' if batch else 'Files.ffs_gui')
             with open(job, 'xb', opener=lambda p, f: os.open(p, f, 0o600)) as stream:
                 stream.write(configuration(cfg, logs, batch, password))
-            result = subprocess.run([binary, str(job)])
+            result = subprocess.run([*command, str(job)], env=environment)
         if batch and result.returncode == 0:
             (state / 'last-success').touch(mode=0o600)
         return result.returncode
@@ -178,6 +213,8 @@ def main():
     setup.add_argument('--host')
     setup.add_argument('--password-entry')
     setup.add_argument('--local', default=str(Path.home() / 'Files'))
+    deletion = commands.add_parser('deletions', help='Enable or disable deletion propagation for Files')
+    deletion.add_argument('policy', choices=['on', 'off'])
     for command in ('preview', 'sync', 'enable', 'disable', 'status', 'session-start'):
         commands.add_parser(command)
     args = parser.parse_args()
@@ -189,13 +226,20 @@ def main():
         configure(args, config_dir)
         return 0
     if args.command in ('disable', 'status'):
+        if args.command == 'disable' and os.environ.get('WSL_DISTRO_NAME'):
+            subprocess.run(['systemctl', '--user', 'disable', 'ftpu-files-session.target'], check=True)
         action = ['disable', '--now'] if args.command == 'disable' else ['status']
         return subprocess.run(['systemctl', '--user', *action, 'ftpu-files.timer']).returncode
     cfg = load_config(config_dir / 'config.json')
+    if args.command == 'deletions':
+        set_deletions(config_dir, state, cfg, args.policy == 'on')
+        return 0
     if args.command == 'enable':
         if not (state / 'last-success').exists():
             raise ValueError('Run a successful ftpu-files sync before enabling its timer.')
         session_start()
+        if os.environ.get('WSL_DISTRO_NAME'):
+            subprocess.run(['systemctl', '--user', 'enable', 'ftpu-files-session.target'], check=True)
         return subprocess.run(['systemctl', '--user', 'enable', '--now', 'ftpu-files.timer']).returncode
     return run_client(cfg, state, args.command == 'sync')
 
