@@ -59,6 +59,39 @@ class ClientTests(unittest.TestCase):
                 CLIENT.validate(dict(self.cfg, **{field: value}))
         with self.assertRaises(ValueError):
             CLIENT.validate(dict(self.cfg, deletion=True))
+        for value in ('true', 1, None):
+            with self.subTest(sync_deletions=value), self.assertRaises(ValueError):
+                CLIENT.validate(dict(self.cfg, sync_deletions=value))
+
+    def test_deletions_apply_both_directions_and_keep_versioning_outside_files(self):
+        cfg = CLIENT.validate(dict(self.cfg, sync_deletions=True))
+        root = ET.fromstring(CLIENT.configuration(cfg, self.state / 'logs', batch=True))
+        self.assertEqual(root.find('Synchronize/Changes/Left').get('Delete'), 'right')
+        self.assertEqual(root.find('Synchronize/Changes/Right').get('Delete'), 'left')
+        self.assertEqual(root.findtext('Synchronize/DeletionPolicy'), 'Versioning')
+        versions = Path(root.findtext('Synchronize/VersioningFolder'))
+        self.assertFalse(versions.is_relative_to(self.local))
+
+    def test_policy_changes_preserve_profile_and_do_not_reset_sync_history(self):
+        config_dir = self.root / 'profile'
+        CLIENT.private_directory(config_dir)
+        database = self.local / '.sync.ffs_db'
+        database.write_bytes(b'previous sync history')
+        CLIENT.set_deletions(config_dir, self.state, self.cfg, True)
+        saved = CLIENT.load_config(config_dir / 'config.json')
+        self.assertEqual(saved, dict(self.cfg, sync_deletions=True))
+        self.assertEqual((config_dir / 'config.json').stat().st_mode & 0o777, 0o600)
+        CLIENT.set_deletions(config_dir, self.state, saved, False)
+        self.assertFalse(CLIENT.load_config(config_dir / 'config.json')['sync_deletions'])
+        self.assertEqual(database.read_bytes(), b'previous sync history')
+
+    def test_policy_change_refuses_an_active_sync(self):
+        CLIENT.private_directory(self.state)
+        with (self.state / 'client.lock').open('a') as lock:
+            CLIENT.fcntl.flock(lock, CLIENT.fcntl.LOCK_EX | CLIENT.fcntl.LOCK_NB)
+            with self.assertRaisesRegex(ValueError, 'process is active'):
+                CLIENT.set_deletions(self.root, self.state, self.cfg, True)
+        self.assertFalse((self.root / 'config.json').exists())
 
     def test_enrollment_private_repeat_does_not_overwrite(self):
         args = type('Args', (), dict(host=self.cfg['host'], password_entry='Private item', local=str(self.local)))()

@@ -23,6 +23,27 @@ This requires no Windows administrator access if WSL 2 is already installed.
 Tailscale connects the WSL environment; Windows applications do not automatically use it.
 Avoid simultaneous Tailscale connections on Windows and inside WSL.
 
+## Shared Files
+
+`ftpu-files` synchronizes `~/Files` with `/drive/Files` through SFTP over Tailscale.
+The timer runs five minutes after each completed job.
+Batch jobs use a private display. `ftpu-files preview` opens the comparison window.
+
+Deletion propagation defaults to off for new profiles.
+`ftpu-files deletions on` enables it in both directions for the shared Files folder.
+The command preserves synchronization history and keeps timestamped versioning enabled.
+Deleted and overwritten copies go to `~/.local/state/ftpu-files/versions`.
+Conflicting changes remain unchanged for manual review.
+`ftpu-files deletions off` stops future deletion propagation without restoring previous deletions.
+
+Before resuming Android's Files pair, enable **Sync deletions** there or keep the pair paused.
+Otherwise, the phone can restore files deleted on another device.
+Keep the FreeFileSync metadata exclusions on that pair.
+Camera and WhatsApp backup settings remain separate.
+Keep an independent backup and test recovery before enabling deletion propagation.
+
+See the [Files setup and recovery guide](docs/ftpu-files.md).
+
 ## Calendars
 
 Each machine connects to Outlook through its own DavMail, vdirsyncer, and khal storage.
@@ -33,3 +54,5 @@ On WSL, [Windows-protected rbw unlock](docs/rbw-windows-unlock.md) permits autom
 The Pi adds read-only WebDAV for Orgzly Revived; the laptop does not use that service.
 
 This repository owns `dotfiles-linux/README.md`. The base repository owns `~/README.md`.
+
+_Codex (AI) for Bart._
