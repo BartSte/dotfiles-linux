@@ -10,7 +10,7 @@ TAILNETS = (ipaddress.ip_network('100.64.0.0/10'),
             ipaddress.ip_network('fd7a:115c:a1e0::/48'))
 
 
-def select_phone(status, selector='', saved=None):
+def select_phone(status, selector='', saved=None, laptop_selector=''):
     if status.get('BackendState') != 'Running':
         raise ValueError('Tailscale is not connected. Run sudo tailscale up first.')
     peers = [p for p in (status.get('Peer') or {}).values()
@@ -47,10 +47,32 @@ def select_phone(status, selector='', saved=None):
     if not server_ips:
         raise ValueError('The Pi has no Tailscale address.')
     # Keep one peer identity, including both address families, even while offline.
-    return {
+    result = {
         'phone': {'id': peer['ID'], 'name': peer.get('HostName', ''), 'ips': addresses},
         'server': {'name': (server.get('DNSName') or '').rstrip('.'), 'ips': server_ips},
     }
+    saved_laptop = (saved or {}).get('laptop', {}).get('id')
+    if laptop_selector or saved_laptop:
+        needle = (laptop_selector or saved_laptop).lower().rstrip('.')
+        candidates = [p for p in (status.get('Peer') or {}).values()
+                      if p.get('OS') == 'linux' and not p.get('Expired')]
+        matches = [p for p in candidates if (not laptop_selector and p.get('ID') == saved_laptop)
+                   or (laptop_selector and needle in {
+            str(p.get('ID', '')).lower(), str(p.get('HostName', '')).lower(),
+            str(p.get('DNSName', '')).lower().rstrip('.'),
+            str(p.get('DNSName', '')).lower().split('.')[0],
+            *[ip.lower() for ip in p.get('TailscaleIPs', [])],
+        })]
+        if len(matches) != 1:
+            raise ValueError('Cannot select the saved or requested Linux laptop. Use --tailscale-laptop NAME.')
+        laptop = matches[0]
+        ips = [ipaddress.ip_address(value) for value in laptop.get('TailscaleIPs', [])]
+        if not laptop.get('ID') or not ips or any(
+                not any(ip.version == net.version and ip in net for net in TAILNETS) for ip in ips):
+            raise ValueError('Laptop has no stable identity or valid Tailscale addresses.')
+        result['laptop'] = {'id': laptop['ID'], 'name': laptop.get('HostName', ''),
+                            'ips': [str(ip) for ip in ips]}
+    return result
 
 
 def firewall_plan(text, sources):
@@ -80,7 +102,8 @@ def main():
         if sys.argv[1] == 'phone':
             saved = Path(sys.argv[3])
             result = select_phone(json.load(sys.stdin), sys.argv[2],
-                                  json.loads(saved.read_text()) if saved.exists() else None)
+                                  json.loads(saved.read_text()) if saved.exists() else None,
+                                  sys.argv[4] if len(sys.argv) > 4 else '')
         elif sys.argv[1] == 'firewall':
             result = firewall_plan(sys.stdin.read(), sys.argv[2:])
         else:

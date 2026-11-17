@@ -1,0 +1,11 @@
+[Unit]
+Description=Synchronize Files every five minutes during the desktop session
+PartOf=graphical-session.target
+
+[Timer]
+OnActiveSec=2min
+OnUnitInactiveSec=5min
+Unit=ftpu-files.service
+
+[Install]
+WantedBy=graphical-session.target

@@ -14,6 +14,7 @@ UFW_DIR=/etc/ufw
 SUPPORT=$(dirname "$(readlink -f -- "${BASH_SOURCE[0]}")")/setup-ftpu-support.py
 ALLOW_FROM=192.168.1.0/24
 TAILSCALE_PHONE=
+TAILSCALE_LAPTOP=
 LAN_ONLY=false
 PHONE_JSON=
 SFTP_CHANGED=false
@@ -35,13 +36,15 @@ Usage: sudo setup-ftpu [options] <partition>
 
 Set up password-based SFTP for ftpu on an NTFS partition. /data holds phone
 backups; /drive gives read-write access to the whole external drive.
-LAN plus one Android phone over Tailscale; SFTP port 2222.
+LAN plus one Android phone and an optional Linux laptop over Tailscale; SFTP port 2222.
 Default LAN subnet: 192.168.1.0/24. Administrative SSH is unchanged.
 
   --dry-run            Inspect and describe changes without changing the system.
   --allow-from <CIDR>  Set the allowed LAN subnet.
   --tailscale-phone <name|IP|ID>
                       Select a phone explicitly; otherwise detect and remember it.
+  --tailscale-laptop <name|IP|ID>
+                      Select and remember an additional Linux laptop.
   --lan-only          Skip Tailscale; allow only the LAN subnet.
   -h, --help           Show this help.
 
@@ -66,6 +69,9 @@ parse_args() {
             --tailscale-phone)
                 if (($# < 2)) || [[ -z $2 ]]; then die '--tailscale-phone requires a name, IP or ID.'; fi
                 TAILSCALE_PHONE=$2; shift 2 ;;
+            --tailscale-laptop)
+                if (($# < 2)) || [[ -z $2 ]]; then die '--tailscale-laptop requires a name, IP or ID.'; fi
+                TAILSCALE_LAPTOP=$2; shift 2 ;;
             --allow-from)
                 (($# >= 2)) || die '--allow-from requires an IPv4 CIDR.'
                 ALLOW_FROM=$2; shift 2 ;;
@@ -75,7 +81,7 @@ parse_args() {
         esac
     done
     [[ -n $DRIVE ]] || die 'Supply an NTFS partition, for example /dev/sda1.'
-    if $LAN_ONLY && [[ -n $TAILSCALE_PHONE ]]; then die '--lan-only conflicts with --tailscale-phone.'; fi
+    if $LAN_ONLY && [[ -n $TAILSCALE_PHONE || -n $TAILSCALE_LAPTOP ]]; then die '--lan-only conflicts with Tailscale peer selection.'; fi
     ALLOW_FROM=$(python3 - "$ALLOW_FROM" <<'PY'
 import ipaddress, sys
 try:
@@ -189,7 +195,8 @@ check_environment() {
     [[ -f $SUPPORT ]] || die "Missing companion helper: $SUPPORT"
     if [[ -e $STATE_DIR ]]; then
         [[ -d $STATE_DIR && $(stat -c '%u:%a' "$STATE_DIR") == 0:700 ]] || die 'Unsafe setup state directory.'
-        for path in "$STATE_DIR/identity" "$STATE_DIR/lock" "$STATE_DIR/phone.json"; do
+        for path in "$STATE_DIR/identity" "$STATE_DIR/lock" "$STATE_DIR/phone.json" "$STATE_DIR/local-recovery"; do
+            safe_path "$path"
             if [[ -e $path ]]; then
                 [[ -f $path && $(stat -c '%u:%a:%h' "$path") == 0:600:1 ]] || die "Unsafe state file: $path"
             fi
@@ -205,7 +212,7 @@ discover_phone() {
     PHONE_JSON=
     $LAN_ONLY && return 0
     command -v tailscale >/dev/null || die 'Install and sign in to Tailscale first, or use --lan-only.'
-    PHONE_JSON=$(tailscale status --json | python3 "$SUPPORT" phone "$TAILSCALE_PHONE" "$STATE_DIR/phone.json")
+    PHONE_JSON=$(tailscale status --json | python3 "$SUPPORT" phone "$TAILSCALE_PHONE" "$STATE_DIR/phone.json" "$TAILSCALE_LAPTOP")
     tailscale debug prefs | python3 -c '
 import json, sys
 if json.load(sys.stdin).get("ShieldsUp"):
@@ -216,13 +223,18 @@ if json.load(sys.stdin).get("ShieldsUp"):
 allowed_sources() {
     printf '%s\n' "$ALLOW_FROM"
     if [[ -n $PHONE_JSON ]]; then
-        python3 -c 'import json,sys; print("\n".join(json.load(sys.stdin)["phone"]["ips"]))' <<< "$PHONE_JSON"
+        python3 -c 'import json,sys; d=json.load(sys.stdin); print("\n".join(dict.fromkeys(d["phone"]["ips"] + d.get("laptop", {}).get("ips", []))))' <<< "$PHONE_JSON"
     fi
 }
 
 allowed_users() {
     local source patterns=
     while IFS= read -r source; do patterns+="ftpu@$source "; done < <(allowed_sources)
+    # Root-owned opt-in for encrypted recovery through the local SFTP server.
+    if [[ -f $STATE_DIR/local-recovery ]]; then
+        [[ $(stat -c '%u:%a' "$STATE_DIR/local-recovery") == 0:600 ]] || die 'Unsafe local recovery marker.'
+        patterns+='ftpu@127.0.0.1 ftpu@::1 '
+    fi
     printf '%s' "${patterns% }"
 }
 
@@ -448,6 +460,8 @@ connection_details() {
 import json,sys
 d=json.load(sys.stdin)
 print("Phone: " + d["phone"]["name"] + " (" + ", ".join(d["phone"]["ips"]) + ")")
+if "laptop" in d:
+    print("Laptop: " + d["laptop"]["name"] + " (" + ", ".join(d["laptop"]["ips"]) + ")")
 print("Tailscale host: " + (d["server"]["name"] or d["server"]["ips"][0]))
 print("Tailscale must be connected on the phone; tailnet policy must permit TCP 2222.")
 ' <<< "$PHONE_JSON"

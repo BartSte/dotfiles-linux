@@ -1,5 +1,11 @@
 # Restricted phone backups over SFTP
 
+Encrypted assistant recovery can use the same SFTP server over loopback.
+The administrator enables this with a root-owned, mode-600 marker at `/var/lib/setup-ftpu/local-recovery`.
+Repeat setup preserves this opt-in and adds only `127.0.0.1` and `::1` to the dedicated SFTP allowlist.
+It does not add a tailnet subnet or change administrative SSH access.
+The private rclone SFTP profile pins the server key; its crypt profile encrypts the recovery archive on the drive.
+
 `setup-ftpu` configures the `ftpu` account for an NTFS drive. `/data` exposes `PhoneBackups` for automatic phone uploads; `/drive` exposes the entire external drive with read-write access for manual file management. It uses password authentication and accepts your home LAN (`192.168.1.0/24` by default) plus one Android phone over Tailscale. A dedicated SFTP service uses port **2222** on both networks. Other SSH accounts, including `barts`, keep their existing settings.
 
 The script supports Debian-based Raspberry Pi systems with an existing OpenSSH configuration and a `barts` administrative account. Keep `setup-ftpu-support.py` alongside the script. Python 3 and the standard Debian account, mount, and systemd tools must already be available. It installs missing `openssh-server` and `ntfs-3g` packages without upgrading the rest of the system. Tailscale must already be installed and signed in on the Pi and phone; use `--lan-only` to skip Tailscale.
@@ -27,6 +33,17 @@ sudo ~/dotfiles-linux/scripts/setup-ftpu /dev/sda1
 For another home subnet, supply a network address with its prefix, for example `--allow-from 10.0.0.0/24`. The restriction uses the source address SSH sees; a connection forwarded or translated by another device may appear to originate from that device. Router rules are not changed.
 
 ## Automatic Tailscale setup
+
+For the Linux Files client, add `--tailscale-laptop NAME` to the setup command.
+Use the laptop's exact Tailscale name or stable device ID.
+Run with `--dry-run` first and use the verified existing partition.
+The script preserves the selected phone and permits both exact laptop addresses.
+It remembers the laptop identity in the existing root-only peer state.
+Later runs retain that identity and refresh its addresses, even while it is offline.
+A missing or expired laptop causes an error rather than selecting a replacement.
+`--lan-only` disables both peers without deleting their saved identities.
+Tailnet policy must permit the laptop to reach TCP 2222.
+This flag does not start laptop synchronization or change phone folder pairs.
 
 On first setup the script selects the only Android device, or the only online Android device if there are several. It shows the selected phone before setup and records its stable Tailscale device ID after success. Later runs keep that same phone even if another phone is online. Missing, expired or ambiguous devices cause an error rather than granting access to a replacement automatically.
 

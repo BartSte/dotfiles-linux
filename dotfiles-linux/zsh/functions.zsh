@@ -43,8 +43,12 @@ fullsync() {
     echo "\n### Syncing mail"
     mailsync
 
-    echo "\n### Syncing dropbox"
-    rclone bisync dropbox: ~/dropbox
+    echo "\n### Syncing Files"
+    if systemctl --user is-active --quiet ftpu-files-view.service; then
+        printf '%s\n' 'Files uses the live drive view.'
+    else
+        ftpu-files sync
+    fi
 }
 
 ################################################################################
