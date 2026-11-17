@@ -1,7 +1,7 @@
 # Daily terminal workflow
 
 Use Bart's existing Neovim, Octo, tmux, and worktree tools for the daily pass.
-The queue records review checkpoints. Codex handles selected assessments and proposals through the existing worker skills.
+The queue records review checkpoints. Codex reviews PRs and resolves conflicts in separate interactive tmux windows.
 
 ## Open the queue
 
@@ -26,10 +26,8 @@ Authored PRs that await others stay in the overview, available with `a`.
 | `o` | Open the PR in Octo for inspection, comments, or a manual review. |
 | `D` | Show the code comparison from the last local assessment or submitted review. |
 | `w` | Open the PR through `tsp-pr`, with the selected head as an explicit requirement. |
-| `c` | Open the PR worktree and insert its brief into the Codex window. |
-| `C` | Show and copy the brief for manual use. |
-| `m` | Resolve conflicts locally, or resume the existing merge with your decision. |
-| `M` | Open the selected PR's saved conflict report. |
+| `R` | Review the PR and your pending comments with Codex. Approve the exact draft before GitHub writes. |
+| `F` | Rebase your PR and resolve conflicts with Codex. Finish with committed changes; approve or run the force push yourself. |
 | `b` | Open the PR in the browser for media or other context. |
 | `d` | Mark the displayed snapshot as checked locally. |
 | `s` | Defer the displayed snapshot until tomorrow. |
@@ -43,48 +41,39 @@ For an approval-only decision, inspect the relevant context and use Octo's norma
 The queue does not submit an approval automatically.
 After finishing the assessment, mark the snapshot checked with `d`.
 
-For deeper assessment, press `c` to prepare the worktree and open its project session.
-The shortcut waits for a Codex pane in that worktree, inserts the exact brief, and focuses the pane.
-It uses `key2pane` for literal text, like `<leader>as`. It leaves submission to the user and does not interrupt Codex.
-Press Enter in Codex to start the assessment with `pr-post` or `pr-respond` as appropriate.
-If multiple panes remain ambiguous, use `C` to inspect and copy the brief for manual delivery.
-Use `w` to open the project layout without inserting a prompt.
-The brief requests preparation only. Existing approval rules still control changes and GitHub writes.
+Press `R` to start an interactive Codex review in a separate tmux window.
+The shortcut prepares the selected PR worktree and starts Codex there with the PR URL and expected head.
+It uses `pr-post` directly. It does not collect another queue or switch to author-feedback work.
+Codex reviews the code and critically assesses your existing pending review body and comments.
+It proposes exact changes to stale, duplicate, or incorrect comments and preserves them until you approve those changes.
+The complete draft includes every existing pending comment that submission will publish.
+You can select findings, request edits, and choose submission or a pending review.
+GitHub writes require your approval. If Codex cannot retrieve all pending comments, it must leave the review unsubmitted.
 
-For your own PR, press `m` to start conflict resolution without an extra Enter in Codex.
-The shortcut reads fresh PR metadata and starts a separate `codex exec` task in the PR worktree.
-The queue keeps focus. This action does not open or switch tmux sessions and does not require tmux.
-The task uses the existing Codex configuration and leaves the local merge uncommitted for review.
-For a new resolution, the task must stop for local changes or unfinished Git operations.
-For a continuation, the task preserves the recorded merge and its resolved files.
-Unclear product decisions remain unresolved and appear in the final report.
-Progress and completion appear through Neovim notifications, with the worktree path.
-Press `M` to open the saved report. Completion does not open a buffer automatically.
-Reports remain available after closing their buffers or restarting Neovim.
-Keep the original Neovim process open until the task finishes.
-The saved process ID blocks another task while the recorded resolver process remains alive.
-Codex also saves its final response directly, so a completed response can remain available without the original callback.
-This action does not authorize a commit, push, GitHub comment, or PR merge.
+Press `F` for conflicts in your own open PR.
+Codex starts in a separate tmux window and rebases the PR onto the current base branch.
+This action authorizes local conflict resolutions, tests, and commits.
+Codex must preserve the intent of both changes and ask you about unclear product decisions.
+On success, the rebase is complete and all intended changes are committed.
+The worktree must be clean, with no staged changes or unfinished Git operation.
+Codex shows the commits, resolution diff, test results, and exact push command for inspection.
+The command targets the PR source repository and branch, including forks.
+It uses an explicit `--force-with-lease=refs/heads/<source-branch>:<recorded-remote-SHA>` lease.
+Codex stops before pushing. Approve that push in the session or run the displayed command yourself.
+If tests fail or a decision blocks progress, Codex must report the blocker instead of claiming success.
 
-The queue shows local status beside GitHub status. GitHub can still report conflicts before a push.
-The shortcut inspects Git after the task finishes and when you open the report or refresh the queue.
-A zero task exit code does not prove that Git conflicts are resolved.
-
-| Local status | Meaning |
-| --- | --- |
-| Ready for review | The expected checkout has an open merge with no unresolved Git files. Commit and push remain pending. |
-| Needs a decision | Git still lists unresolved files. Read the blocker and task report. |
-| Failed | The task failed, the checkout changed unexpectedly, or Git cannot inspect the merge. |
-| Committed locally | You explicitly committed the reviewed merge. A push remains pending. |
-| Published | You explicitly pushed the recorded commit to the PR source branch. Refresh GitHub status. |
-
-In the report, press `d` to inspect the staged and unstaged diffs.
-Press `m` to supply the missing decision and resume an unresolved merge.
-For example, enter `Use policy version 5.` The continuation preserves the existing merge.
-Read the test results before committing. Ready for review does not prove that tests passed or that the resolution is correct.
-Press `c` to confirm review and enter a commit message. Normal Git hooks still run.
-Press `p` to confirm a separate push to the source branch from fresh PR metadata.
-The push never uses force. Neither action runs automatically after conflict resolution.
+Both actions require Neovim inside tmux and the `codex` executable.
+The queue stays open in its original window. Codex opens in the same tmux session.
+Each PR gets a window named `codex-<owner>-<repo>-<number>`.
+The initial prompt starts the interactive task automatically. You can reply and approve actions in that window.
+A repeated shortcut returns to the existing Codex window for that PR instead of starting another task.
+This also works after a Neovim restart and preserves the conversation and local worktree changes.
+After Codex exits or its window closes, a shortcut prepares a new session through the usual worktree checks.
+Use `Alt+<window number>` to return to the Neovim window or select another tmux window.
+Codex continues while you use Neovim and does not depend on Neovim remaining open.
+Use `w` to open the project through tmux without starting Codex.
+The old `c`, `C`, `m`, and `M` queue actions and saved conflict reports are removed.
+Existing report files remain on disk but the queue does not read them.
 
 The shortcut fetches the current PR head through the base repository, including PRs from forks.
 If a clean checkout is behind, `w` fast-forwards it before opening the tmux session.
